@@ -1,8 +1,11 @@
-import {View, Text} from 'react-native';
 import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from '../screens/main/Home';
+import HomeDetails from '../screens/main/HomeDetails';
+import StylistSelect from '../screens/main/StylistSelect';
+import DateAndTimeSelection from '../screens/main/DateAndTimeSelection';
+import BookingSummary from '../screens/main/BookingSummary';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -11,6 +14,10 @@ const Main = () => {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
       <Stack.Screen name="Home" component={MyTabs} />
+      <Tab.Screen name="HomeDetails" component={HomeDetails} />
+      <Tab.Screen name="StylistSelect" component={StylistSelect} />
+      <Tab.Screen name="DateAndTimeSelection" component={DateAndTimeSelection} />
+      <Tab.Screen name="BookingSummary" component={BookingSummary} />
       <Stack.Screen name="Profile" component={MyTabs} />
     </Stack.Navigator>
   );

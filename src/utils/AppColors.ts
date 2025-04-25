@@ -6,9 +6,10 @@ type Colors = {
     BLUE: string;
     DARKGRAY: string;
     PEACHCOLOUR: string;
-    INPUTBG: string
-    BGCOLOURS: string
-
+    INPUTBG: string;
+    BGCOLOURS: string;
+    APPBG: string;
+    GREEN: string;
   };
   
 const AppColors: Colors = {
@@ -20,8 +21,9 @@ const AppColors: Colors = {
     DARKGRAY: "#939393",
     PEACHCOLOUR: "#F7D794",
     INPUTBG: "#F5F5F5",
-    BGCOLOURS: "#FDFDFD"
-
+    BGCOLOURS: "#FDFDFD",
+    APPBG: "#EFEFEF",
+    GREEN: "#00a760",
   };
   
   export default AppColors;

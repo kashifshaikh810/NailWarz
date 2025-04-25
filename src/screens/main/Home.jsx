@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {
   View,
   Text,
@@ -22,7 +23,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import APPImages from '../../assets/APPImages';
 import LinearGradient from 'react-native-linear-gradient';
 import AppButton from '../../components/AppButton';
-import Entypo from 'react-native-vector-icons/Entypo'
+import Entypo from 'react-native-vector-icons/Entypo';
 import SaloonsCard from '../../components/SaloonsCard';
 import SaloonsArray from '../../utils/SaloonsArray';
 const Home = () => {
@@ -67,7 +68,7 @@ const Home = () => {
       <AppTextInput
         containerBg={AppColors.INPUTBG}
         inputPlaceHolder={'Enter address or city name'}
-        
+
         logo={
           <AntDesign
             name={'search1'}
@@ -86,7 +87,7 @@ const Home = () => {
           borderRadius: 15,
           overflow: 'hidden',
           padding: 20,
-          marginTop:20
+          marginTop:20,
         }}>
         <LinearGradient
           colors={[
@@ -102,7 +103,7 @@ const Home = () => {
             width: responsiveWidth(90),
             height: responsiveHeight(20),
             opacity: 0.5,
-          }}></LinearGradient>
+          }} />
         <View style={{position: 'absolute', zIndex: 2, padding: 20}}>
           <AppText
             title="Morning Special!"
@@ -188,7 +189,7 @@ const Home = () => {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginTop:20
+          marginTop:20,
         }}>
         <AppText
           title="Nearby Salons"
@@ -199,7 +200,7 @@ const Home = () => {
 
         <View style={{flexDirection:'row', alignItems:'center', gap:3}}>
           <Entypo
-          name={"location"}
+          name={'location'}
           color={AppColors.BLUE}
           size={responsiveFontSize(2)}
           />
@@ -207,7 +208,7 @@ const Home = () => {
         </View>
       </View>
 
-        
+
       <FlatList
       data={SaloonsArray}
       contentContainerStyle={{gap:10}}
@@ -215,9 +216,9 @@ const Home = () => {
 
         return(
           <SaloonsCard title={item.title} KM={item.KM}  Rating={item.Rating} TotalNoOfRating={item.TotalNoOfRating} img={item.img}  location={item.location}/>
-        )
+        );
       }}
-      
+
       />
     </BackgroundScreen>
   );
