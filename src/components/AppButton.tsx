@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {View, Text, TouchableOpacity} from 'react-native';
 import React from 'react';
 import AppColors from '../utils/AppColors';
@@ -8,8 +9,10 @@ type props = {
   bgColor?: any;
   textColor?: any;
   handlePress?: () => void;
+  borderWidth?: any,
+  borderColor?: any,
 };
-const AppButton = ({title, handlePress, bgColor, textColor}: props) => {
+const AppButton = ({title, handlePress, bgColor, textColor, borderWidth, borderColor}: props) => {
   return (
     <TouchableOpacity
       onPress={handlePress}
@@ -19,6 +22,8 @@ const AppButton = ({title, handlePress, bgColor, textColor}: props) => {
         justifyContent: 'center',
         padding: 10,
         borderRadius: 10,
+        borderColor: borderColor ? borderColor : null,
+        borderWidth: borderWidth ? borderWidth : 0,
       }}>
       <AppText
         textColor={textColor ? textColor : AppColors.WHITE}

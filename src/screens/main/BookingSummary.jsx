@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React from 'react';
+import React, { useState } from 'react';
 import {View, Text, ScrollView, FlatList, TouchableOpacity} from 'react-native';
 import AppColors from '../../utils/AppColors';
 import AppHeader from '../../components/AppHeader';
@@ -39,6 +39,7 @@ const pricingDetails = [
 
 const BookingSummary = () => {
   const navigation = useNavigation();
+  const [paymentType, setPaymentType] = useState({id: 1});
 
   return (
     <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
@@ -133,7 +134,9 @@ const BookingSummary = () => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                }}>
+                }}
+                onPress={() => setPaymentType({id: item.id})}
+                >
                 <View>
                   <AppText
                     title={item.title}
@@ -147,7 +150,7 @@ const BookingSummary = () => {
                   />
                 </View>
                 <Fontisto
-                  name={item.id == 2 ? 'radio-btn-passive' : 'radio-btn-active'}
+                  name={paymentType.id === item.id ? 'radio-btn-active' : 'radio-btn-passive'}
                   size={responsiveFontSize(2.5)}
                   color={AppColors.BLUE}
                 />
@@ -200,7 +203,7 @@ const BookingSummary = () => {
 
         <AppButton
           title="Proceed"
-          handlePress={() => navigation.navigate('BookingSummary')}
+          handlePress={() => navigation.navigate('SelectPaymentMethod')}
           // bgColor={AppColors.DARKGRAY}
           // textColor={AppColors.WHITE}
         />
