@@ -1,18 +1,19 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {View, Text, ScrollView, FlatList, TouchableOpacity} from 'react-native';
 import AppColors from '../../utils/AppColors';
 import {useNavigation} from '@react-navigation/native';
 import AppHeader from '../../components/AppHeader';
 import {
-    responsiveFontSize,
+  responsiveFontSize,
   responsiveHeight,
   responsiveWidth,
 } from '../../utils/Responsive_Dimensions';
 import AppText from '../../components/AppTextComps/AppText';
 import LineBreak from '../../components/LineBreak';
-import EvilIcons from 'react-native-vector-icons/EvilIcons'
+import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import AppButton from '../../components/AppButton';
+import CalendarModal from '../../components/CalendarModal';
 
 const datesData = [
   {id: 1, day: 'TUE', date: 'Sep 9', mins: '40 mins'},
@@ -32,8 +33,10 @@ const timesData = [
 
 const DateAndTimeSelection = () => {
   const navigation = useNavigation();
-  const [isSelectedDate, setIsSelectedDate] = useState({id: 0})
-  const [isSelectedTime, setIsSelectedTime] = useState({id: 0})
+  const [isSelectedDate, setIsSelectedDate] = useState({id: 0});
+  const [isSelectedTime, setIsSelectedTime] = useState({id: 0});
+  const [selectedDateFromCalendar, setSelectedDateFromCalendar] = useState('');
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   return (
     <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
@@ -58,35 +61,36 @@ const DateAndTimeSelection = () => {
           horizontal
           ListFooterComponent={
             <TouchableOpacity
-                style={{
-                  backgroundColor: AppColors.WHITE,
-                  borderRadius: 10,
-                  alignItems: 'center',
-                  paddingHorizontal: responsiveWidth(3.4),
-                  paddingVertical: 10,
-                  width: responsiveWidth(16),
-                  height: responsiveHeight(9.5),
-                  gap: 5,
-                }}>
-                     <EvilIcons
-                      name={"calendar"}
-                      size={responsiveFontSize(3)}
-                      color={AppColors.BLACK}
-                      
-                      />
-                     <AppText
-                  title="More Dates"
-                  textSize={1.7}
-                  textColor={AppColors.BLACK}
-                  textFontWeight
-                />
-                </TouchableOpacity>
+              style={{
+                backgroundColor: AppColors.WHITE,
+                borderRadius: 10,
+                alignItems: 'center',
+                paddingHorizontal: responsiveWidth(3.4),
+                paddingVertical: 10,
+                width: responsiveWidth(16),
+                height: responsiveHeight(9.5),
+                gap: 5,
+              }}
+              onPress={() => setShowCalendarModal(true)}
+              >
+              <EvilIcons
+                name={'calendar'}
+                size={responsiveFontSize(3)}
+                color={AppColors.BLACK}
+              />
+              <AppText
+                title="More Dates"
+                textSize={1.7}
+                textColor={AppColors.BLACK}
+                textFontWeight
+              />
+            </TouchableOpacity>
           }
           contentContainerStyle={{gap: 15}}
           renderItem={({item}) => {
             return (
               <TouchableOpacity
-              onPress={() => setIsSelectedDate({id: item.id})}
+                onPress={() => setIsSelectedDate({id: item.id})}
                 style={{
                   backgroundColor: AppColors.WHITE,
                   borderRadius: 10,
@@ -94,12 +98,16 @@ const DateAndTimeSelection = () => {
                   paddingHorizontal: responsiveWidth(3.4),
                   paddingVertical: 10,
                   borderWidth: isSelectedDate.id === item.id ? 2 : 0,
-                  borderColor: AppColors.BLUE
+                  borderColor: AppColors.BLUE,
                 }}>
                 <AppText
                   title={item.day}
                   textSize={1.7}
-                  textColor={isSelectedDate.id === item.id ? AppColors.BLUE : AppColors.DARKGRAY}
+                  textColor={
+                    isSelectedDate.id === item.id
+                      ? AppColors.BLUE
+                      : AppColors.DARKGRAY
+                  }
                   textFontWeight
                 />
                 <LineBreak space={0.3} />
@@ -107,7 +115,11 @@ const DateAndTimeSelection = () => {
                 <AppText
                   title={item.date}
                   textSize={1.5}
-                  textColor={isSelectedDate.id === item.id ? AppColors.BLUE : AppColors.BLACK}
+                  textColor={
+                    isSelectedDate.id === item.id
+                      ? AppColors.BLUE
+                      : AppColors.BLACK
+                  }
                   textFontWeight
                 />
                 <LineBreak space={0.3} />
@@ -115,16 +127,20 @@ const DateAndTimeSelection = () => {
                 <AppText
                   title={item.mins}
                   textSize={1.3}
-                  textColor={isSelectedDate.id === item.id ? AppColors.BLUE : AppColors.DARKGRAY}
+                  textColor={
+                    isSelectedDate.id === item.id
+                      ? AppColors.BLUE
+                      : AppColors.DARKGRAY
+                  }
                 />
               </TouchableOpacity>
             );
           }}
         />
 
-<LineBreak space={3} />
+        <LineBreak space={3} />
 
-<AppText
+        <AppText
           title="Select Time"
           textSize={2.5}
           textColor={AppColors.BLACK}
@@ -148,10 +164,9 @@ const DateAndTimeSelection = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   borderWidth: isSelectedTime.id === item.id ? 2 : 0,
-                  borderColor: AppColors.BLUE
+                  borderColor: AppColors.BLUE,
                 }}
-              onPress={() => setIsSelectedTime({id: item.id})}
-                >
+                onPress={() => setIsSelectedTime({id: item.id})}>
                 <AppText
                   title={item.time}
                   textSize={2}
@@ -159,18 +174,27 @@ const DateAndTimeSelection = () => {
                   textFontWeight
                 />
 
-             {item.offText && <AppText
-                  title={item.offText}
-                  textSize={1.7}
-                  textColor={AppColors.GREEN}
-                  textFontWeight
-                />}
+                {item.offText && (
+                  <AppText
+                    title={item.offText}
+                    textSize={1.7}
+                    textColor={AppColors.GREEN}
+                    textFontWeight
+                  />
+                )}
               </TouchableOpacity>
             );
           }}
         />
 
-<LineBreak space={4} />
+        <CalendarModal
+          visible={showCalendarModal}
+          setVisible={() => setShowCalendarModal(false)}
+          selected={selectedDateFromCalendar}
+          setSelected={setSelectedDateFromCalendar}
+        />
+
+        <LineBreak space={4} />
 
         <AppButton
           title="Confirm Appointment"

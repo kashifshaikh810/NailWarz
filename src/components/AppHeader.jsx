@@ -8,7 +8,7 @@ import AppColors from '../utils/AppColors'
 
 const AppHeader = ({onPress, title}) => {
   return (
-    <View style={{flexDirection: 'row', backgroundColor: AppColors.WHITE, gap: title ? 10 : 0, paddingTop: title ? responsiveHeight(3) : 0, paddingBottom: title ? responsiveHeight(3) : 0,  justifyContent: title ? 'flex-start' : 'space-between', alignItems: 'center', paddingVertical: responsiveHeight(2), paddingHorizontal: responsiveHeight(2)}}>
+    <View style={{flexDirection: 'row', backgroundColor: AppColors.WHITE, gap: title ? 10 : 0, paddingTop: title ? responsiveHeight(3) : 10, paddingBottom: title ? responsiveHeight(3) : 10,  justifyContent: title ? 'flex-start' : 'space-between', alignItems: 'center', paddingVertical: responsiveHeight(2), paddingHorizontal: responsiveHeight(2)}}>
         <TouchableOpacity onPress={onPress}>
       <MaterialIcons
                       name={"arrow-back-ios"}

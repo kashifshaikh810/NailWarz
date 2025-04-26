@@ -26,14 +26,15 @@ import AppButton from '../../components/AppButton';
 import Entypo from 'react-native-vector-icons/Entypo';
 import SaloonsCard from '../../components/SaloonsCard';
 import SaloonsArray from '../../utils/SaloonsArray';
+import { useNavigation } from '@react-navigation/native';
+
 const Home = () => {
   const [serviceSelected, setServiceSelect] = useState(0);
   const Servies = [
     {id: 1, name: 'Dip Powder Nails', icon: APPImages.COMB},
     {id: 2, name: 'Gel Manicure/Pedicure', icon: APPImages.FACIAL},
   ];
-
-
+  const navigation = useNavigation();
 
   return (
     <BackgroundScreen>
@@ -43,9 +44,8 @@ const Home = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
           paddingHorizontal: 10,
-
         }}>
-        <View style={{flexDirection: 'row'}}>
+        <TouchableOpacity style={{flexDirection: 'row'}} onPress={() => navigation.navigate('SearchLocation')}>
           <EvilIcons
             name={'location'}
             color={AppColors.BLUE}
@@ -55,7 +55,7 @@ const Home = () => {
             <AppText title="Location" textSize={2} />
             <AppText title="Lakewood, California" textSize={2} textFontWeight />
           </View>
-        </View>
+        </TouchableOpacity>
 
         <Ionicons
           name={'notifications-outline'}

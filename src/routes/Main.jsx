@@ -8,6 +8,7 @@ import DateAndTimeSelection from '../screens/main/DateAndTimeSelection';
 import BookingSummary from '../screens/main/BookingSummary';
 import SelectPaymentMethod from '../screens/main/SelectPaymentMethod';
 import DownloadReceipt from '../screens/main/DownloadReceipt';
+import SearchLocation from '../screens/main/SearchLocation';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -22,6 +23,7 @@ const Main = () => {
       <Tab.Screen name="BookingSummary" component={BookingSummary} />
       <Tab.Screen name="SelectPaymentMethod" component={SelectPaymentMethod} />
       <Tab.Screen name="DownloadReceipt" component={DownloadReceipt} />
+      <Tab.Screen name="SearchLocation" component={SearchLocation} />
       <Stack.Screen name="Profile" component={MyTabs} />
     </Stack.Navigator>
   );
