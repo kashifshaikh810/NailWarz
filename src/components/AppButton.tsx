@@ -27,7 +27,7 @@ const AppButton = ({title, handlePress, bgColor, textColor, borderWidth, borderC
       }}>
       <AppText
         textColor={textColor ? textColor : AppColors.WHITE}
-        textSize={2.5}
+        textSize={2.4}
         title={title ? title : "Continue"}
         textFontWeight
       />
