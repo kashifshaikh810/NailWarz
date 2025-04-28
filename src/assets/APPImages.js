@@ -5,6 +5,5 @@ export default APPImages = {
     COMB: require('./comb.png'),
     CENTRALSALOONS: require('./CentralSalon.png'),
     NAILS: require('./nails.png'),
-
-
+    map: require('./Map.png'),
 }

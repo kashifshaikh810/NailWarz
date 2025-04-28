@@ -26,7 +26,7 @@ import AppButton from '../../components/AppButton';
 import Entypo from 'react-native-vector-icons/Entypo';
 import SaloonsCard from '../../components/SaloonsCard';
 import SaloonsArray from '../../utils/SaloonsArray';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 
 const Home = () => {
   const [serviceSelected, setServiceSelect] = useState(0);
@@ -45,7 +45,9 @@ const Home = () => {
           justifyContent: 'space-between',
           paddingHorizontal: 10,
         }}>
-        <TouchableOpacity style={{flexDirection: 'row'}} onPress={() => navigation.navigate('SearchLocation')}>
+        <TouchableOpacity
+          style={{flexDirection: 'row'}}
+          onPress={() => navigation.navigate('SearchLocation')}>
           <EvilIcons
             name={'location'}
             color={AppColors.BLUE}
@@ -64,19 +66,18 @@ const Home = () => {
         />
       </View>
 
-        <View style={{marginTop:20}}>
-      <AppTextInput
-        containerBg={AppColors.INPUTBG}
-        inputPlaceHolder={'Enter address or city name'}
-
-        logo={
-          <AntDesign
-            name={'search1'}
-            size={responsiveFontSize(2)}
-            color={AppColors.BLACK}
-          />
-        }
-      />
+      <View style={{marginTop: 20}}>
+        <AppTextInput
+          containerBg={AppColors.INPUTBG}
+          inputPlaceHolder={'Enter address or city name'}
+          logo={
+            <AntDesign
+              name={'search1'}
+              size={responsiveFontSize(2)}
+              color={AppColors.BLACK}
+            />
+          }
+        />
       </View>
 
       <ImageBackground
@@ -87,7 +88,7 @@ const Home = () => {
           borderRadius: 15,
           overflow: 'hidden',
           padding: 20,
-          marginTop:20,
+          marginTop: 20,
         }}>
         <LinearGradient
           colors={[
@@ -103,7 +104,8 @@ const Home = () => {
             width: responsiveWidth(90),
             height: responsiveHeight(20),
             opacity: 0.5,
-          }} />
+          }}
+        />
         <View style={{position: 'absolute', zIndex: 2, padding: 20}}>
           <AppText
             title="Morning Special!"
@@ -189,7 +191,7 @@ const Home = () => {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginTop:20,
+          marginTop: 20,
         }}>
         <AppText
           title="Nearby Salons"
@@ -198,27 +200,39 @@ const Home = () => {
           textFontWeight
         />
 
-        <View style={{flexDirection:'row', alignItems:'center', gap:3}}>
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 3}}>
           <Entypo
-          name={'location'}
-          color={AppColors.BLUE}
-          size={responsiveFontSize(2)}
+            name={'location'}
+            color={AppColors.BLUE}
+            size={responsiveFontSize(2)}
           />
-          <AppText title="View on Map" textColor={AppColors.BLUE} textSize={2} />
+          <TouchableOpacity
+            onPress={() =>  navigation.navigate('MapView')}
+          >
+          <AppText
+            title="View on Map"
+            textColor={AppColors.BLUE}
+            textSize={2}
+            />
+            </TouchableOpacity>
         </View>
       </View>
 
-
       <FlatList
-      data={SaloonsArray}
-      contentContainerStyle={{gap:10}}
-      renderItem={({item})=>{
-
-        return(
-          <SaloonsCard title={item.title} KM={item.KM}  Rating={item.Rating} TotalNoOfRating={item.TotalNoOfRating} img={item.img}  location={item.location}/>
-        );
-      }}
-
+        data={SaloonsArray}
+        contentContainerStyle={{gap: 10}}
+        renderItem={({item}) => {
+          return (
+            <SaloonsCard
+              title={item.title}
+              KM={item.KM}
+              Rating={item.Rating}
+              TotalNoOfRating={item.TotalNoOfRating}
+              img={item.img}
+              location={item.location}
+            />
+          );
+        }}
       />
     </BackgroundScreen>
   );
