@@ -28,7 +28,7 @@ const posts = [
     time: '7h',
     desc: 'Lorem ipsum simply dummy amet, consectetur sadipscing elitr, sed',
     profImg: APPImages.NAILS,
-    saloonImg: APPImages.NAILS,
+    saloonImg: APPImages.nailsTwo,
     isPost: false,
   },
   {
@@ -37,7 +37,7 @@ const posts = [
     time: '7h',
     desc: 'Lorem ipsum simply dummy amet, consectetur sadipscing elitr, sed',
     profImg: APPImages.NAILS,
-    saloonImg: APPImages.NAILS,
+    saloonImg: APPImages.nailsTwo,
     isPost: true,
   },
 ];
@@ -115,7 +115,7 @@ const Warz = () => {
                         style={{
                           flexDirection: 'row',
                           gap: 7,
-                          alignItems: 'center',
+                          alignItems: 'flex-end',
                         }}>
                         <AppText
                           title={item.name}
@@ -146,22 +146,39 @@ const Warz = () => {
 
                 <LineBreak space={2} />
 
-                <AppText
-                  title={item.desc}
-                  textColor={AppColors.BLACK}
-                  textSize={1.4}
-                />
+                <View
+                  style={
+                    item.isPost
+                      ? {
+                          borderWidth: 1,
+                          borderColor: AppColors.BLUE,
+                          borderRadius: 10,
+                        }
+                      : {}
+                  }>
+                  <LineBreak space={1} />
+                  <View
+                    style={
+                      item.isPost ? {paddingHorizontal: responsiveWidth(3)} : {}
+                    }>
+                    <AppText
+                      title={item.desc}
+                      textColor={AppColors.BLACK}
+                      textSize={1.4}
+                    />
+                  </View>
 
-                <LineBreak space={1} />
+                  <LineBreak space={1} />
 
-                <Image
-                  source={item.saloonImg}
-                  style={{
-                    borderRadius: 10,
-                    width: responsiveWidth(85),
-                    height: responsiveHeight(20),
-                  }}
-                />
+                  <Image
+                    source={item.saloonImg}
+                    style={{
+                      borderRadius: 10,
+                      width: responsiveWidth(83),
+                      height: responsiveHeight(20),
+                    }}
+                  />
+                </View>
 
                 <LineBreak space={1.5} />
 
