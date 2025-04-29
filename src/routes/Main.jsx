@@ -23,6 +23,10 @@ import {
   responsiveWidth,
 } from '../utils/Responsive_Dimensions';
 import APPImages from '../assets/APPImages';
+import Community from '../screens/main/warz/Community';
+import BattlePoll from '../screens/main/warz/BattlePoll';
+import LiveVotingScores from '../screens/main/warz/LiveVotingScores';
+import FinalScoreBoard from '../screens/main/warz/FinalScoreBoard';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -41,6 +45,10 @@ const Main = () => {
       <Tab.Screen name="SelectPaymentMethod" component={SelectPaymentMethod} />
       <Tab.Screen name="DownloadReceipt" component={DownloadReceipt} />
       <Tab.Screen name="SearchLocation" component={SearchLocation} />
+      <Tab.Screen name="Community" component={Community} />
+      <Tab.Screen name="BattlePoll" component={BattlePoll} />
+      <Tab.Screen name="LiveVotingScores" component={LiveVotingScores} />
+      <Tab.Screen name="FinalScoreBoard" component={FinalScoreBoard} />
       <Tab.Screen name="MapView" component={MapView} />
       <Stack.Screen name="Profile" component={MyTabs} />
     </Stack.Navigator>

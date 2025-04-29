@@ -19,6 +19,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import APPImages from '../../../assets/APPImages';
 import LineBreak from '../../../components/LineBreak';
 import AppButton from '../../../components/AppButton';
+import {useNavigation} from '@react-navigation/native';
 
 const posts = [
   {
@@ -28,6 +29,7 @@ const posts = [
     desc: 'Lorem ipsum simply dummy amet, consectetur sadipscing elitr, sed',
     profImg: APPImages.NAILS,
     saloonImg: APPImages.NAILS,
+    isPost: false,
   },
   {
     id: 2,
@@ -36,12 +38,15 @@ const posts = [
     desc: 'Lorem ipsum simply dummy amet, consectetur sadipscing elitr, sed',
     profImg: APPImages.NAILS,
     saloonImg: APPImages.NAILS,
+    isPost: true,
   },
 ];
 
 const Warz = () => {
+  const navigation = useNavigation();
+
   return (
-    <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
+    <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
       <View
         style={{
           paddingHorizontal: responsiveWidth(4),
@@ -83,6 +88,11 @@ const Warz = () => {
                   paddingVertical: responsiveHeight(2),
                   borderColor: AppColors.PEACHCOLOUR,
                   borderRadius: 10,
+                }}
+                onPress={() => {
+                  if (item.isPost) {
+                    navigation.navigate('Community');
+                  }
                 }}>
                 <View
                   style={{
@@ -127,7 +137,7 @@ const Warz = () => {
                   </View>
 
                   <AppText
-                    title={'poll'}
+                    title={item.isPost ? 'post' : 'poll'}
                     textColor={AppColors.BTNCOLOURS}
                     textSize={1.7}
                     textFontWeight
@@ -155,7 +165,12 @@ const Warz = () => {
 
                 <LineBreak space={1.5} />
 
-                <AppButton title={`VOTE`} handlePress={() => {}} />
+                {!item.isPost && (
+                  <AppButton
+                    title={`VOTE`}
+                    handlePress={() => navigation.navigate('BattlePoll')}
+                  />
+                )}
               </TouchableOpacity>
             );
           }}

@@ -6,4 +6,7 @@ export default APPImages = {
     CENTRALSALOONS: require('./CentralSalon.png'),
     NAILS: require('./nails.png'),
     map: require('./Map.png'),
+    nailsTwo: require('./nailTwo.png'),
+    default_user: require('./default_user.png'),
+    counting: require('./OBJECTS.png'),
 }
