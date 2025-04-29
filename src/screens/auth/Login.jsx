@@ -17,7 +17,10 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import Logo from '../../components/AppTextComps/Logo';
 import APPImages from '../../assets/APPImages';
 import LinearGradient from 'react-native-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+
 const Login = () => {
+    const navigation = useNavigation();
   return (
 
       <LinearGradient  colors={[ AppColors.WHITE, AppColors.BLACK]} style={{flex:1, padding:20}} >
@@ -47,8 +50,7 @@ const Login = () => {
         
       />
 
-
-        <AppButton />
+        <AppButton handlePress={() => navigation.navigate('Main')} />
 
         <AppText title='Or' textAlignment={'center'} textSize={2} textColor={AppColors.WHITE}/>
 

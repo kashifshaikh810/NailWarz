@@ -151,6 +151,7 @@ const profileMenus = [
     mrgnTop: 0,
     bottomWidth: 0,
     borderBottomRadius: 10,
+    navTo: 'Auth',
   },
 ];
 
@@ -214,7 +215,13 @@ const Profile = () => {
                   borderBottomRightRadius: item.borderBottomRadius
                     ? item.borderBottomRadius
                     : 0,
-                }}>
+                }}
+                onPress={() => {
+                  if(item.navTo){
+                    navigation.navigate(item.navTo)
+                  }
+                }}
+                >
                 <View
                   style={{
                     borderBottomColor: AppColors.DARKGRAY,
