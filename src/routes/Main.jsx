@@ -27,6 +27,7 @@ import Community from '../screens/main/warz/Community';
 import BattlePoll from '../screens/main/warz/BattlePoll';
 import LiveVotingScores from '../screens/main/warz/LiveVotingScores';
 import FinalScoreBoard from '../screens/main/warz/FinalScoreBoard';
+import EditProfile from '../screens/main/profile/EditProfile';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -49,6 +50,7 @@ const Main = () => {
       <Tab.Screen name="BattlePoll" component={BattlePoll} />
       <Tab.Screen name="LiveVotingScores" component={LiveVotingScores} />
       <Tab.Screen name="FinalScoreBoard" component={FinalScoreBoard} />
+      <Tab.Screen name="EditProfile" component={EditProfile} />
       <Tab.Screen name="MapView" component={MapView} />
       <Stack.Screen name="Profile" component={MyTabs} />
     </Stack.Navigator>
