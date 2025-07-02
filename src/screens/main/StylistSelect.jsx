@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -22,42 +22,48 @@ import AppText from '../../components/AppTextComps/AppText';
 import APPImages from '../../assets/APPImages';
 import LineBreak from '../../components/LineBreak';
 import AppButton from '../../components/AppButton';
+import {ImageBaseUrl} from '../../BaseUrl';
+import {ShowToast} from '../../GlobalFunctions/auth';
 
-const cardData = [
-  {
-    id: 1,
-    profImg: APPImages.CENTRALSALOONS,
-    name: 'John Doe',
-    designation: 'Nail Technician',
-    ratingStatus: 'Top Rated',
-  },
-  {
-    id: 2,
-    profImg: APPImages.CENTRALSALOONS,
-    name: 'Anna Lee',
-    designation: 'Nail Technician',
-    ratingStatus: 'Top Rated',
-  },
-  {
-    id: 3,
-    profImg: APPImages.CENTRALSALOONS,
-    name: 'Ella Ford',
-    designation: 'Nail Technician',
-    ratingStatus: '',
-  },
-  {
-    id: 4,
-    profImg: APPImages.CENTRALSALOONS,
-    name: 'Marsh Donnell',
-    designation: 'Nail Technician',
-    ratingStatus: '',
-  },
-];
+// const cardData = [
+//   {
+//     id: 1,
+//     profImg: APPImages.CENTRALSALOONS,
+//     name: 'John Doe',
+//     designation: 'Nail Technician',
+//     ratingStatus: 'Top Rated',
+//   },
+//   {
+//     id: 2,
+//     profImg: APPImages.CENTRALSALOONS,
+//     name: 'Anna Lee',
+//     designation: 'Nail Technician',
+//     ratingStatus: 'Top Rated',
+//   },
+//   {
+//     id: 3,
+//     profImg: APPImages.CENTRALSALOONS,
+//     name: 'Ella Ford',
+//     designation: 'Nail Technician',
+//     ratingStatus: '',
+//   },
+//   {
+//     id: 4,
+//     profImg: APPImages.CENTRALSALOONS,
+//     name: 'Marsh Donnell',
+//     designation: 'Nail Technician',
+//     ratingStatus: '',
+//   },
+// ];
 
-const StylistSelect = () => {
+const StylistSelect = ({route}) => {
   const navigation = useNavigation();
-  const [isSelectedProfile, setIsSelectedProfile] = useState({});
-
+  const [selectedTechnician, setSelectedTechnician] = useState(null);
+  const [technicianName, setTechnicianName] = useState();
+  const {data} = route?.params;
+  // technicians, saloonId, serviceName, price, serviceId
+  console.log('selectedTechnician', selectedTechnician);
+  console.log('technicianName', technicianName);
   return (
     <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
       <AppHeader
@@ -75,7 +81,7 @@ const StylistSelect = () => {
             flexDirection: 'row',
             paddingLeft: responsiveWidth(10),
             borderRadius: 10,
-            borderWidth: isSelectedProfile?.id ? 2 : 0,
+            borderWidth: 2,
             borderColor: AppColors.BLUE,
             gap: responsiveWidth(8),
             paddingHorizontal: responsiveWidth(5),
@@ -106,12 +112,15 @@ const StylistSelect = () => {
         <LineBreak space={2} />
 
         <FlatList
-          data={cardData}
+          data={data?.technicians}
           ItemSeparatorComponent={() => <LineBreak space={2} />}
           renderItem={({item}) => {
             return (
               <TouchableOpacity
-                onPress={() => setIsSelectedProfile({id: item.id})}
+                onPress={() => {
+                  setSelectedTechnician(item._id);
+                  setTechnicianName(item.fullName);
+                }}
                 style={{
                   flexDirection: 'row',
                   paddingLeft: responsiveWidth(5),
@@ -119,29 +128,41 @@ const StylistSelect = () => {
                   gap: responsiveWidth(5),
                   paddingVertical: responsiveHeight(3),
                   alignItems: 'center',
-                  backgroundColor: isSelectedProfile.id === item.id ? AppColors.BTNCOLOURS : AppColors.WHITE,
+                  backgroundColor:
+                    selectedTechnician === item._id
+                      ? AppColors.BTNCOLOURS
+                      : AppColors.WHITE,
                 }}>
                 <Image
-                  source={item.profImg}
+                  source={{uri: `${ImageBaseUrl}${item?.image}`}}
                   style={{
                     width: responsiveWidth(15),
                     height: responsiveHeight(8),
+                    borderRadius: responsiveHeight(1),
                   }}
                 />
                 <View>
                   <AppText
-                    title={item.name}
+                    title={item?.fullName}
                     textSize={2.2}
-                    textColor={isSelectedProfile.id === item.id ? AppColors.WHITE : AppColors.BLACK}
+                    textColor={
+                      selectedTechnician === item._id
+                        ? AppColors.WHITE
+                        : AppColors.BLACK
+                    }
                   />
 
                   <AppText
                     title={item.designation}
                     textSize={1.9}
-                    textColor={isSelectedProfile.id === item.id ? AppColors.WHITE : AppColors.DARKGRAY}
+                    textColor={
+                      selectedTechnician === item._id
+                        ? AppColors.WHITE
+                        : AppColors.DARKGRAY
+                    }
                   />
                 </View>
-                <View
+                {/* <View
                   style={{
                     flexDirection: 'row',
                     flex: 1,
@@ -157,7 +178,9 @@ const StylistSelect = () => {
                       alignItems: 'center',
                       backgroundColor: item.ratingStatus
                         ? AppColors.PEACHCOLOUR
-                        : isSelectedProfile.id === item.id ? AppColors.BTNCOLOURS : AppColors.WHITE,
+                        : isSelectedProfile.id === item.id
+                        ? AppColors.BTNCOLOURS
+                        : AppColors.WHITE,
                       gap: 10,
                     }}>
                     {item.ratingStatus && (
@@ -173,7 +196,7 @@ const StylistSelect = () => {
                       textColor={AppColors.BLACK}
                     />
                   </View>
-                </View>
+                </View> */}
               </TouchableOpacity>
             );
           }}
@@ -183,9 +206,19 @@ const StylistSelect = () => {
 
         <AppButton
           title="Select & Continue"
-          handlePress={() => navigation.navigate('DateAndTimeSelection')}
-          // bgColor={AppColors.DARKGRAY}
-          // textColor={AppColors.WHITE}
+          handlePress={() => {
+            if (selectedTechnician) {
+              navigation.navigate('DateAndTimeSelection', {
+                data: {
+                  ...data,
+                  selectedTechnician,
+                  technicianName,
+                },
+              });
+            } else {
+              return ShowToast('error', 'Plz Select A Stylist To Proceed');
+            }
+          }}
         />
       </View>
     </ScrollView>

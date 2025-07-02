@@ -3,6 +3,7 @@ import {View, Text, TouchableOpacity} from 'react-native';
 import React from 'react';
 import AppColors from '../utils/AppColors';
 import AppText from './AppTextComps/AppText';
+import { responsiveWidth } from '../utils/Responsive_Dimensions';
 
 type props = {
   title?: any;
@@ -11,8 +12,9 @@ type props = {
   handlePress?: () => void;
   borderWidth?: any,
   borderColor?: any,
+  width?: number,
 };
-const AppButton = ({title, handlePress, bgColor, textColor, borderWidth, borderColor}: props) => {
+const AppButton = ({title,width, handlePress, bgColor, textColor, borderWidth, borderColor}: props) => {
   return (
     <TouchableOpacity
       onPress={handlePress}
@@ -24,6 +26,7 @@ const AppButton = ({title, handlePress, bgColor, textColor, borderWidth, borderC
         borderRadius: 10,
         borderColor: borderColor ? borderColor : null,
         borderWidth: borderWidth ? borderWidth : 0,
+        width:responsiveWidth(width),
       }}>
       <AppText
         textColor={textColor ? textColor : AppColors.WHITE}

@@ -28,14 +28,17 @@ import BattlePoll from '../screens/main/warz/BattlePoll';
 import LiveVotingScores from '../screens/main/warz/LiveVotingScores';
 import FinalScoreBoard from '../screens/main/warz/FinalScoreBoard';
 import EditProfile from '../screens/main/profile/EditProfile';
+import CreatePost from '../screens/main/warz/CreatePost';
+import AllReviews from '../screens/main/AllReviews';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 const Main = () => {
   return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
+    <Stack.Navigator  screenOptions={{headerShown: false}}>
       <Stack.Screen name="Home" component={MyTabs} />
+      <Stack.Screen name="CreatePost" component={CreatePost} />
       <Tab.Screen name="HomeDetails" component={HomeDetails} />
       <Tab.Screen name="StylistSelect" component={StylistSelect} />
       <Tab.Screen
@@ -43,6 +46,7 @@ const Main = () => {
         component={DateAndTimeSelection}
       />
       <Tab.Screen name="BookingSummary" component={BookingSummary} />
+      <Tab.Screen name="AllReviews" component={AllReviews} />
       <Tab.Screen name="SelectPaymentMethod" component={SelectPaymentMethod} />
       <Tab.Screen name="DownloadReceipt" component={DownloadReceipt} />
       <Tab.Screen name="SearchLocation" component={SearchLocation} />

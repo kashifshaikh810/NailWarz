@@ -27,6 +27,9 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {useDispatch, useSelector} from 'react-redux';
+import {clearToken} from '../../../Redux/Slices';
+import {BaseUrl, ImageBaseUrl} from '../../../BaseUrl';
 
 const profileMenus = [
   {
@@ -157,6 +160,8 @@ const profileMenus = [
 
 const Profile = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {userData} = useSelector(state => state.user);
   return (
     <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader onPress={() => navigation.goBack()} title="Profile" />
@@ -173,12 +178,16 @@ const Profile = () => {
               alignItems: 'center',
             }}>
             <Image
-              source={APPImages.nailsTwo}
+              source={
+                userData?.image
+                  ? {uri: `${ImageBaseUrl}${userData?.image}`}
+                  : APPImages.dummyImg
+              }
               style={{width: 100, height: 100, borderRadius: 100}}
             />
           </View>
           <AppText
-            title={'Charles James'}
+            title={userData?.username}
             textColor={AppColors.BLACK}
             textSize={2.5}
             textFontWeight
@@ -217,11 +226,14 @@ const Profile = () => {
                     : 0,
                 }}
                 onPress={() => {
-                  if(item.navTo){
-                    navigation.navigate(item.navTo)
+                  if (item.title === 'Logout') {
+                    dispatch(clearToken());
+                    return;
                   }
-                }}
-                >
+                  if (item.navTo) {
+                    navigation.navigate(item.navTo);
+                  }
+                }}>
                 <View
                   style={{
                     borderBottomColor: AppColors.DARKGRAY,

@@ -7,8 +7,9 @@ import {
 } from '../utils/Responsive_Dimensions';
 import AppColors from '../utils/AppColors';
 import AppText from './AppTextComps/AppText';
+import { ImageBaseUrl } from '../BaseUrl';
 
-const PointesProfile = ({item}) => {
+const PointesProfile = ({item,index}) => {
   return (
     <View
       style={{
@@ -22,17 +23,17 @@ const PointesProfile = ({item}) => {
       }}>
       <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
         <AppText
-          title={`${item.id}-`}
+          title={`${index}-`}
           textColor={AppColors.BLACK}
           textSize={2}
           textFontWeight
         />
         <Image
-          source={item.profImg}
+          source={{uri:`${ImageBaseUrl}${item?.voter_id.image}`}}
           style={{width: 40, height: 40, borderRadius: 100}}
         />
         <AppText
-          title={item.username}
+          title={item?.voter_id.username}
           textColor={AppColors.BLACK}
           textSize={2}
           textFontWeight
@@ -40,7 +41,7 @@ const PointesProfile = ({item}) => {
       </View>
       <View style={{paddingHorizontal: responsiveWidth(2)}}>
         <AppText
-          title={item.numOfScore}
+          title={item?.vote}
           textColor={AppColors.BLACK}
           textSize={2}
           textFontWeight

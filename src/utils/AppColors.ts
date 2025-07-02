@@ -17,6 +17,7 @@ const AppColors: Colors = {
     WHITE: "#FFFFFF",
     BTNCOLOURS: "#C11111",
     LIGHTGRAY: "#D9D9D9",
+    LIGHTGRAY2:"#58575C",
     BLUE: "#001AB0",
     DARKGRAY: "#939393",
     PEACHCOLOUR: "#F7D794",

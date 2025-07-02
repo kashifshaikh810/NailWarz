@@ -1,6 +1,14 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
-import {View, Text, ScrollView, FlatList, TouchableOpacity} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import AppColors from '../../utils/AppColors';
 import AppHeader from '../../components/AppHeader';
 import {useNavigation} from '@react-navigation/native';
@@ -15,64 +23,137 @@ import {
 } from '../../utils/Responsive_Dimensions';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import AppButton from '../../components/AppButton';
+import {createBooking, getSaloonById} from '../../GlobalFunctions';
+import moment from 'moment';
+import {useSelector} from 'react-redux';
+import {ShowToast} from '../../GlobalFunctions/auth';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
-const bookingDetails = [
-  {id: 1, title: 'Date', date: 'Wed, Sep 10 at 9:30 AM'},
-  {id: 2, title: 'Stylist', date: 'Any stylist - 40 Mins'},
-];
+// const pricingDetails = [
+//   {id: 1, title: 'Dip Powder Nails', amount: '$10.00'},
+//   {id: 2, title: 'Dip Powder Nails', amount: '$5.00'},
+//   {id: 3, title: 'Discount', amount: '$3.00'},
+//   {id: 4, title: 'Total', amount: '$12.00'},
+// ];
 
-const paymentDetails = [
-  {id: 1, title: 'Pay Online Now', subTitle: 'Secure your booking instantly'},
-  {
-    id: 2,
-    title: 'Pay at Salon',
-    subTitle: 'Settle payment after your appointment',
-  },
-];
-
-const pricingDetails = [
-  {id: 1, title: 'Dip Powder Nails', amount: '$10.00'},
-  {id: 2, title: 'Dip Powder Nails', amount: '$5.00'},
-  {id: 3, title: 'Discount', amount: '$3.00'},
-  {id: 4, title: 'Total', amount: '$12.00'},
-];
-
-const BookingSummary = () => {
+const BookingSummary = ({route}) => {
   const navigation = useNavigation();
-  const [paymentType, setPaymentType] = useState({id: 1});
+  const [paymentType, setPaymentType] = useState({id: 2});
+  const [saloonData, setSaloonData] = useState();
+  const {_id} = useSelector(state => state?.user?.userData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [saloonLoading, setSaloonLoading] = useState(false);
+  const [visibleConfirmationModal, setVisibleConfirmationModal] = useState({
+    id: 0,
+  });
+  const {
+    saloonId,
+    selectedTechnician,
+    serviceId,
+    selectedBookingDate,
+    technicianName,
+    serviceName,
+    price,
+    selectedTime,
+    selectedDate,
+    selectedDay,
+  } = route?.params?.data;
+  const time12hr = selectedTime?.value;
+  const time24hr = moment(time12hr, ['h:mm A']).format('HH:mm');
+  const [bookingId, setBookingId] = useState();
+  console.log('saloonData', saloonData);
+  const bookingDetails = [
+    {
+      id: 1,
+      title: 'Date',
+      date: `${selectedDay} ${selectedDate} at ${selectedTime?.value}`,
+    },
+    {id: 2, title: 'Stylist', date: `${technicianName} - 30 Mins`},
+  ];
 
+  const paymentDetails = [
+    {id: 1, title: 'Pay Online Now', subTitle: 'Secure your booking instantly'},
+    {
+      id: 2,
+      title: 'Pay at Salon',
+      subTitle: 'Settle payment after your appointment',
+    },
+  ];
+  const getSaloonByIdHandler = async () => {
+    setSaloonLoading(true);
+    const response = await getSaloonById(saloonId);
+    setSaloonLoading(false);
+    setSaloonData(response.data);
+  };
+  const createBookingHandler = async () => {
+    setIsLoading(true);
+    try {
+      const response = await createBooking(
+        _id,
+        saloonId,
+        serviceId,
+        selectedTechnician,
+        selectedBookingDate,
+        time24hr,
+      );
+      setIsLoading(false);
+      console.log('response', response);
+
+      if (response?.success) {
+        setVisibleConfirmationModal(true);
+        setBookingId(response?.data?._id);
+        // return ShowToast('success', response.message);
+      } else {
+        return ShowToast('error', response.message);
+      }
+    } catch (err) {
+      ShowToast('error', err?.response?.data?.message);
+      setIsLoading(false);
+      throw err;
+    }
+  };
+  useEffect(() => {
+    getSaloonByIdHandler();
+  }, []);
   return (
     <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
       <AppHeader onPress={() => navigation.goBack()} title="Booking Summary" />
-
       <LineBreak space={1.5} />
-
-      <FlatList
-        data={[
-          {
-            id: 1,
-            img: APPImages.NAILS,
-            title: 'Dip Powder Nails',
-            location: 'Los Angeles, California',
-            KM: 2,
-            Rating: 4.7,
-            TotalNoOfRating: 321,
-          },
-        ]}
-        contentContainerStyle={{gap: 10}}
-        renderItem={({item}) => {
-          return (
-            <SaloonsCard
-              title={item.title}
-              KM={item.KM}
-              Rating={item.Rating}
-              TotalNoOfRating={item.TotalNoOfRating}
-              img={item.img}
-              location={item.location}
-            />
-          );
-        }}
-      />
+      {saloonLoading ? (
+        <View style={{height: responsiveHeight(10), justifyContent: 'center'}}>
+          <ActivityIndicator size={40} color={AppColors.BTNCOLOURS} />
+        </View>
+      ) : (
+        <FlatList
+          data={[
+            {
+              id: 1,
+              img: saloonData?.image[0],
+              title: saloonData?.salonName,
+              location: saloonData?.bussinessAddress,
+              KM: 2,
+              Rating: saloonData?.avgRating,
+              TotalNoOfRating: saloonData?.totalReviews,
+            },
+          ]}
+          contentContainerStyle={{gap: 10}}
+          renderItem={({item}) => {
+            return (
+              <SaloonsCard
+                showDeleteCard={false}
+                title={item.title}
+                KM={item.KM}
+                textWidth={55}
+                saloonId={saloonId}
+                Rating={item.Rating}
+                TotalNoOfRating={item.TotalNoOfRating}
+                img={item.img}
+                location={item.location}
+              />
+            );
+          }}
+        />
+      )}
 
       <LineBreak space={2} />
 
@@ -135,8 +216,10 @@ const BookingSummary = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                 }}
-                onPress={() => setPaymentType({id: item.id})}
-                >
+                onPress={() => {
+                  item?.id === 1 ? Alert.alert('Under Development') : null;
+                  setPaymentType({id: 2});
+                }}>
                 <View>
                   <AppText
                     title={item.title}
@@ -150,7 +233,11 @@ const BookingSummary = () => {
                   />
                 </View>
                 <Fontisto
-                  name={paymentType.id === item.id ? 'radio-btn-active' : 'radio-btn-passive'}
+                  name={
+                    paymentType.id === item.id
+                      ? 'radio-btn-active'
+                      : 'radio-btn-passive'
+                  }
                   size={responsiveFontSize(2.5)}
                   color={AppColors.BLUE}
                 />
@@ -159,56 +246,102 @@ const BookingSummary = () => {
           }}
         />
 
-<LineBreak space={4} />
+        <LineBreak space={4} />
 
-<AppText
-  title="Price Details"
-  textSize={2.5}
-  textColor={AppColors.BLACK}
-  textFontWeight
-/>
+        <AppText
+          title="Price Details"
+          textSize={2.5}
+          textColor={AppColors.BLACK}
+          textFontWeight
+        />
 
-<LineBreak space={1.5} />
+        <LineBreak space={1.5} />
 
-<FlatList
-  data={pricingDetails}
-  contentContainerStyle={{gap: 10}}
-  renderItem={({item}) => {
-    return (
-      <TouchableOpacity
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: item.title === 'Total' ? 10 : 0,
-        }}>
+        {/* <FlatList
+          data={pricingDetails}
+          contentContainerStyle={{gap: 10}}
+          renderItem={({item}) => {
+            return (
+            );
+          }}
+        /> */}
+
+        <TouchableOpacity
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: 10,
+          }}>
           <AppText
-            title={item.title}
-            textSize={item.title === 'Total' ? 2.2 : 1.7}
-            textColor={item.title === 'Total' ? AppColors.BLACK : AppColors.DARKGRAY}
-            textFontWeight={item.title === 'Total' ? true : false}
+            title={serviceName}
+            textSize={2}
+            textColor={AppColors.DARKGRAY}
+            textFontWeight={true}
           />
           <AppText
-            title={item.amount}
-            textSize={item.title === 'Total' ? 2.2 : 1.7}
-            textColor={item.title === 'Total' ? AppColors.BLACK : AppColors.DARKGRAY}
-            textFontWeight={item.title === 'Total' ? true : false}
+            title={`$${price}`}
+            textSize={2}
+            textColor={AppColors.DARKGRAY}
+            textFontWeight={true}
           />
-      </TouchableOpacity>
-    );
-  }}
-/>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: 20,
+          }}>
+          <AppText
+            title={'Total'}
+            textSize={2.5}
+            textColor={AppColors.BLACK}
+            textFontWeight={true}
+          />
+          <AppText
+            title={`$${price}`}
+            textSize={2.5}
+            textColor={AppColors.BLACK}
+            textFontWeight={true}
+          />
+        </TouchableOpacity>
 
-<LineBreak space={4} />
+        <LineBreak space={4} />
+
+        <ConfirmationModal
+          iconName={'check'}
+          title={'You appointment is confirmed!'}
+          subTitle={
+            'Thank you for showing your interest. We look forward to seeing you soon.'
+          }
+          buttonOneTitle={'View Receipt'}
+          buttonTwoTitle={'Back to Home'}
+          handleBackPress={() => {
+            navigation.navigate('Home');
+            setVisibleConfirmationModal(false);
+          }}
+          visible={visibleConfirmationModal}
+          setVisible={() => {
+            navigation.navigate('DownloadReceipt', {bookingId});
+            setVisibleConfirmationModal(false);
+          }}
+        />
 
         <AppButton
-          title="Proceed"
-          handlePress={() => navigation.navigate('SelectPaymentMethod')}
+          title={
+            isLoading ? (
+              <ActivityIndicator size={'large'} color={AppColors.WHITE} />
+            ) : (
+              'Proceed'
+            )
+          }
+          handlePress={createBookingHandler}
           // bgColor={AppColors.DARKGRAY}
           // textColor={AppColors.WHITE}
         />
 
-<LineBreak space={2} />
+        <LineBreak space={2} />
       </View>
     </ScrollView>
   );

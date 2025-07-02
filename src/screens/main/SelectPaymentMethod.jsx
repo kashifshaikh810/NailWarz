@@ -30,7 +30,9 @@ const timesData = [
 const SelectPaymentMethod = () => {
   const navigation = useNavigation();
   const [isSelectedCard, setIsSelectedCard] = useState({id: 0});
-  const [visibleConfirmationModal, setVisibleConfirmationModal] = useState({id: 0});
+  const [visibleConfirmationModal, setVisibleConfirmationModal] = useState({
+    id: 0,
+  });
 
   return (
     <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
@@ -287,7 +289,7 @@ const SelectPaymentMethod = () => {
           visible={visibleConfirmationModal}
           setVisible={() => {
             navigation.navigate('DownloadReceipt');
-            setVisibleConfirmationModal(false)
+            setVisibleConfirmationModal(false);
           }}
         />
 

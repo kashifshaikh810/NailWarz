@@ -1,6 +1,14 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
-import {View, Text, Image, FlatList, TouchableOpacity} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import AppHeader from '../../components/AppHeader';
 import {ScrollView} from 'react-native-gesture-handler';
 import AppColors from '../../utils/AppColors';
@@ -17,13 +25,18 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AppButton from '../../components/AppButton';
-
-const menuData = [
-  {id: 1, title: 'Acrylic Set'},
-  {id: 2, title: 'Manicure'},
-  {id: 3, title: 'Pedicure'},
-  {id: 4, title: 'Nail Art'},
-];
+import {
+  addToFavourite,
+  getAllReviews,
+  getSaloonById,
+  getServiceByCategoryId,
+  getServiceBySalonAndCategoryId,
+} from '../../GlobalFunctions';
+import {ImageBaseUrl} from '../../BaseUrl';
+import {useDispatch, useSelector} from 'react-redux';
+import {ShowToast} from '../../GlobalFunctions/auth';
+import {setUserData} from '../../Redux/Slices';
+import ReviewsCard from '../../components/ReviewsCard';
 
 const cardData = [
   {id: 1, colorName: 'Solid Color', amount: '$10.00', time: '30 Mins'},
@@ -35,199 +48,405 @@ const cardData = [
   },
 ];
 
-const HomeDetails = () => {
+const HomeDetails = ({route}) => {
   const navigation = useNavigation();
-  const [menu, setMenu] = useState({id: 1});
-  const [selectedItems, setSelectedItems] = useState([]);
+  const {saloonId} = route?.params;
+  const [saloonData, setSaloonData] = useState();
+  const [menuData, setMenuData] = useState([]);
+  const [currentCategory, setCurrentCategory] = useState();
+  const [services, setServices] = useState();
+  const [selectedService, setSelectedService] = useState();
+  const [fvrtLoading, setFvrtLoading] = useState(false);
+  const [isFvrt, setIsFvrt] = useState();
+  const {_id, favourite} = useSelector(state => state.user?.userData);
+  const {userData} = useSelector(state => state?.user);
+  const [allReviews, setAllReviews] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading2, setIsLoading2] = useState(false);
+  // console.log('selectedService.price', selectedService.price);
+  console.log('saloonDatasaloonData', saloonData);
+  const dispatch = useDispatch();
 
+  const getSaloonByIdHandler = async () => {
+    setIsLoading(true);
+    const response = await getSaloonById(saloonId);
+    setIsLoading(false);
+    if (!response.success) {
+      ShowToast('error', response.message);
+    }
+    setSaloonData(response.data);
+  };
+  useEffect(() => {
+    if (favourite?.includes(saloonId)) {
+      setIsFvrt(true);
+    } else {
+      setIsFvrt(false);
+    }
+  }, [favourite]);
+  useEffect(() => {
+    getSaloonByIdHandler();
+  }, []);
+  useEffect(() => {
+    if (saloonData?.categoryId?.length > 0) {
+      setMenuData(saloonData.categoryId);
+      // setMenu({_id: saloonData.categoryId[0]._id}); // 👈 make first one active
+    }
+  }, [saloonData]);
+  useEffect(() => {
+    if (menuData?.length > 0 && !currentCategory) {
+      setCurrentCategory(menuData[0]._id); // ✅ Set first category
+    }
+  }, [menuData]);
+  const getServicesHandler = async () => {
+    setIsLoading2(true);
+    const response = await getServiceBySalonAndCategoryId(currentCategory,saloonId);
+    setIsLoading2(false);
+    setServices(response.data);
+  };
+  const addToFavouriteHandler = async () => {
+    setFvrtLoading(true);
+    try {
+      const response = await addToFavourite(_id, saloonId);
+      console.log('response', response);
+      if (response.success) {
+        ShowToast('success', response.message);
+        const updatedUserData = {
+          ...userData, // retain previous user data
+          favourite: response.user.favourite, // update only favourite
+        };
+        dispatch(setUserData(updatedUserData));
+
+        console.log('updatedUserData', updatedUserData);
+      } else {
+        ShowToast('error', response.message);
+      }
+      setFvrtLoading(false);
+    } catch (err) {
+      ShowToast('error', err?.response?.data?.message);
+      setFvrtLoading(false);
+    }
+  };
+  const getAllReviewsHandler = async () => {
+    const response = await getAllReviews(saloonId);
+    if (response.success) {
+      setAllReviews(response?.data);
+    } else {
+      ShowToast('error', response.message);
+    }
+  };
+  useEffect(() => {
+    getServicesHandler();
+  }, [currentCategory]);
+  useEffect(() => {
+    getAllReviewsHandler();
+  }, []);
   return (
-    <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
-      <AppHeader onPress={() => navigation.goBack()} />
-
-      <View
-        style={{
-          paddingHorizontal: responsiveWidth(3),
-          marginVertical: responsiveHeight(2),
-        }}>
-        <Image
-          source={APPImages.NAILS}
-          style={{
-            width: responsiveWidth(95),
-            height: responsiveHeight(30),
-            borderRadius: 15,
-          }}
-        />
-
-        <LineBreak space={3} />
-        <AppText title="Saloon name here" textSize={3} textFontWeight />
-        <LineBreak space={1} />
-
-        <View style={{flexDirection: 'row', gap: 10}}>
-          <View style={{gap: 12, alignItems: 'center'}}>
-            <EvilIcons
-              name={'location'}
-              size={responsiveFontSize(2.7)}
-              color={AppColors.DARKGRAY}
-            />
-            <AntDesign
-              name={'clockcircleo'}
-              size={responsiveFontSize(2)}
-              color={AppColors.DARKGRAY}
-            />
-            <FontAwesome
-              name={'star'}
-              size={responsiveFontSize(2.7)}
-              color={AppColors.PEACHCOLOUR}
-            />
-          </View>
-
-          <View style={{gap: 12, justifyContent: 'center'}}>
-            <AppText
-              title="No 03,Brooklyn, Los Angeles, California"
-              textSize={1.6}
-              textColor={AppColors.DARKGRAY}
-            />
-            <AppText
-              title="9AM-10PM, Mon - Sun"
-              textSize={1.6}
-              textColor={AppColors.DARKGRAY}
-            />
-            <AppText
-              title="4.7 (312)"
-              textSize={1.6}
-              textColor={AppColors.DARKGRAY}
-            />
-          </View>
+    <ScrollView
+      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.APPBG}}>
+      <AppHeader
+        isFvrt={isFvrt}
+        isFvrtLoading={fvrtLoading}
+        handleFavouritePress={addToFavouriteHandler}
+        onPress={() => navigation.goBack()}
+      />
+      {isLoading ? (
+        <View style={{flex: 0.8, justifyContent: 'center'}}>
+          <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
         </View>
-
-        <LineBreak space={2} />
-
-        <AppText
-          title="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard"
-          textSize={1.9}
-          textColor={AppColors.DARKGRAY}
-        />
-
-        <LineBreak space={3} />
-
-        <FlatList
-          data={menuData}
-          horizontal
-          contentContainerStyle={{gap: 15}}
-          renderItem={({item}) => {
-            return (
-              <TouchableOpacity onPress={() => setMenu({id: item.id})}>
-                <AppText
-                  title={item.title}
-                  borderBottomWidth={menu.id === item.id ? 3 : 0}
-                  paddingBottom={menu.id === item.id ? 4 : 0}
-                  borderBottomColor={
-                    menu.id === item.id ? AppColors.BLUE : AppColors.WHITE
-                  }
-                  textSize={1.8}
-                  textFontWeight
-                  textColor={
-                    menu.id === item.id ? AppColors.BLUE : AppColors.DARKGRAY
-                  }
-                />
-              </TouchableOpacity>
-            );
-          }}
-        />
-
-        <LineBreak space={2} />
-
-        <FlatList
-          data={cardData}
-          contentContainerStyle={{gap: 15}}
-          renderItem={({item}) => {
-            return (
-              <View
-                style={{
-                  borderRadius: 10,
-                  backgroundColor: AppColors.WHITE,
-                  paddingHorizontal: responsiveWidth(4),
-                  paddingVertical: responsiveHeight(2),
-                }}>
-                <View
+      ) : (
+        <View
+          style={{
+            paddingHorizontal: responsiveWidth(3),
+            marginVertical: responsiveHeight(2),
+          }}>
+          <FlatList
+            horizontal
+            data={saloonData?.image}
+            contentContainerStyle={{gap: responsiveHeight(2)}}
+            renderItem={({item, index}) => {
+              return (
+                <Image
+                  source={{
+                    uri: `${ImageBaseUrl}${item}`,
+                  }}
                   style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}>
-                  <View>
-                    <AppText
-                      title={item.colorName}
-                      textSize={2.2}
-                      textFontWeight
-                      textColor={AppColors.BLACK}
-                    />
-                    <LineBreak space={0.5} />
-                    <View style={{flexDirection: 'row', gap: 20}}>
-                      <AppText
-                        title={item.amount}
-                        textSize={1.5}
-                        textColor={AppColors.DARKGRAY}
-                      />
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 6,
-                        }}>
-                        <AntDesign
-                          name={'clockcircleo'}
-                          size={responsiveFontSize(1.5)}
-                          color={AppColors.DARKGRAY}
-                        />
-                        <AppText
-                          title={item.time}
-                          textSize={1.5}
-                          textColor={AppColors.DARKGRAY}
-                        />
-                      </View>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setSelectedItems(prev => {
-                        const exists = prev.some(i => i.id === item.id);
-                        if (exists) {
-                          return prev.filter(i => i.id !== item.id);
-                        } else {
-                          return [...prev, {...item}];
-                        }
-                      });
+                    alignSelf: 'center',
+                    width: responsiveWidth(85),
+                    height: responsiveHeight(25),
+                    borderRadius: 15,
+                  }}
+                />
+              );
+            }}
+          />
+          <LineBreak space={3} />
+          <AppText title={saloonData?.salonName} textSize={3} textFontWeight />
+          <LineBreak space={1} />
+
+          <View style={{gap: 10}}>
+            <View style={{gap: 12, alignItems: 'center', flexDirection: 'row'}}>
+              <EvilIcons
+                name={'location'}
+                size={responsiveFontSize(2.7)}
+                color={AppColors.DARKGRAY}
+              />
+              <AppText
+                title={saloonData?.bussinessAddress}
+                textSize={1.6}
+                textColor={AppColors.DARKGRAY}
+              />
+            </View>
+
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+              <FontAwesome
+                name={'star'}
+                size={responsiveFontSize(2.7)}
+                color={AppColors.PEACHCOLOUR}
+              />
+              <AppText
+                title={`${saloonData?.avgRating} (${saloonData?.totalReviews})`}
+                textSize={1.6}
+                textColor={AppColors.DARKGRAY}
+              />
+            </View>
+            <FlatList
+              data={saloonData?.workingDays}
+              contentContainerStyle={{gap: responsiveHeight(1)}}
+              renderItem={({item, index}) => {
+                return item?.isActive ? (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 12,
                     }}>
                     <AntDesign
-                      name={
-                        selectedItems.some(i => i.id === item.id)
-                          ? 'checkcircle'
-                          : 'pluscircleo'
-                      }
-                      size={responsiveFontSize(2.7)}
-                      color={
-                        selectedItems.some(i => i.id === item.id)
-                          ? AppColors.BLUE
-                          : AppColors.BLACK
-                      }
+                      name={'clockcircleo'}
+                      size={responsiveFontSize(2)}
+                      color={AppColors.DARKGRAY}
                     />
-                  </TouchableOpacity>
-                </View>
+                    <AppText
+                      title={`${item?.startTime}-${item?.endTime}, ${item?.day}`}
+                      textSize={1.6}
+                      textColor={AppColors.DARKGRAY}
+                    />
+                  </View>
+                ) : null;
+              }}
+            />
+            {/* <View style={{gap: 12, justifyContent: 'center'}}></View> */}
+          </View>
+
+          <LineBreak space={2} />
+
+          <AppText
+            title={saloonData?.description}
+            textSize={1.9}
+            textColor={AppColors.DARKGRAY}
+          />
+
+          <LineBreak space={3} />
+
+          <FlatList
+            data={menuData}
+            horizontal
+            contentContainerStyle={{gap: 15}}
+            renderItem={({item}) => {
+              return (
+                <TouchableOpacity
+                  onPress={() => {
+                    setCurrentCategory(item?._id);
+                    // setMenu({_id: item._id});
+                  }}>
+                  <AppText
+                    title={item?.categoryName}
+                    borderBottomWidth={currentCategory === item._id ? 3 : 0}
+                    paddingBottom={currentCategory === item._id ? 4 : 0}
+                    borderBottomColor={
+                      currentCategory === item._id
+                        ? AppColors.BLUE
+                        : AppColors.WHITE
+                    }
+                    textSize={1.8}
+                    textFontWeight
+                    textColor={
+                      currentCategory === item._id
+                        ? AppColors.BLUE
+                        : AppColors.DARKGRAY
+                    }
+                  />
+                </TouchableOpacity>
+              );
+            }}
+          />
+
+          <LineBreak space={2} />
+          {isLoading2 ? (
+            <View style={{marginVertical: responsiveHeight(1)}}>
+              <ActivityIndicator size="large" color={AppColors.BTNCOLOURS} />
+            </View>
+          ) : services?.length > 0 ? (
+            <FlatList
+              data={services}
+              contentContainerStyle={{gap: 15}}
+              renderItem={({item}) => {
+                return (
+                  <View
+                    style={{
+                      borderRadius: 10,
+                      backgroundColor: AppColors.WHITE,
+                      paddingHorizontal: responsiveWidth(4),
+                      paddingVertical: responsiveHeight(2),
+                    }}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}>
+                      <View>
+                        <AppText
+                          title={item?.serviceName}
+                          textSize={2.2}
+                          textFontWeight
+                          textColor={AppColors.BLACK}
+                        />
+                        <LineBreak space={0.5} />
+                        <View style={{flexDirection: 'row', gap: 20}}>
+                          <AppText
+                            title={`$${item?.price}`}
+                            textSize={1.5}
+                            textColor={AppColors.DARKGRAY}
+                          />
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 6,
+                            }}>
+                            <AntDesign
+                              name={'clockcircleo'}
+                              size={responsiveFontSize(1.5)}
+                              color={AppColors.DARKGRAY}
+                            />
+                            <AppText
+                              title={'30 Mins'}
+                              textSize={1.5}
+                              textColor={AppColors.DARKGRAY}
+                            />
+                          </View>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => setSelectedService(item)}>
+                        <AntDesign
+                          name={
+                            item?._id === selectedService?._id
+                              ? 'checkcircle'
+                              : 'pluscircleo'
+                          }
+                          size={responsiveFontSize(2.7)}
+                          color={
+                            item?._id === selectedService?._id
+                              ? AppColors.BLUE
+                              : AppColors.BLACK
+                          }
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              }}
+            />
+          ) : (
+            <AppText
+              title={'No Services Found'}
+              textAlignment="center"
+              textFontWeight
+              textSize={2.5}
+            />
+          )}
+
+          <LineBreak space={2} />
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: responsiveHeight(2),
+            }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: responsiveHeight(2),
+              }}>
+              <AppText title="Reviews" textSize={2.5} />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: responsiveHeight(1),
+                }}>
+                <AntDesign name="star" color="#F2A905" size={20} />
+                <AppText
+                  textSize={1.9}
+                  title={`${saloonData?.avgRating} (${saloonData?.totalReviews})`}
+                />
               </View>
-            );
-          }}
-        />
-
-        <LineBreak space={2} />
-
-        <AppButton
-          title={`Continue (${selectedItems?.length})`}
-          handlePress={() => navigation.navigate('StylistSelect')}
-        />
-      </View>
+            </View>
+            {allReviews?.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('AllReviews', {saloonId})}>
+                <AppText
+                  title="See All"
+                  textSize={1.9}
+                  style={styles.textStyle}
+                />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+          <FlatList
+            horizontal
+            contentContainerStyle={{
+              gap: responsiveHeight(2),
+              marginBottom: responsiveHeight(2),
+            }}
+            showsHorizontalScrollIndicator={false}
+            data={allReviews.slice(0, 3)}
+            renderItem={({item, index}) => {
+              return <ReviewsCard data={item} />;
+            }}
+          />
+          <AppButton
+            // title={`Continue (${selectedItems?.length})`}
+            title={'Continue'}
+            handlePress={() =>
+              selectedService
+                ? navigation.navigate('StylistSelect', {
+                    data: {
+                      saloonId,
+                      serviceId: selectedService?._id,
+                      serviceName: selectedService?.serviceName,
+                      price: selectedService.price,
+                      technicians: selectedService?.technicianId,
+                    },
+                  })
+                : ShowToast('error', 'Plz Select A Service To Proceed')
+            }
+          />
+        </View>
+      )}
     </ScrollView>
   );
 };
 
 export default HomeDetails;
+const styles = StyleSheet.create({
+  textStyle: {
+    color: AppColors.BLACK,
+    textDecorationLine: 'underline',
+    fontSize: responsiveFontSize(2.2),
+    // marginTop: 10,
+  },
+});

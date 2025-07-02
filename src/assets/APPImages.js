@@ -9,4 +9,5 @@ export default APPImages = {
     nailsTwo: require('./nailTwo.png'),
     default_user: require('./default_user.png'),
     counting: require('./OBJECTS.png'),
+    dummyImg: require('./userDummy.png'),
 }

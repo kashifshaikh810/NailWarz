@@ -12,7 +12,17 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import AppButton from './AppButton';
 import {useNavigation} from '@react-navigation/native';
 
-const ConfirmationModal = ({iconName, title, subTitle, buttonOneTitle, buttonTwoTitle, isChangeColor, visible, setVisible}) => {
+const ConfirmationModal = ({
+  iconName,
+  title,
+  subTitle,
+  buttonOneTitle,
+  buttonTwoTitle,
+  isChangeColor,
+  handleBackPress,
+  visible,
+  setVisible,
+}) => {
   const navigation = useNavigation();
 
   return (
@@ -78,11 +88,13 @@ const ConfirmationModal = ({iconName, title, subTitle, buttonOneTitle, buttonTwo
 
             <AppButton
               title={buttonTwoTitle}
-              handlePress={setVisible}
-                bgColor={AppColors.WHITE}
-                textColor={isChangeColor ? AppColors.BTNCOLOURS : AppColors.BLUE}
-                borderWidth={2}
-                borderColor={isChangeColor ? AppColors.BTNCOLOURS : AppColors.BLUE}
+              handlePress={handleBackPress}
+              bgColor={AppColors.WHITE}
+              textColor={isChangeColor ? AppColors.BTNCOLOURS : AppColors.BLUE}
+              borderWidth={2}
+              borderColor={
+                isChangeColor ? AppColors.BTNCOLOURS : AppColors.BLUE
+              }
             />
           </View>
         </View>

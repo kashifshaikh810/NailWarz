@@ -1,6 +1,14 @@
 /* eslint-disable react-native/no-inline-styles */
-import {View, Text, Image, TouchableOpacity, FlatList} from 'react-native';
-import React from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import {
   responsiveFontSize,
   responsiveHeight,
@@ -9,10 +17,17 @@ import {
 import AppText from './AppTextComps/AppText';
 import AppColors from '../utils/AppColors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import Entypo from 'react-native-vector-icons/Entypo';
 import {useNavigation} from '@react-navigation/native';
 import LineBreak from './LineBreak';
 import AppButton from './AppButton';
+import {ImageBaseUrl} from '../BaseUrl';
+import {AirbnbRating, Rating} from 'react-native-ratings';
+import AppTextInput from './AppTextInput';
+import Modal from 'react-native-modal';
+import {useSelector} from 'react-redux';
+import {addReviews} from '../GlobalFunctions';
+import {ShowToast} from '../GlobalFunctions/auth';
 type props = {
   img?: any,
   title?: string,
@@ -20,6 +35,8 @@ type props = {
   date?: any,
   service?: any,
   bookingType?: any,
+  saloonId?: string,
+  bookingId?: string,
   cancelBookingOnPress?: () => void,
 };
 
@@ -38,11 +55,45 @@ const BookingCard = ({
   date,
   service,
   bookingType,
+  saloonId,
+  bookingId,
   cancelBookingOnPress,
 }: props) => {
   const navigation = useNavigation();
+  const {userData} = useSelector(state => state.user);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [reviewMsg, setReviewMsg] = useState('');
+  const [totalStars, setTotalStars] = useState(4);
+  useEffect(() => {
+    // Set the default value when the screen loads
+    setTotalStars(3);
+  }, []);
+  console.log('modalVisible', modalVisible);
+
+  const addReviewsHandler = async () => {
+    if (!reviewMsg) {
+      return ShowToast('error', 'Plz Leave Your Comments On This!');
+    }
+    setIsLoading(true);
+    const response = await addReviews(
+      saloonId,
+      userData._id,
+      totalStars,
+      reviewMsg,
+    );
+    setIsLoading(false);
+    if (response.success) {
+      ShowToast('success', response.message);
+      setModalVisible(false);
+    } else {
+      ShowToast('error', response.message);
+    }
+  };
   return (
-    <TouchableOpacity onPress={() => navigation.navigate('HomeDetails')}>
+    <View
+    // onPress={() => navigation.navigate('HomeDetails', {saloonId})}
+    >
       <View
         style={{
           padding: 20,
@@ -79,7 +130,7 @@ const BookingCard = ({
             alignItems: 'center',
           }}>
           <Image
-            source={img}
+            source={{uri: `${ImageBaseUrl}${img}`}}
             style={{
               height: responsiveHeight(10),
               width: responsiveHeight(10),
@@ -142,7 +193,9 @@ const BookingCard = ({
             />
             <AppButton
               title="View Receipt"
-              handlePress={() => navigation.navigate('DownloadReceipt')}
+              handlePress={() =>
+                navigation.navigate('DownloadReceipt', {bookingId})
+              }
               // bgColor={AppColors.DARKGRAY}
               // textColor={AppColors.WHITE}
             />
@@ -151,7 +204,7 @@ const BookingCard = ({
 
         {bookingType === 'completed' && (
           <View>
-            <FlatList
+            {/* <FlatList
               data={ratingsStar}
               contentContainerStyle={{
                 paddingHorizontal: responsiveWidth(5),
@@ -170,21 +223,127 @@ const BookingCard = ({
                   </TouchableOpacity>
                 );
               }}
+            /> */}
+            {/* <Rating
+            
+              count={5}
+              reviews={[]} // hide default text labels
+              defaultRating={3}
+              size={30}
+            starContainerStyle={{
+  flexDirection: 'row',
+  justifyContent: 'center',
+  // fallback to margin-based spacing
+  columnGap: 10, // or use marginHorizontal in custom star
+}}
+            /> */}
+            <AppText
+              styles={styles.reviewPrompt}
+              title="Leave a review"
+              onPress={() => setModalVisible(true)}
+              // onPress={() => navigation.navigate('AddReview', {bookingId})}
             />
-
             <LineBreak space={2} />
 
             <AppButton
               title="View Receipt"
-              handlePress={() => navigation.navigate('DownloadReceipt')}
+              handlePress={() =>
+                navigation.navigate('DownloadReceipt', {bookingId})
+              }
               // bgColor={AppColors.DARKGRAY}
               // textColor={AppColors.WHITE}
             />
           </View>
         )}
       </View>
-    </TouchableOpacity>
+      <Modal
+        animationInTiming={600}
+        animationOutTiming={600}
+        animationIn={'slideInUp'}
+        animationOut={'slideOutDown'}
+        onBackdropPress={() => setModalVisible(false)}
+        isVisible={modalVisible}
+        style={{margin: 0}}>
+        <View
+          style={{
+            borderTopLeftRadius: responsiveHeight(1.5),
+            borderTopRightRadius: responsiveHeight(1.5),
+            // height: responsiveHeight(10),
+            width: responsiveWidth(100),
+            position: 'absolute',
+            backgroundColor: AppColors.WHITE,
+            minHeight: responsiveHeight(50),
+            bottom: 0,
+            padding: responsiveHeight(1),
+          }}>
+          <TouchableOpacity
+            onPress={() => setModalVisible(false)}
+            style={{alignSelf: 'flex-end', marginTop: responsiveHeight(1)}}>
+            <Entypo name="cross" size={30} />
+          </TouchableOpacity>
+          <AppText
+            title="Give A Star"
+            textAlignment="center"
+            mrgnTop={1.2}
+            textSize={3}
+            textColor={AppColors.BTNCOLOURS}
+          />
+          <Rating
+            count={5}
+            startingValue={4}
+            defaultRating={4}
+            size={30}
+            onFinishRating={ratings => setTotalStars(ratings)}
+            style={{marginTop: responsiveHeight(2)}}
+            starContainerStyle={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              // fallback to margin-based spacing
+              columnGap: 10, // or use marginHorizontal in custom star
+            }}
+          />
+          <View
+            style={{
+              height: responsiveHeight(17),
+              marginVertical: responsiveHeight(3),
+              paddingHorizontal: responsiveHeight(2),
+            }}>
+            <AppTextInput
+              onChangeText={value => setReviewMsg(value)}
+              multiline
+              height={14}
+              fntSize={2.3}
+              containerBg={AppColors.INPUTBG}
+              txtAlignVertical="top"
+              inputPlaceHolder="Note...."
+            />
+          </View>
+          <View style={{alignItems: 'center', bottom: 5}}>
+            <AppButton
+              title={
+                isLoading ? (
+                  <ActivityIndicator size={'large'} color={AppColors.WHITE} />
+                ) : (
+                  'Submit'
+                )
+              }
+              width={80}
+              bgColor={AppColors.BTNCOLOURS}
+              handlePress={addReviewsHandler}
+            />
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
 export default BookingCard;
+const styles = StyleSheet.create({
+  reviewPrompt: {
+    color: AppColors.BTNCOLOURS,
+    textDecorationLine: 'underline',
+    fontSize: responsiveFontSize(2.2),
+    // marginTop: 10,
+  },
+});
