@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity } from 'react-native'
 import React from 'react'
 import AppColors from '../utils/AppColors'
 import AppText from './AppTextComps/AppText'
+import { responsiveHeight } from '../utils/Responsive_Dimensions'
 
 
 type props = {
@@ -13,7 +14,7 @@ type props = {
 }
 const SocialAuthButton = ({title,bgColor,logo,txtColor}: props) => {
   return (
-    <TouchableOpacity style={{backgroundColor:bgColor, alignItems:'center', justifyContent:'center', padding:10, borderRadius:10, flexDirection:'row', gap:10, }}>
+    <TouchableOpacity style={{backgroundColor:bgColor, alignItems:'center', justifyContent:'center', padding:15, borderRadius:responsiveHeight(1.5), flexDirection:'row', gap:10, }}>
         {
             logo
         }

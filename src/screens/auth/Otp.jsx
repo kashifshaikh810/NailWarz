@@ -23,14 +23,14 @@ const Otp = ({navigation, route}) => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
 
-  const {token} = route?.params;
+  const {token, email, phone} = route?.params;
   console.log('value', value);
   const handleOtpVerification = async () => {
     if (!value) {
       return ShowToast('error', 'Plz Enter Your Otp To Proceed!');
     }
     setIsLoading(true);
-    await verifyOtp(token, value, dispatch);
+    await verifyOtp(token, value, phone, dispatch);
     setIsLoading(false);
   };
   return (
@@ -44,7 +44,9 @@ const Otp = ({navigation, route}) => {
             textFontWeight
           />
           <AppText
-            title="We’ve sent a 4-digit code to 071*****05 Please enter it below."
+            title={`We’ve sent a 4-digit code to ${
+              email ? email : phone
+            } Please enter it below.`}
             textSize={1.9}
             textwidth={80}
             textAlignment={'center'}
@@ -95,14 +97,17 @@ const Otp = ({navigation, route}) => {
         </View>
       </View>
 
-      <AppButton handlePress={handleOtpVerification}
-          title={
-            isLoading ? (
-              <ActivityIndicator size={'large'} color={AppColors.WHITE} />
-            ) : (
-              'Continue'
-            )
-          } bgColor={AppColors.BTNCOLOURS} />
+      <AppButton
+        handlePress={handleOtpVerification}
+        title={
+          isLoading ? (
+            <ActivityIndicator size={'large'} color={AppColors.WHITE} />
+          ) : (
+            'Continue'
+          )
+        }
+        bgColor={AppColors.BTNCOLOURS}
+      />
     </BackgroundScreen>
   );
 };

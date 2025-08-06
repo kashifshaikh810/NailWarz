@@ -61,7 +61,14 @@ const BookingSummary = ({route}) => {
   const time12hr = selectedTime?.value;
   const time24hr = moment(time12hr, ['h:mm A']).format('HH:mm');
   const [bookingId, setBookingId] = useState();
-  console.log('saloonData', saloonData);
+  console.log('serviceId', serviceId);
+  console.log('selectedDate', selectedDate);
+  console.log('selectedDay', selectedDay);
+  console.log('selectedTime===>>>>>>', selectedTime);
+  // selectedTime: isSelectedTime,
+  //               selectedDate: isSelectedDate?.date,
+  //               selectedDay: isSelectedDate?.day,
+  //               selectedBookingDate: isSelectedDate?.formattedDate,
   const bookingDetails = [
     {
       id: 1,
@@ -94,7 +101,7 @@ const BookingSummary = ({route}) => {
         serviceId,
         selectedTechnician,
         selectedBookingDate,
-        time24hr,
+        selectedTime.value,
       );
       setIsLoading(false);
       console.log('response', response);
@@ -116,8 +123,16 @@ const BookingSummary = ({route}) => {
     getSaloonByIdHandler();
   }, []);
   return (
-    <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
+    <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader onPress={() => navigation.goBack()} title="Booking Summary" />
+      <View
+        style={{
+          backgroundColor: '#B4B4B4',
+          height: 0.5,
+          elevation: 5,
+          width: '100%',
+        }}
+      />
       <LineBreak space={1.5} />
       {saloonLoading ? (
         <View style={{height: responsiveHeight(10), justifyContent: 'center'}}>
@@ -311,9 +326,9 @@ const BookingSummary = ({route}) => {
 
         <ConfirmationModal
           iconName={'check'}
-          title={'You appointment is confirmed!'}
+          title={'Your appointment is confirmed!'}
           subTitle={
-            'Thank you for showing your interest. We look forward to seeing you soon.'
+            'Thank you for booking through Nail Warz. We look forward to seeing you soon! Please leave a review of your service!'
           }
           buttonOneTitle={'View Receipt'}
           buttonTwoTitle={'Back to Home'}

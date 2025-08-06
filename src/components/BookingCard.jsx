@@ -102,6 +102,7 @@ const BookingCard = ({
           width: responsiveWidth(90),
           alignSelf: 'center',
           backgroundColor: AppColors.WHITE,
+          elevation: 7,
         }}>
         <View
           style={

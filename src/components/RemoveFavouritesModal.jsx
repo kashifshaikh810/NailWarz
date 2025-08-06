@@ -28,8 +28,8 @@ const RemoveFavouritesModal = ({
         style={{
           margin: 0,
         }}
-        backdropOpacity={0.1}
-        backdropColor="white"
+        backdropOpacity={0.3} // <--- slightly darker backdrop
+        backdropColor="black"
         onBackdropPress={handleBackdropPress}
         isVisible={visible}>
         <View

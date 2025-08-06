@@ -20,11 +20,12 @@ const AppHeader = ({
   isBtn = false,
   title,
   isTextAlignCentered,
+  style,
 }) => {
   console.log('sifvrt',isFvrt)
   return (
     <View
-      style={{
+      style={[{
         flexDirection: 'row',
         backgroundColor: AppColors.WHITE,
         gap: title ? 10 : 0,
@@ -35,7 +36,7 @@ const AppHeader = ({
         alignItems: 'center',
         paddingVertical: responsiveHeight(2),
         paddingHorizontal: responsiveHeight(2),
-      }}>
+      },style]}>
       <TouchableOpacity onPress={onPress}>
         <MaterialIcons
           name={'arrow-back-ios'}
@@ -55,12 +56,12 @@ const AppHeader = ({
             borderWidth: 1,
             padding: responsiveHeight(1.5),
             borderRadius: 10,
-            borderColor: AppColors.PEACHCOLOUR,
+            borderColor: '#F5F5F5',
           }}>
           <Ionicons
             name={isFvrt ? 'heart' : 'heart-outline'}
             size={responsiveFontSize(2.7)}
-            color={AppColors.BTNCOLOURS}
+            color={isFvrt ? AppColors.BTNCOLOURS : AppColors.BLACK}
           />
         </TouchableOpacity>
       )}

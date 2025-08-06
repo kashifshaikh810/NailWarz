@@ -14,13 +14,13 @@ interface ReviewCardProps {
 }
 const ReviewsCard: React.FC<ReviewCardProps> = ({ data }) => {
   return (
-    <View style={{ borderWidth: 2, borderColor: '#E9E9E9', padding: responsiveHeight(2), backgroundColor: AppColors.WHITE, borderRadius: responsiveHeight(1.5) }}>
+    <View style={{ padding: responsiveHeight(2), backgroundColor: AppColors.WHITE, elevation: 6, borderRadius: responsiveHeight(1.5) }}>
       <View style={{ flexDirection: 'row', gap: responsiveHeight(3.3), justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', gap: responsiveHeight(2), alignItems: 'center' }}>
           <Image source={data?.userId?.image ? { uri: `${ImageBaseUrl}${data?.userId?.image}` } : APPImages.dummyImg} style={{ height: responsiveHeight(7), width: responsiveWidth(14), borderRadius: responsiveHeight(4) }} />
           <View>
-            <AppText title={data?.userId?.username} textFontWeight textSize={2} />
-            <AppText title={moment(`${data?.createdAt}`).fromNow()} textFontWeight />
+            <AppText textColor="#1E1E1E" title={data?.userId?.username} textFontWeight textSize={2} />
+            <AppText title={moment(`${data?.createdAt}`).fromNow()} textColor="#9DA5B3" />
           </View>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: responsiveHeight(1) }}>
@@ -28,7 +28,7 @@ const ReviewsCard: React.FC<ReviewCardProps> = ({ data }) => {
           <AppText title={data?.stars} />
         </View>
       </View>
-      <AppText textFontWeight mrgnTop={2} textSize={1.9} title={data?.message} />
+      <AppText textColor="#9096A1" mrgnTop={2} textSize={1.9} title={data?.message} />
     </View>
   );
 };

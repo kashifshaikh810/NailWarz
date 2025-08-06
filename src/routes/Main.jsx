@@ -30,13 +30,14 @@ import FinalScoreBoard from '../screens/main/warz/FinalScoreBoard';
 import EditProfile from '../screens/main/profile/EditProfile';
 import CreatePost from '../screens/main/warz/CreatePost';
 import AllReviews from '../screens/main/AllReviews';
+import SelectAnyTech from '../screens/main/SelectAnyTech';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 const Main = () => {
   return (
-    <Stack.Navigator  screenOptions={{headerShown: false}}>
+    <Stack.Navigator screenOptions={{headerShown: false}}>
       <Stack.Screen name="Home" component={MyTabs} />
       <Stack.Screen name="CreatePost" component={CreatePost} />
       <Tab.Screen name="HomeDetails" component={HomeDetails} />
@@ -57,6 +58,7 @@ const Main = () => {
       <Tab.Screen name="EditProfile" component={EditProfile} />
       <Tab.Screen name="MapView" component={MapView} />
       <Stack.Screen name="Profile" component={MyTabs} />
+      <Stack.Screen name="SelectAnyTech" component={SelectAnyTech} />
     </Stack.Navigator>
   );
 };
@@ -77,7 +79,7 @@ function MyTabs() {
             iconName = focused ? 'person' : 'person-outline';
           } else if (route.name === 'Booking') {
             iconName = focused ? 'calendar' : 'calendar-outline';
-          } else if (route.name === 'Favourites') {
+          } else if (route.name === 'Favorites') {
             iconName = focused ? 'heart' : 'heart-outline';
           }
 
@@ -85,7 +87,10 @@ function MyTabs() {
             return (
               <Image
                 source={APPImages.LOGO}
-                style={{width: responsiveWidth(6.5), height: responsiveHeight(3.5)}}
+                style={{
+                  width: responsiveWidth(6.5),
+                  height: responsiveHeight(3.5),
+                }}
               />
             );
           } else {
@@ -96,7 +101,7 @@ function MyTabs() {
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Booking" component={Booking} />
       <Tab.Screen name="Warz" component={Warz} />
-      <Tab.Screen name="Favourites" component={Favourites} />
+      <Tab.Screen name="Favorites" component={Favourites} />
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   );

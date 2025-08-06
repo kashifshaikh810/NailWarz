@@ -8,6 +8,7 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  NativeModules,
 } from 'react-native';
 import AppColors from '../../utils/AppColors';
 import AppHeader from '../../components/AppHeader';
@@ -23,6 +24,7 @@ import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import RNFS from 'react-native-fs';
 import {getBookingById} from '../../GlobalFunctions';
 import moment from 'moment';
+import RNBlobUtil from 'react-native-blob-util';
 
 const DownloadReceipt = ({route}) => {
   const navigation = useNavigation();
@@ -32,19 +34,22 @@ const DownloadReceipt = ({route}) => {
   const formattedDate = moment(bookingDetails?.date, 'DD-MM-YYYY').format(
     'ddd, MMM DD',
   );
+  const {bookingId} = route?.params;
 
-  console.log('formattedTime', formattedTime);
-  console.log('formattedDate', formattedDate);
+  console.log('bookingId', bookingId);
+  console.log('bookingDetails', bookingDetails);
+  const displayId = `${bookingId.slice(0, 6)}...${bookingId.slice(-4)}`;
   const sectionDataOne = [
-    {id: 1, title: 'Salon', subTitle: bookingDetails?.salonId?.salonName},
-    {id: 2, title: 'Customer Name', subTitle: bookingDetails?.userId?.username},
-    {id: 3, title: 'Phone', subTitle: bookingDetails?.salonId?.phoneNumber},
+    {id: 1, title: 'Booking Id', subTitle: displayId},
+    {id: 2, title: 'Salon', subTitle: bookingDetails?.salonId?.salonName},
+    {id: 3, title: 'Customer Name', subTitle: bookingDetails?.userId?.username},
+    {id: 4, title: 'Phone', subTitle: bookingDetails?.salonId?.phoneNumber},
     {
       id: 4,
       title: 'Booking Date',
       subTitle: formattedDate,
     },
-    {id: 5, title: 'Booking Time', subTitle: formattedTime},
+    {id: 5, title: 'Booking Time', subTitle: bookingDetails?.time},
     {id: 6, title: 'Stlyist', subTitle: bookingDetails?.technicianId?.fullName},
   ];
 
@@ -57,7 +62,6 @@ const DownloadReceipt = ({route}) => {
     {id: 2, title: 'Total', subTitle: `$${bookingDetails?.serviceId?.price}`},
     // {id: 3, title: 'Discount', subTitle: '$3.00'},
   ];
-  const {bookingId} = route?.params;
   const getBookingByIdHandler = async () => {
     try {
       setIsLoading(true);
@@ -80,51 +84,49 @@ const DownloadReceipt = ({route}) => {
       return;
     }
 
-    // Optional: Request permission on Android
-    if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        {
-          title: 'Storage Permission',
-          message: 'App needs access to your storage to save receipts.',
-          buttonPositive: 'OK',
-        },
-      );
-      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-        Alert.alert('Permission Denied', 'Storage permission is required.');
-        return;
-      }
-    }
-
     const htmlContent = `
     <h2 style="text-align:center;">Receipt</h2>
+    <p><strong>Booking Id:</strong> ${bookingId}</p>
     <p><strong>Salon:</strong> ${bookingDetails?.salonId?.salonName}</p>
     <p><strong>Customer Name:</strong> ${bookingDetails?.userId?.username}</p>
     <p><strong>Phone:</strong> ${bookingDetails?.salonId?.phoneNumber}</p>
     <p><strong>Booking Date:</strong> ${formattedDate}</p>
-    <p><strong>Booking Time:</strong> ${formattedTime}</p>
+    <p><strong>Booking Time:</strong> ${bookingDetails?.time}</p>
     <p><strong>Stylist:</strong> ${bookingDetails?.technicianId?.fullName}</p>
     <hr/>
     <p><strong>Service:</strong> ${bookingDetails?.serviceId?.serviceName}</p>
     <p><strong>Total:</strong> $${bookingDetails?.serviceId?.price}</p>
   `;
-    const filePath = `${RNFS.DownloadDirectoryPath}/receipt_${bookingDetails?._id}.pdf`;
+
     try {
-      const file = await RNHTMLtoPDF.convert({
+      const pdf = await RNHTMLtoPDF.convert({
         html: htmlContent,
+        base64: true,
         fileName: `receipt_${bookingDetails?._id}`,
-        directory: '', // Leave empty, since you're giving full path
-        filePath: filePath,
       });
 
-      Alert.alert('Success', `Receipt saved at:\n${file.filePath}`);
+      const filePath = `${RNFS.DownloadDirectoryPath}/Receipt_${bookingDetails?._id}.pdf`;
+
+      await RNFS.writeFile(filePath, pdf.base64, 'base64');
+
+      // ✅ Trigger media scanner so it appears in Downloads folder
+      if (NativeModules.RNFetchBlob && NativeModules.RNFetchBlob.scanFile) {
+        NativeModules.RNFetchBlob.scanFile([
+          {path: filePath, mime: 'application/pdf'},
+        ]);
+      } else {
+        console.log('Scan file module not available');
+      }
+
+      Alert.alert('Success', `Saved to Downloads:\n${filePath}`);
     } catch (err) {
-      console.error('PDF Generation Error:', err);
-      Alert.alert('Error', 'Could not generate receipt');
+      console.error('PDF Generation or Save Error:', err);
+      Alert.alert('Error', 'Failed to generate or save the PDF.');
     }
   };
+
   return (
-    <View style={{flex: 1, backgroundColor: AppColors.APPBG}}>
+    <View style={{flex: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader onPress={() => navigation.goBack()} title="Receipt" />
       {isLoading ? (
         <View style={{flex: 0.4, justifyContent: 'center'}}>
@@ -139,30 +141,44 @@ const DownloadReceipt = ({route}) => {
           <View
             style={{
               backgroundColor: AppColors.WHITE,
+              elevation: 6,
               borderRadius: 10,
               paddingVertical: responsiveHeight(2),
               paddingHorizontal: responsiveWidth(4),
             }}>
             <FlatList
               data={sectionDataOne}
-              ItemSeparatorComponent={() => <LineBreak space={1.5} />}
-              renderItem={({item}) => {
+              // ItemSeparatorComponent={() => <LineBreak space={1.5} />}
+              renderItem={({item, index}) => {
                 return (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                    }}>
-                    <AppText
-                      title={item.title}
-                      textSize={2}
-                      textColor={AppColors.BLACK}
-                    />
-                    <AppText
-                      title={item.subTitle}
-                      textSize={2}
-                      textColor={AppColors.DARKGRAY}
-                    />
+                  <View>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                      }}>
+                      <AppText
+                        title={item.title}
+                        textSize={2}
+                        textColor={AppColors.BLACK}
+                      />
+                      <AppText
+                        title={item.subTitle}
+                        textSize={2}
+                        textColor={AppColors.DARKGRAY}
+                      />
+                    </View>
+                    {index !== 6 ? (
+                      <View
+                        style={{
+                          backgroundColor: '#b4b4b4',
+                          height: 1,
+                          // elevation: 5,
+                          marginVertical: responsiveHeight(1.7),
+                          width: '100%',
+                        }}
+                      />
+                    ) : null}
                   </View>
                 );
               }}
@@ -174,30 +190,45 @@ const DownloadReceipt = ({route}) => {
           <View
             style={{
               backgroundColor: AppColors.WHITE,
+              elevation: 6,
               borderRadius: 10,
               paddingVertical: responsiveHeight(2),
               paddingHorizontal: responsiveWidth(4),
             }}>
             <FlatList
               data={sectionDataTwo}
-              ItemSeparatorComponent={() => <LineBreak space={1.5} />}
-              renderItem={({item}) => {
+              // ItemSeparatorComponent={() => <LineBreak space={1.5} />}
+              renderItem={({item, index}) => {
                 return (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                    }}>
-                    <AppText
-                      title={item.title}
-                      textSize={2}
-                      textColor={AppColors.BLACK}
-                    />
-                    <AppText
-                      title={item.subTitle}
-                      textSize={2}
-                      textColor={AppColors.DARKGRAY}
-                    />
+                  <View>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                      }}>
+                      <AppText
+                        title={item.title}
+                        textSize={2}
+                        textColor={AppColors.BLACK}
+                      />
+                      <AppText
+                        title={item.subTitle}
+                        textSize={2}
+                        textColor={AppColors.DARKGRAY}
+                      />
+                    </View>
+                    {index !== 1 ? (
+                      <View
+                        style={{
+                          backgroundColor: '#b4b4b4',
+                          height: 1,
+                          // elevation: 5,
+                          marginVertical: responsiveHeight(1.7),
+
+                          width: '100%',
+                        }}
+                      />
+                    ) : null}
                   </View>
                 );
               }}

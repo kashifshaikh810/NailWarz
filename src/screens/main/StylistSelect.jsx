@@ -25,50 +25,28 @@ import AppButton from '../../components/AppButton';
 import {ImageBaseUrl} from '../../BaseUrl';
 import {ShowToast} from '../../GlobalFunctions/auth';
 
-// const cardData = [
-//   {
-//     id: 1,
-//     profImg: APPImages.CENTRALSALOONS,
-//     name: 'John Doe',
-//     designation: 'Nail Technician',
-//     ratingStatus: 'Top Rated',
-//   },
-//   {
-//     id: 2,
-//     profImg: APPImages.CENTRALSALOONS,
-//     name: 'Anna Lee',
-//     designation: 'Nail Technician',
-//     ratingStatus: 'Top Rated',
-//   },
-//   {
-//     id: 3,
-//     profImg: APPImages.CENTRALSALOONS,
-//     name: 'Ella Ford',
-//     designation: 'Nail Technician',
-//     ratingStatus: '',
-//   },
-//   {
-//     id: 4,
-//     profImg: APPImages.CENTRALSALOONS,
-//     name: 'Marsh Donnell',
-//     designation: 'Nail Technician',
-//     ratingStatus: '',
-//   },
-// ];
-
 const StylistSelect = ({route}) => {
   const navigation = useNavigation();
   const [selectedTechnician, setSelectedTechnician] = useState(null);
+  const [selectRandomTech, setSelectRandomTech] = useState(null);
   const [technicianName, setTechnicianName] = useState();
   const {data} = route?.params;
   // technicians, saloonId, serviceName, price, serviceId
   console.log('selectedTechnician', selectedTechnician);
-  console.log('technicianName', technicianName);
+  console.log('data======<><><><><><><><><><>', data);
   return (
-    <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
+    <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader
         onPress={() => navigation.goBack()}
         title="Choose Your Nail Technician"
+      />
+      <View
+        style={{
+          backgroundColor: '#B4B4B4',
+          height: 0.5,
+          elevation: 5,
+          width: '100%',
+        }}
       />
 
       <View
@@ -76,18 +54,31 @@ const StylistSelect = ({route}) => {
           paddingHorizontal: responsiveWidth(3),
           marginVertical: responsiveHeight(2),
         }}>
-        <View
+        <TouchableOpacity
+          onPress={() => navigation.navigate('SelectAnyTech', {data})}
+          // onPress={() => {
+          //   if (data?.technicians?.length > 0) {
+          //     const randomIndex = Math.floor(
+          //       Math.random() * data.technicians.length,
+          //     );
+          //     const randomTechnician = data.technicians[randomIndex];
+          //     setSelectedTechnician(randomTechnician._id);
+          //     setTechnicianName(randomTechnician.fullName);
+          //     setSelectRandomTech(true);
+          //   }
+          // }}
           style={{
             flexDirection: 'row',
             paddingLeft: responsiveWidth(10),
             borderRadius: 10,
-            borderWidth: 2,
-            borderColor: AppColors.BLUE,
+            borderWidth: selectRandomTech ? 2 : null,
+            borderColor: selectRandomTech ? AppColors.BLUE : null,
             gap: responsiveWidth(8),
             paddingHorizontal: responsiveWidth(5),
             paddingVertical: responsiveHeight(3),
             alignItems: 'center',
             backgroundColor: AppColors.WHITE,
+            elevation: 6,
           }}>
           <Feather
             name={'users'}
@@ -96,7 +87,7 @@ const StylistSelect = ({route}) => {
           />
           <View>
             <AppText
-              title="Any Nail Technician"
+              title="Select Any Nail Technician"
               textSize={2}
               textColor={AppColors.BLACK}
             />
@@ -107,12 +98,13 @@ const StylistSelect = ({route}) => {
               textColor={AppColors.DARKGRAY}
             />
           </View>
-        </View>
+        </TouchableOpacity>
 
         <LineBreak space={2} />
 
         <FlatList
           data={data?.technicians}
+          contentContainerStyle={{margin: 10}}
           ItemSeparatorComponent={() => <LineBreak space={2} />}
           renderItem={({item}) => {
             return (
@@ -132,6 +124,7 @@ const StylistSelect = ({route}) => {
                     selectedTechnician === item._id
                       ? AppColors.BTNCOLOURS
                       : AppColors.WHITE,
+                  elevation: 5,
                 }}>
                 <Image
                   source={{uri: `${ImageBaseUrl}${item?.image}`}}
@@ -153,6 +146,7 @@ const StylistSelect = ({route}) => {
                   />
 
                   <AppText
+                    textwidth={65}
                     title={item.designation}
                     textSize={1.9}
                     textColor={
@@ -205,7 +199,9 @@ const StylistSelect = ({route}) => {
         <LineBreak space={4} />
 
         <AppButton
+          disabled={selectedTechnician ? false : true}
           title="Select & Continue"
+          bgColor={selectedTechnician ? AppColors.BTNCOLOURS : '#CCCCCC'}
           handlePress={() => {
             if (selectedTechnician) {
               navigation.navigate('DateAndTimeSelection', {

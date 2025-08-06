@@ -43,6 +43,7 @@ const Warz = () => {
   }, [focus]);
   return (
     <ScrollView
+      showsVerticalScrollIndicator={false}
       contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
       <View
         style={{
@@ -66,11 +67,19 @@ const Warz = () => {
               />
             </View>
           </View>
-          <Ionicons
-            name={'notifications-outline'}
-            size={responsiveFontSize(3)}
-            color={AppColors.BLACK}
-          />
+          <TouchableOpacity
+            style={{
+              borderWidth: 1,
+              padding: responsiveHeight(1.5),
+              borderRadius: 10,
+              borderColor: '#F5F5F5',
+            }}>
+            <Ionicons
+              name={'notifications-outline'}
+              size={responsiveFontSize(3)}
+              color={AppColors.BLACK}
+            />
+          </TouchableOpacity>
         </View>
         <TouchableOpacity
           onPress={() => navigation.navigate('CreatePost')}
@@ -210,7 +219,7 @@ const Warz = () => {
                       </View>
 
                       <LineBreak space={1.5} />
-                     
+
                       {item.Post_Type !== 'Post' && (
                         <AppButton
                           title={'VOTE'}
@@ -220,17 +229,17 @@ const Warz = () => {
                         />
                       )}
                     </TouchableOpacity>
-                     {item.Share?.length > 0 && (
-                        <TouchableOpacity style={{marginTop: 10}}>
-                          {item.Share.map((sharedItem, index) => (
-                            <SharePost
-                              key={index}
-                              postData={item}
-                              item={sharedItem}
-                            />
-                          ))}
-                        </TouchableOpacity>
-                      )}
+                    {item.Share?.length > 0 && (
+                      <TouchableOpacity style={{marginTop: 10}}>
+                        {item.Share.map((sharedItem, index) => (
+                          <SharePost
+                            key={index}
+                            postData={item}
+                            item={sharedItem}
+                          />
+                        ))}
+                      </TouchableOpacity>
+                    )}
                   </View>
                 );
               }}

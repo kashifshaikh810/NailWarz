@@ -56,7 +56,7 @@ const Home = () => {
   });
   const [saloons, setSaloons] = useState([]);
   console.log('latLng', latLng);
-  console.log('currentCategory', currentCategory.categoryId);
+  console.log('currentCategory', currentCategory);
   const getAllCategoriesHandler = async () => {
     setIsLoading(true);
     const response = await getAllCategories();
@@ -153,71 +153,90 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (latLng.latitude && latLng.longitude) {
+    if (latLng.latitude && latLng.longitude && currentCategory?.categoryId) {
       getSaloonsHandler();
     }
-  }, [latLng]);
+  }, [latLng, currentCategory]);
   const handleSearch = () => {
     if (searchedSalon?.trim()?.length > 0) {
       getSaloonsHandler();
     }
   };
-  useEffect(() => {
-    getSaloonsHandler();
-  }, [currentCategory]);
+  // useEffect(() => {
+  //   getSaloonsHandler();
+  // }, [currentCategory]);
   useEffect(() => {
     handleSearch();
   }, [searchedSalon]);
   return (
-    <BackgroundScreen>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: 10,
-        }}>
-        <TouchableOpacity
-          style={{flexDirection: 'row'}}
-          // onPress={() => navigation.navigate('SearchLocation')}
-        >
-          <EvilIcons
-            name={'location'}
-            color={AppColors.BLUE}
-            size={responsiveFontSize(5)}
-          />
-          <View>
-            <AppText title="Location" textSize={2} />
-            <AppText
-              title={address}
-              textwidth={50}
-              numberOfLines={2}
-              textSize={1.9}
-              textFontWeight
-            />
-          </View>
-        </TouchableOpacity>
-
-        <Ionicons
-          name={'notifications-outline'}
-          size={responsiveFontSize(3)}
-          color={AppColors.BLACK}
+    <BackgroundScreen padding={0.1} bgColor={'#fff'}>
+      <View style={{padding: 20, paddingBottom: 0, paddingTop: 2}}>
+        <Image
+          source={APPImages.logoSmall}
+          style={{
+            alignSelf: 'center',
+            height: responsiveHeight(8.5),
+            width: responsiveWidth(13),
+            marginTop: responsiveHeight(2),
+          }}
+          resizeMode="contain"
         />
-      </View>
-
-      <View style={{marginTop: 20}}>
-        <AppTextInput
-          onChangeText={value => setSearchedSalon(value)}
-          containerBg={AppColors.INPUTBG}
-          inputPlaceHolder={'Search By Salon Name'}
-          logo={
-            <AntDesign
-              name={'search1'}
-              size={responsiveFontSize(2)}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            // paddingHorizontal: 10,
+          }}>
+          <TouchableOpacity
+            style={{flexDirection: 'row', alignItems: 'center'}}
+            // onPress={() => navigation.navigate('SearchLocation')}
+          >
+            <EvilIcons
+              name={'location'}
+              color={AppColors.BLUE}
+              size={responsiveFontSize(5)}
+            />
+            <View>
+              <AppText title="Location" textSize={2} />
+              <AppText
+                title={address}
+                textwidth={45}
+                numberOfLines={1}
+                textSize={1.9}
+                textFontWeight
+              />
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              borderWidth: 1,
+              padding: responsiveHeight(1.5),
+              borderRadius: 10,
+              borderColor: '#F5F5F5',
+            }}>
+            <Ionicons
+              name={'notifications-outline'}
+              size={responsiveFontSize(3)}
               color={AppColors.BLACK}
             />
-          }
-        />
+          </TouchableOpacity>
+        </View>
+
+        <View style={{marginTop: 20}}>
+          <AppTextInput
+            onChangeText={value => setSearchedSalon(value)}
+            containerBg={AppColors.INPUTBG}
+            inputPlaceHolder={'Search By Salon Name'}
+            logo={
+              <AntDesign
+                name={'search1'}
+                size={responsiveFontSize(2)}
+                color={AppColors.BLACK}
+              />
+            }
+          />
+        </View>
       </View>
       {isLoading ? (
         <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
@@ -231,6 +250,7 @@ const Home = () => {
               width: responsiveWidth(90),
               height: responsiveHeight(20),
               borderRadius: 15,
+              margin: 20,
               overflow: 'hidden',
               padding: 20,
               marginTop: 20,
@@ -293,6 +313,7 @@ const Home = () => {
                 textColor={AppColors.BLACK}
                 textSize={3}
                 textFontWeight
+                styles={{marginLeft: 20}}
               />
 
               <View style={{flexDirection: 'row', alignItems: 'center'}}>
@@ -300,7 +321,12 @@ const Home = () => {
                   data={categories}
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{gap: 10}}
+                  contentContainerStyle={{
+                    gap: 10,
+                    paddingLeft: 20,
+                    paddingRight: 10,
+                    marginBottom: 10,
+                  }}
                   renderItem={({item, index}) => {
                     const logic =
                       currentCategory.categoryName == item?.categoryName;
@@ -321,6 +347,7 @@ const Home = () => {
                             : AppColors.WHITE,
                           borderRadius: 10,
                           gap: 5,
+                          elevation: 5,
                         }}>
                         {/* <Image
                     source={item.icon}
@@ -329,7 +356,7 @@ const Home = () => {
                         <AppText
                           title={item?.categoryName}
                           textSize={2}
-                          textColor={logic ? AppColors.WHITE : AppColors.BLACK}
+                          textColor={logic ? AppColors.WHITE : '#A0A0A0'}
                         />
                       </TouchableOpacity>
                     );
@@ -338,69 +365,79 @@ const Home = () => {
               </View>
             </View>
           ) : null}
-
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: 20,
-            }}>
-            <AppText
-              title="Nearby Salons"
-              textColor={AppColors.BLACK}
-              textSize={3}
-              textFontWeight
-            />
-
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 3}}>
-              <Entypo
-                name={'location'}
-                color={AppColors.BLUE}
-                size={responsiveFontSize(2)}
-              />
-              {/* <TouchableOpacity onPress={() => navigation.navigate('MapView')}> */}
-              <TouchableOpacity>
-                <AppText
-                  title="View on Map"
-                  textColor={AppColors.BLUE}
-                  textSize={2}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          {isLoading2 ? (
-            <View style={{flex: 1, justifyContent: 'center'}}>
-              <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
-            </View>
-          ) : saloons.length > 0 ? (
-            <FlatList
-              data={saloons}
-              contentContainerStyle={{gap: 10}}
-              renderItem={({item}) => {
-                return (
-                  <SaloonsCard
-                    title={item?.salonName}
-                    KM={'km'}
-                    saloonId={item?._id}
-                    Rating={item?.avgRating}
-                    TotalNoOfRating={item?.totalReviews}
-                    img={item?.image[0]}
-                    location={item?.location?.locationName}
-                  />
-                );
-              }}
-            />
-          ) : (
-            <View style={{flex: 0.6, justifyContent: 'center'}}>
+          <View style={{flex: 1}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: 20,
+                marginHorizontal: 20,
+              }}>
               <AppText
-                title={'No Salons Found'}
-                textAlignment="center"
+                title="Nearby Salons"
+                textColor={AppColors.BLACK}
+                textSize={3}
                 textFontWeight
-                textSize={2.5}
               />
+
+              <View
+                style={{flexDirection: 'row', alignItems: 'center', gap: 3}}>
+                <Entypo
+                  name={'location'}
+                  color={AppColors.BLUE}
+                  size={responsiveFontSize(2)}
+                />
+                {/* <TouchableOpacity onPress={() => navigation.navigate('MapView')}> */}
+                <TouchableOpacity>
+                  <AppText
+                    title="View on Map"
+                    textColor={AppColors.BLUE}
+                    textSize={2}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
-          )}
+            {isLoading2 ? (
+              <View style={{flex: 1, justifyContent: 'center'}}>
+                <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
+              </View>
+            ) : saloons.length > 0 ? (
+              <FlatList
+                data={saloons}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                  gap: 10,
+                  backgroundColor: 'white',
+                  paddingHorizontal: responsiveHeight(2),
+                  alignItems: 'center',
+                  marginTop: responsiveHeight(2),
+                }}
+                renderItem={({item}) => {
+                  return (
+                    <SaloonsCard
+                      title={item?.salonName}
+                      KM={'km'}
+                      saloonId={item?._id}
+                      Rating={item?.avgRating}
+                      TotalNoOfRating={item?.totalReviews}
+                      img={item?.image[0]}
+                      location={item?.location?.locationName}
+                    />
+                  );
+                }}
+              />
+            ) : (
+              <View style={{flex: 0.6, justifyContent: 'center'}}>
+                <AppText
+                  title={'No Salons Found'}
+                  textAlignment="center"
+                  textFontWeight
+                  textSize={2.5}
+                />
+              </View>
+            )}
+          </View>
         </View>
       )}
     </BackgroundScreen>

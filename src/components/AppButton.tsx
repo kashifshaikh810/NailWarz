@@ -1,9 +1,9 @@
 /* eslint-disable react-native/no-inline-styles */
-import {View, Text, TouchableOpacity} from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import React from 'react';
 import AppColors from '../utils/AppColors';
 import AppText from './AppTextComps/AppText';
-import { responsiveWidth } from '../utils/Responsive_Dimensions';
+import { responsiveHeight, responsiveWidth } from '../utils/Responsive_Dimensions';
 
 type props = {
   title?: any;
@@ -13,21 +13,26 @@ type props = {
   borderWidth?: any,
   borderColor?: any,
   width?: number,
+  marginHorizontal?: number,
+  disabled?: boolean,
+  style?:any,
 };
-const AppButton = ({title,width, handlePress, bgColor, textColor, borderWidth, borderColor}: props) => {
+const AppButton = ({ title,style, disabled, width, marginHorizontal, handlePress, bgColor, textColor, borderWidth, borderColor }: props) => {
   return (
     <TouchableOpacity
+      disabled={disabled}
       onPress={handlePress}
-      style={{
+      style={[{
         backgroundColor: bgColor ? bgColor : AppColors.BTNCOLOURS,
         alignItems: 'center',
         justifyContent: 'center',
+        marginHorizontal: responsiveHeight(marginHorizontal),
         padding: 10,
         borderRadius: 10,
         borderColor: borderColor ? borderColor : null,
         borderWidth: borderWidth ? borderWidth : 0,
-        width:responsiveWidth(width),
-      }}>
+        width: responsiveWidth(width),
+      },style]}>
       <AppText
         textColor={textColor ? textColor : AppColors.WHITE}
         textSize={2.4}

@@ -1,6 +1,13 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
-import {View, Text, ScrollView, FlatList, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import AppColors from '../../utils/AppColors';
 import {useNavigation} from '@react-navigation/native';
 import AppHeader from '../../components/AppHeader';
@@ -16,22 +23,7 @@ import AppButton from '../../components/AppButton';
 import CalendarModal from '../../components/CalendarModal';
 import {getTechnicianById} from '../../GlobalFunctions';
 import {ShowToast} from '../../GlobalFunctions/auth';
-
-// const datesData = [
-//   {id: 1, day: 'TUE', date: 'Sep 9', mins: '30 mins'},
-//   {id: 2, day: 'WED', date: 'Sep 10', mins: '30 mins'},
-//   {id: 3, day: 'THU', date: 'Sep 11', mins: '30 mins'},
-// ];
-
-// const timesData = [
-//   {id: 1, time: '9:00 AM', offText: '20% Off'},
-//   {id: 2, time: '9:30 AM', offText: '20% Off'},
-//   {id: 3, time: '10:30 AM', offText: ''},
-//   {id: 4, time: '11:00 AM', offText: ''},
-//   {id: 5, time: '11:30 AM', offText: ''},
-//   {id: 6, time: '12:00 PM', offText: ''},
-//   {id: 7, time: '12:30 PM', offText: ''},
-// ];
+import moment from 'moment';
 
 const DateAndTimeSelection = ({route}) => {
   const navigation = useNavigation();
@@ -43,57 +35,124 @@ const DateAndTimeSelection = ({route}) => {
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [workingDays, setWorkingDays] = useState([]);
   const [timesData, setTimesData] = useState([]);
-  console.log('selectedDay', selectedDay);
-  // technicianId,saloonId,serviceId,technicianName,price,serviceName,
+  const [bookedAppointments, setBookedAppointments] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  console.log('selectedDay===>>><<<<', selectedDay);
+  console.log('bookedAppointments===>>><<<<', bookedAppointments);
+  console.log('data===>>><<<<', data);
+  console.log('isSelectedTime.id !== 0===>>><<<<', isSelectedTime.id === 0);
   useEffect(() => {
-    if (selectedDay && workingDays.length > 0) {
-      const dayData = workingDays.find(
+    if (selectedDay && workingDays?.length > 0) {
+      const dayData = workingDays?.find(
         item => item.day === selectedDay && item.isActive,
       );
 
       if (dayData) {
-        const slots = generateTimeSlots(dayData.startTime, dayData.endTime);
+        let slots = generateTimeSlots(
+          dayData.startTime,
+          dayData.endTime,
+          dayData.breakStart,
+          dayData.breakEnd,
+        );
+        console.log('Slot Time:', slots);
+
+        const bookedTimes = bookedAppointments?.map(
+          // appointment => appointment.time,
+          appointment => moment(appointment.time, 'hh:mm A').format('HH:mm'),
+        ); // raw HH:mm
+
+        if (bookedTimes?.length > 0) {
+          slots = slots.filter(slot => !bookedTimes.includes(slot.raw)); // compare raw times
+        }
+        console.log('bookedTimes (formatted) ===>>>', bookedTimes);
+
         setTimesData(slots);
       } else {
-        setTimesData([]); // no working hours found
+        setTimesData([]);
       }
     }
-  }, [selectedDay, workingDays]);
+  }, [selectedDay, workingDays, bookedAppointments, isSelectedDate]);
 
   useEffect(() => {
+    if (datesData?.length > 0 && !isSelectedDate?.id) {
+      const firstItem = datesData[0];
+      setIsSelectedDate(firstItem);
+      setSelectedDay(firstItem.day);
+    }
+  }, [datesData]);
+  useEffect(() => {
     if (selectedDateFromCalendar && selectedFormattedDate) {
-      const isCustom = !isCustomDateAlreadyInList;
-
       setIsSelectedDate(selectedFormattedDate);
       setSelectedDay(selectedFormattedDate.day);
     }
   }, [selectedDateFromCalendar]);
 
-  const generateTimeSlots = (startTime, endTime) => {
+  // const generateTimeSlots = (startTime, endTime) => {
+  //   const slots = [];
+  //   let [startHour, startMinute] = startTime.split(':').map(Number);
+  //   let [endHour, endMinute] = endTime.split(':').map(Number);
+
+  //   const start = new Date();
+  //   start.setHours(startHour, startMinute, 0, 0);
+
+  //   const end = new Date();
+  //   end.setHours(endHour, endMinute, 0, 0);
+
+  //   let id = 1;
+  //   while (start <= end) {
+  //     const formattedTime = new Date(start).toLocaleTimeString([], {
+  //       hour: 'numeric',
+  //       minute: '2-digit',
+  //       hour12: true,
+  //     });
+
+  //     slots.push({id: id++, time: formattedTime, offText: ''});
+  //     start.setMinutes(start.getMinutes() + 30);
+  //   }
+
+  //   return slots;
+  // };
+  const generateTimeSlots = (startTime, endTime, breakStart, breakEnd) => {
     const slots = [];
-    let [startHour, startMinute] = startTime.split(':').map(Number);
-    let [endHour, endMinute] = endTime.split(':').map(Number);
 
-    const start = new Date();
-    start.setHours(startHour, startMinute, 0, 0);
+    const parse12HourTime = timeStr => moment(timeStr, 'hh:mm A').toDate();
 
-    const end = new Date();
-    end.setHours(endHour, endMinute, 0, 0);
+    const formatToRaw = date => moment(date).format('HH:mm'); // Internal comparison
+    const formatToDisplay = date => moment(date).format('hh:mm A'); // For UI
+
+    const start = parse12HourTime(startTime);
+    const end = parse12HourTime(endTime);
+    const breakStartTime = breakStart ? parse12HourTime(breakStart) : null;
+    const breakEndTime = breakEnd ? parse12HourTime(breakEnd) : null;
 
     let id = 1;
-    while (start <= end) {
-      const formattedTime = new Date(start).toLocaleTimeString([], {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
+    const current = new Date(start);
 
-      slots.push({id: id++, time: formattedTime, offText: ''});
-      start.setMinutes(start.getMinutes() + 30);
+    while (current < end) {
+      const currentRaw = formatToRaw(current);
+      const currentDisplay = formatToDisplay(current);
+
+      const isInBreak =
+        breakStartTime &&
+        breakEndTime &&
+        current >= breakStartTime &&
+        current < breakEndTime;
+
+      if (!isInBreak) {
+        slots.push({
+          id: id++,
+          time: currentDisplay,
+          raw: currentRaw,
+          offText: '',
+        });
+      }
+
+      current.setMinutes(current.getMinutes() + 30); // 30 min gap
     }
 
     return slots;
   };
+
   const getNextDates = (numDays = 3) => {
     const options = {month: 'short', day: 'numeric'};
     const dayLabels = [
@@ -129,12 +188,20 @@ const DateAndTimeSelection = ({route}) => {
     });
   };
   const getTechnicianHandler = async () => {
-    const response = await getTechnicianById(data?.selectedTechnician);
-    setWorkingDays(response.data.workingDays);
+    setIsLoading(true);
+    const response = await getTechnicianById(
+      data?.selectedTechnician,
+      isSelectedDate?.formattedDate,
+    );
+    setIsLoading(false);
+
+    console.log('response.data======>>>><<<<<<<', response?.data);
+    setWorkingDays(response.data?.technician?.workingDays);
+    setBookedAppointments(response.data?.technicianAppointments);
   };
   useEffect(() => {
     getTechnicianHandler();
-  }, []);
+  }, [isSelectedDate?.formattedDate]);
 
   const convertSelectedDate = (selectedDateStr, id = 1) => {
     const dateObj = new Date(selectedDateStr);
@@ -187,203 +254,240 @@ const DateAndTimeSelection = ({route}) => {
   // console.log('formattedTime', formattedTime);
 
   return (
-    <ScrollView style={{flexGrow: 1, backgroundColor: AppColors.APPBG}}>
-      <AppHeader onPress={() => navigation.goBack()} title="Date and time" />
-
-      <View
-        style={{
-          paddingHorizontal: responsiveWidth(4),
-          marginVertical: responsiveHeight(2),
-          flex: 1,
-        }}>
-        <AppText
-          title="Select Date"
-          textSize={2.5}
-          textColor={AppColors.BLACK}
-          textFontWeight
+    <View style={{flex: 1}}>
+      <ScrollView style={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+        <AppHeader onPress={() => navigation.goBack()} title="Date and time" />
+        <View
+          style={{
+            backgroundColor: '#B4B4B4',
+            height: 0.5,
+            elevation: 5,
+            width: '100%',
+          }}
         />
+        <View
+          style={{
+            // paddingHorizontal: responsiveWidth(4),
+            // backgroundColor:AppColors.WHITE,
+            marginVertical: responsiveHeight(2),
+            flex: 1,
+          }}>
+          <AppText
+            mrgnLeft={2}
+            title="Select Date"
+            textSize={2.5}
+            textColor={AppColors.BLACK}
+            textFontWeight
+          />
 
-        <LineBreak space={1.5} />
+          {/* <LineBreak space={1.5} /> */}
 
-        <FlatList
-          data={datesData}
-          horizontal
-          ListFooterComponent={
-            <TouchableOpacity
-              style={{
-                backgroundColor: AppColors.WHITE,
-                borderRadius: 10,
-                alignItems: 'center',
-                paddingHorizontal: responsiveWidth(3.4),
-                paddingVertical: 10,
-                width: responsiveWidth(16),
-                height: responsiveHeight(9.5),
-                gap: 5,
-              }}
-              onPress={() => setShowCalendarModal(true)}>
-              <EvilIcons
-                name={'calendar'}
-                size={responsiveFontSize(3)}
-                color={AppColors.BLACK}
-              />
-              <AppText
-                title="More Dates"
-                textSize={1.7}
-                textColor={AppColors.BLACK}
-                textFontWeight
-              />
-            </TouchableOpacity>
-          }
-          contentContainerStyle={{gap: 15}}
-          renderItem={({item}) => {
-            return (
+          <FlatList
+            data={datesData}
+            showsHorizontalScrollIndicator={false}
+            horizontal
+            ListFooterComponent={
               <TouchableOpacity
-                onPress={() => {
-                  setIsSelectedDate(item);
-                  setSelectedDay(item?.day);
-
-                  console.log('item========', item);
-                }}
                 style={{
                   backgroundColor: AppColors.WHITE,
+                  elevation: 6,
                   borderRadius: 10,
                   alignItems: 'center',
                   paddingHorizontal: responsiveWidth(3.4),
                   paddingVertical: 10,
-                  borderWidth: isSelectedDate.id === item.id ? 2 : 0,
-                  borderColor: AppColors.BLUE,
-                }}>
+                  width: responsiveWidth(16),
+                  height: responsiveHeight(9.5),
+                  gap: 5,
+                }}
+                onPress={() => setShowCalendarModal(true)}>
+                <EvilIcons
+                  name={'calendar'}
+                  size={responsiveFontSize(3)}
+                  color={AppColors.BLACK}
+                />
                 <AppText
-                  title={item.label}
+                  title="More Dates"
                   textSize={1.7}
-                  textColor={
-                    isSelectedDate.id === item.id
-                      ? AppColors.BLUE
-                      : AppColors.DARKGRAY
-                  }
+                  textColor={AppColors.BLACK}
                   textFontWeight
-                />
-                <LineBreak space={0.3} />
-
-                <AppText
-                  title={item.date}
-                  textSize={1.5}
-                  textColor={
-                    isSelectedDate.id === item.id
-                      ? AppColors.BLUE
-                      : AppColors.BLACK
-                  }
-                  textFontWeight
-                />
-                <LineBreak space={0.3} />
-
-                <AppText
-                  title={item.mins}
-                  textSize={1.3}
-                  textColor={
-                    isSelectedDate.id === item.id
-                      ? AppColors.BLUE
-                      : AppColors.DARKGRAY
-                  }
                 />
               </TouchableOpacity>
-            );
-          }}
-        />
-
-        <LineBreak space={3} />
-
-        {timesData?.length > 0 ? (
-          <View>
-            <AppText
-              title="Select Time"
-              textSize={2.5}
-              textColor={AppColors.BLACK}
-              textFontWeight
-            />
-
-            <LineBreak space={1.5} />
-
-            <FlatList
-              data={timesData}
-              contentContainerStyle={{gap: 15}}
-              renderItem={({item}) => (
+            }
+            contentContainerStyle={{gap: 15, padding: responsiveHeight(2)}}
+            renderItem={({item}) => {
+              return (
                 <TouchableOpacity
+                  onPress={() => {
+                    setIsSelectedDate(item);
+                    setSelectedDay(item?.day);
+
+                    console.log('item========', item);
+                  }}
                   style={{
                     backgroundColor: AppColors.WHITE,
+                    elevation: 6,
                     borderRadius: 10,
+                    alignItems: 'center',
                     paddingHorizontal: responsiveWidth(3.4),
                     paddingVertical: 10,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    borderWidth: isSelectedTime.id === item.id ? 2 : 0,
+                    borderWidth: isSelectedDate.id === item.id ? 2 : 0,
                     borderColor: AppColors.BLUE,
-                  }}
-                  onPress={() =>
-                    setIsSelectedTime({id: item.id, value: item?.time})
-                  }>
+                  }}>
                   <AppText
-                    title={item.time}
-                    textSize={2}
-                    textColor={AppColors.BLACK}
+                    title={item.label}
+                    textSize={1.7}
+                    textColor={
+                      isSelectedDate.id === item.id
+                        ? AppColors.BLUE
+                        : AppColors.DARKGRAY
+                    }
                     textFontWeight
                   />
-                  {item.offText && (
+                  <LineBreak space={0.3} />
+
+                  <AppText
+                    title={item.date}
+                    textSize={1.5}
+                    textColor={
+                      isSelectedDate.id === item.id
+                        ? AppColors.BLUE
+                        : AppColors.BLACK
+                    }
+                    textFontWeight
+                  />
+                  <LineBreak space={0.3} />
+
+                  <AppText
+                    title={item.mins}
+                    textSize={1.3}
+                    textColor={
+                      isSelectedDate.id === item.id
+                        ? AppColors.BLUE
+                        : AppColors.DARKGRAY
+                    }
+                  />
+                </TouchableOpacity>
+              );
+            }}
+          />
+
+          <LineBreak space={1.5} />
+
+          {isLoading ? (
+            <View
+              style={{height: responsiveHeight(25), justifyContent: 'center'}}>
+              <ActivityIndicator size={40} color={AppColors.BTNCOLOURS} />
+            </View>
+          ) : timesData?.length > 0 ? (
+            <View>
+              <AppText
+                mrgnLeft={2}
+                title="Select Time"
+                textSize={2.5}
+                textColor={AppColors.BLACK}
+                textFontWeight
+              />
+
+              {/* <LineBreak space={1.5} /> */}
+
+              <FlatList
+                data={timesData}
+                contentContainerStyle={{
+                  gap: responsiveHeight(2),
+                  padding: responsiveHeight(2),
+                  paddingBottom: responsiveHeight(7),
+                }}
+                renderItem={({item}) => (
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: AppColors.WHITE,
+                      elevation: 5,
+                      borderRadius: 10,
+                      paddingHorizontal: responsiveWidth(3.4),
+                      paddingVertical: 10,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderWidth: isSelectedTime.id === item.id ? 2 : 0,
+                      borderColor: AppColors.BLUE,
+                    }}
+                    onPress={() =>
+                      setIsSelectedTime({id: item.id, value: item?.time})
+                    }>
                     <AppText
-                      title={item.offText}
-                      textSize={1.7}
-                      textColor={AppColors.GREEN}
+                      title={item.time}
+                      textSize={2}
+                      textColor={AppColors.BLACK}
                       textFontWeight
                     />
-                  )}
-                </TouchableOpacity>
-              )}
-            />
-            <LineBreak space={4} />
-            <AppButton
-              title="Confirm Appointment"
-              handlePress={() =>
-                isSelectedTime.id !== 0
-                  ? navigation.navigate('BookingSummary', {
-                      data: {
-                        ...data,
-                        selectedTime: isSelectedTime,
-                        selectedDate: isSelectedDate?.date,
-                        selectedDay: isSelectedDate?.day,
-                        selectedBookingDate: isSelectedDate?.formattedDate,
-                      },
-                    })
-                  : ShowToast('error', 'Plz Select Appointment Time To Proceed')
-              }
-              // bgColor={AppColors.DARKGRAY}
-              // textColor={AppColors.WHITE}
-            />
-          </View>
-        ) : (
-          <View
-            style={{marginTop: responsiveHeight(5), justifyContent: 'center'}}>
-            <AppText
-              title={
-                selectedDay
-                  ? 'Salon is closed on this day. Choose another date.'
-                  : null
-              }
-              textSize={2.5}
-              textAlignment={'center'}
-              textColor={AppColors.BLACK}
-              textFontWeight
-            />
-          </View>
-        )}
-        <CalendarModal
-          visible={showCalendarModal}
-          setVisible={() => setShowCalendarModal(false)}
-          selected={selectedDateFromCalendar}
-          setSelected={setSelectedDateFromCalendar}
+                    {item.offText && (
+                      <AppText
+                        title={item.offText}
+                        textSize={1.7}
+                        textColor={AppColors.GREEN}
+                        textFontWeight
+                      />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+              <LineBreak space={2} />
+            </View>
+          ) : (
+            <View
+              style={{
+                marginTop: responsiveHeight(5),
+                justifyContent: 'center',
+              }}>
+              <AppText
+                title={
+                  selectedDay
+                    ? 'Salon is closed on this day. Choose another date.'
+                    : null
+                }
+                textSize={2.5}
+                textAlignment={'center'}
+                textColor={AppColors.BLACK}
+                textFontWeight
+              />
+            </View>
+          )}
+          <CalendarModal
+            visible={showCalendarModal}
+            setVisible={() => setShowCalendarModal(false)}
+            selected={selectedDateFromCalendar}
+            setSelected={setSelectedDateFromCalendar}
+          />
+        </View>
+      </ScrollView>
+      {timesData?.length > 0 ? (
+        <AppButton
+          style={{
+            marginHorizontal: responsiveHeight(2),
+            position: 'absolute',
+            bottom: responsiveHeight(2),
+            width: responsiveWidth(90),
+            alignSelf: 'center',
+          }}
+          bgColor={isSelectedTime.id === 0 ? '#CCCCCC' : AppColors.BTNCOLOURS}
+          title="Confirm Appointment"
+          disabled={isSelectedTime.id === 0}
+          handlePress={() =>
+            navigation.navigate('BookingSummary', {
+              data: {
+                ...data,
+                selectedTime: isSelectedTime,
+                selectedDate: isSelectedDate?.date,
+                selectedDay: isSelectedDate?.day,
+                selectedBookingDate: isSelectedDate?.formattedDate,
+              },
+            })
+          }
+          // bgColor={AppColors.DARKGRAY}
+          // textColor={AppColors.WHITE}
         />
-      </View>
-    </ScrollView>
+      ) : null}
+    </View>
   );
 };
 

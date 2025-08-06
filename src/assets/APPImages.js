@@ -10,4 +10,7 @@ export default APPImages = {
     default_user: require('./default_user.png'),
     counting: require('./OBJECTS.png'),
     dummyImg: require('./userDummy.png'),
-}
+    Splash: require('./Splash.png'),
+    bg: require('./bg.png'),
+    logoSmall: require('./logoSmall.png'),
+};

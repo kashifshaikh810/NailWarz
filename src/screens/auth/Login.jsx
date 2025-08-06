@@ -6,6 +6,7 @@ import {
   Image,
   ActivityIndicator,
   ScrollView,
+  ImageBackground,
 } from 'react-native';
 import React, {useState} from 'react';
 import AppText from '../../components/AppTextComps/AppText';
@@ -28,72 +29,107 @@ import LinearGradient from 'react-native-linear-gradient';
 import {useNavigation} from '@react-navigation/native';
 import {userLogin} from '../../GlobalFunctions/auth';
 import {useDispatch, useSelector} from 'react-redux';
+import {SvgFromXml, SvgUri} from 'react-native-svg';
+import {AppIcons} from '../../assets/Icons';
 
 const Login = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
+  const [phone, setPhone] = useState(null);
   const dispatch = useDispatch();
-  const [isLoading, setIsLoading] = useState(false);
-  const {token,userData} = useSelector(state => state.user);
-  console.log('token', token);
+  const [secureTxtEntry, setSecureTxtEntry] = useState(true);
+  const {token, userData, isLoading} = useSelector(state => state.user);
+  const [withEmail, setWithEmail] = useState(true);
+
   console.log('userData', userData);
 
-
   const loginHandler = async () => {
-    setIsLoading(true);
-    await userLogin(email, password, dispatch);
-    setIsLoading(false);
+    await userLogin(email, password, phone, dispatch, navigation);
   };
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{flexGrow: 1}}>
-      <LinearGradient
-        colors={[AppColors.WHITE, AppColors.BLACK]}
-        style={{flex: 1, padding: 20}}>
-        <View
-          style={{
-            height: responsiveHeight(10),
-            justifyContent: 'flex-end',
-            marginBottom: 20,
-          }}>
-          <Logo logoUrl={APPImages.LOGO} />
-        </View>
-
+    <ImageBackground source={APPImages.bg} style={{flex: 1}}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{flexGrow: 1, padding: 20}}>
         <View style={{gap: 20}}>
-          <Logo
-            logoUrl={APPImages.LOGO}
-            logoWeight={responsiveHeight(20)}
-            logoHeight={responsiveHeight(20)}
-            logoReizeMode={'contain'}
-          />
+          <View
+            style={{
+              marginTop: responsiveHeight(3),
+              marginBottom: responsiveHeight(2),
+            }}>
+            <Logo
+              logoUrl={APPImages.LOGO}
+              logoWeight={responsiveHeight(20)}
+              logoHeight={responsiveHeight(20)}
+              logoReizeMode={'contain'}
+            />
+          </View>
 
           <View>
             <AppText
-              title="Welcome to"
+              title="Welcome"
+              textAlignment={'center'}
               textColor={AppColors.WHITE}
               textSize={3}
               textFontWeight={700}
             />
-            <AppText
-              title="Nail Warz"
-              textColor={AppColors.WHITE}
-              textSize={3.5}
-              textFontWeight={700}
-            />
           </View>
-
-          <AppTextInput
-            onChangeText={value => setEmail(value)}
-            inputPlaceHolder={'Enter your email address'}
-            containerBg={AppColors.INPUTBG}
-          />
-          <AppTextInput
-            onChangeText={value => setPassword(value)}
-            inputPlaceHolder={'Enter your pasword'}
-            containerBg={AppColors.INPUTBG}
-          />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: responsiveHeight(2),
+            }}>
+            <TouchableOpacity
+              onPress={() => {
+                setWithEmail(true);
+                setEmail('');
+              }}>
+              <AppText
+                textSize={1.99}
+                textColor={withEmail ? AppColors.BTNCOLOURS : '#fff'}
+                title="Login with email"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setWithEmail(false);
+                setPhone('');
+              }}>
+              <AppText
+                textColor={withEmail ? '#fff' : AppColors.BTNCOLOURS}
+                textSize={1.99}
+                title="Login with phone"
+              />
+            </TouchableOpacity>
+          </View>
+          {withEmail ? (
+            <View style={{gap: responsiveHeight(2)}}>
+              <AppTextInput
+                keyboardType="email-address"
+                onChangeText={value => setEmail(value)}
+                inputPlaceHolder={'Enter your email address'}
+                containerBg={AppColors.INPUTBG}
+              />
+              <AppTextInput
+                showEye={true}
+                handleEyePress={() => setSecureTxtEntry(!secureTxtEntry)}
+                secureTxtEntry={secureTxtEntry}
+                onChangeText={value => setPassword(value)}
+                inputPlaceHolder={'Enter your pasword'}
+                containerBg={AppColors.INPUTBG}
+              />
+            </View>
+          ) : (
+            <AppTextInput
+              keyboardType="numeric"
+              onChangeText={value => setPhone(value)}
+              inputPlaceHolder={'Enter your phone number'}
+              containerBg={AppColors.INPUTBG}
+            />
+          )}
 
           <AppButton
             title={
@@ -116,7 +152,7 @@ const Login = () => {
           <View
             style={{
               justifyContent: 'flex-end',
-              gap: 10,
+              gap: responsiveHeight(2.5),
             }}>
             <SocialAuthButton
               bgColor={AppColors.BLACK}
@@ -124,7 +160,7 @@ const Login = () => {
               logo={
                 <AntDesign
                   name={'apple1'}
-                  size={responsiveFontSize(2)}
+                  size={responsiveFontSize(2.8)}
                   color={AppColors.WHITE}
                 />
               }
@@ -134,10 +170,13 @@ const Login = () => {
               bgColor={AppColors.LIGHTGRAY}
               title={'Continue with Google'}
               logo={
-                <AntDesign
-                  name={'google'}
-                  size={responsiveFontSize(2)}
-                  color={AppColors.BLACK}
+                <SvgFromXml
+                  xml={AppIcons.google}
+                  height={responsiveFontSize(2.8)}
+                  width={responsiveFontSize(2.8)}
+                  // name={'google'}
+                  // size={responsiveFontSize(2)}
+                  // color={AppColors.BLACK}
                 />
               }
             />
@@ -162,8 +201,8 @@ const Login = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
-    </ScrollView>
+      </ScrollView>
+    </ImageBackground>
   );
 };
 

@@ -2,13 +2,25 @@ import axios from 'axios';
 import { BaseUrl } from '../BaseUrl';
 import Toast from 'react-native-toast-message';
 import { setToken, setUserData, UserLogin } from '../Redux/Slices';
+import { useNavigation } from '@react-navigation/native';
 
-export const registerUser = async (userName: string, email: string, password: string, navigation: any) => {
-  let data = JSON.stringify({
-    'username': userName,
-    'email': email.toLowerCase(),
-    'password': password,
-  });
+export const registerUser = async (userName: string, email: string, password: string, phone: number, navigation: any) => {
+  let payload: any = {
+    username: userName,
+  };
+
+  if (email) {
+    payload.email = email.toLowerCase();
+  }
+  if (password) {
+    payload.password = password;
+  }
+  if (phone) {
+    payload.phone = phone;
+  }
+
+  let data = JSON.stringify(payload);
+  console.log('dattaaaadttta',data)
 
   let config = {
     method: 'post',
@@ -24,7 +36,7 @@ export const registerUser = async (userName: string, email: string, password: st
     console.log('response.data', response.data);
     if (response.data.success) {
       ShowToast('success', response.data.message);
-      navigation.navigate('Otp', { token: response.data.token });
+      navigation.navigate('Otp', { token: response.data.token, email, phone });
     } else {
       ShowToast('error', response.data.message);
     }
@@ -40,11 +52,20 @@ export const ShowToast = (type: string, text: string) => {
     text1: text,
   });
 };
-export const userLogin = async (email: string, password: string, dispatch: any) => {
-  let data = JSON.stringify({
-    'email': email.toLowerCase(),
-    'password': password,
-  });
+export const userLogin = async (email: string, password: string, phone: number, dispatch: any, navigation: any) => {
+  const payload: any = {};
+  if (email) {
+    payload.email = email.toLowerCase();
+  }
+  if (password) {
+    payload.password = password;
+  }
+  if (phone) {
+    payload.phone = Number(phone);
+  }
+
+  const data = JSON.stringify(payload);
+  console.log('data', data)
 
   let config = {
     method: 'post',
@@ -55,13 +76,31 @@ export const userLogin = async (email: string, password: string, dispatch: any) 
     },
     data: data,
   };
-  await dispatch(UserLogin(config));
+  if (email) {
+    await dispatch(UserLogin(config));
+  } else {
+    const result: any = await dispatch(UserLogin(config));
+    console.log('response', result);
+    if (result.payload?.success && !result.payload?.token) {
+      navigation.navigate('Otp', { token: null, phone: result.payload?.phone });
+    }
+  }
 };
-export const verifyOtp = async (token: string, otp: number, dispatch: any) => {
-  let data = JSON.stringify({
-    'token': token,
-    'otp': otp,
-  });
+export const verifyOtp = async (token: string, otp: number, phone: number, dispatch: any) => {
+  // let data = JSON.stringify({
+  //   'token': token,
+  //   'otp': otp,
+  // });
+  let payload: any = {
+    otp: otp,
+  };
+  if (token) {
+    payload.token = token;
+  }
+  if (phone) {
+    payload.phone = Number(phone);
+  }
+  const data = JSON.stringify(payload);
   let config = {
     method: 'post',
     maxBodyLength: Infinity,
@@ -71,12 +110,20 @@ export const verifyOtp = async (token: string, otp: number, dispatch: any) => {
     },
     data: data,
   };
+  console.log('data', data);
+  console.log('config', config);
+
   try {
     const response = await axios.request(config);
+    console.log('response.data', response.data);
     if (response.data.success) {
       ShowToast('success', response.data.message);
       dispatch(setUserData(response.data?.data));
-      dispatch(setToken(token));
+      if (token) {
+        dispatch(setToken(token));
+      } else {
+        dispatch(setToken(response.data.token));
+      }
     } else {
       ShowToast('error', response.data.message);
     }

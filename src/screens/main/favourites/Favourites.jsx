@@ -84,9 +84,18 @@ const Favourites = () => {
   }, [isFocus]);
   return (
     <ScrollView
-      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.APPBG}}>
+      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader onPress={() => navigation.goBack()} title="Favourites" />
-      <LineBreak space={2} />
+         <View
+                style={{
+                  backgroundColor: '#B4B4B4',
+                  height: 0.5,
+                  elevation: 5,
+                  width: '100%',
+                  marginBottom:responsiveHeight(1.5),
+                }}
+              />
+      {/* <LineBreak space={2} /> */}
       <RemoveFavouritesModal
         loading2={loading2}
         handleBackdropPress={() => setShowRemoveModal(false)}
@@ -102,10 +111,14 @@ const Favourites = () => {
           <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
         </View>
       ) : allSaloons.length > 0 ? (
-        <View style={{paddingHorizontal: responsiveWidth(5)}}>
+        <View style={{}}>
           <FlatList
             data={allSaloons}
-            contentContainerStyle={{gap: 10}}
+            contentContainerStyle={{
+              gap: 10,
+              paddingHorizontal: responsiveWidth(5),
+              alignSelf: 'center',
+            }}
             // keyExtractor={item => item.id.toString()}
             renderItem={({item}) => (
               <SwipeableItem
@@ -121,7 +134,9 @@ const Favourites = () => {
                     }}
                     style={{
                       backgroundColor: '#FA52521A',
-                      flex: 1,
+                      // flex: 1,
+                      marginTop: responsiveHeight(1.4),
+                      height: responsiveHeight(15.2),
                       alignSelf: 'flex-end',
                       justifyContent: 'center',
                       alignItems: 'center',

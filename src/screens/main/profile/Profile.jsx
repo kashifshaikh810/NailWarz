@@ -162,6 +162,7 @@ const Profile = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {userData} = useSelector(state => state.user);
+  console.log('userdata===',userData)
   return (
     <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader onPress={() => navigation.goBack()} title="Profile" />

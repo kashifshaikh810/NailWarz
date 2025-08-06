@@ -105,9 +105,22 @@ const Booking = () => {
   }, [selectedTab]);
   return (
     <ScrollView
-      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.APPBG}}>
-      <AppHeader onPress={() => navigation.goBack()} title="Bookings" />
-
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+      <AppHeader
+        style={{paddingBottom: responsiveHeight(2)}}
+        onPress={() => navigation.goBack()}
+        title="Bookings"
+      />
+      <View
+        style={{
+          backgroundColor: '#B4B4B4',
+          height: 0.5,
+          elevation: 5,
+          width: '100%',
+          marginBottom: 10,
+        }}
+      />
       <CancelBookingModal
         visible={showCancelBookingModal}
         handleAppointmentButtonPress={() => {
@@ -127,48 +140,50 @@ const Booking = () => {
           setShowSuccessCancelBookingModal(false);
         }}
       />
+
+      <View
+        style={{
+          paddingHorizontal: responsiveWidth(5),
+          paddingVertical: responsiveHeight(2),
+        }}>
+        <FlatList
+          data={tabs}
+          horizontal
+          contentContainerStyle={{gap: 15}}
+          renderItem={({item}) => {
+            return (
+              <TouchableOpacity onPress={() => setSelectedTab(item.title)}>
+                <AppText
+                  title={item.title}
+                  textSize={2.4}
+                  textColor={
+                    selectedTab === item.title
+                      ? AppColors.BTNCOLOURS
+                      : AppColors.DARKGRAY
+                  }
+                  borderBottomWidth={selectedTab === item.title ? 3 : 0}
+                  borderBottomColor={
+                    selectedTab === item.title ? AppColors.BTNCOLOURS : null
+                  }
+                  paddingBottom={responsiveHeight(0.5)}
+                />
+              </TouchableOpacity>
+            );
+          }}
+        />
+
+        <LineBreak space={2} />
+      </View>
       {isLoading ? (
         <View style={{flex: 1, justifyContent: 'center'}}>
           <ActivityIndicator size={50} color={AppColors?.BTNCOLOURS} />
         </View>
       ) : (
-        <View
-          style={{
-            paddingHorizontal: responsiveWidth(5),
-            paddingVertical: responsiveHeight(2),
-          }}>
-          <FlatList
-            data={tabs}
-            horizontal
-            contentContainerStyle={{gap: 15}}
-            renderItem={({item}) => {
-              return (
-                <TouchableOpacity onPress={() => setSelectedTab(item.title)}>
-                  <AppText
-                    title={item.title}
-                    textSize={2.4}
-                    textColor={
-                      selectedTab === item.title
-                        ? AppColors.BTNCOLOURS
-                        : AppColors.DARKGRAY
-                    }
-                    borderBottomWidth={selectedTab === item.title ? 3 : 0}
-                    borderBottomColor={
-                      selectedTab === item.title ? AppColors.BTNCOLOURS : null
-                    }
-                    paddingBottom={responsiveHeight(0.5)}
-                  />
-                </TouchableOpacity>
-              );
-            }}
-          />
-
-          <LineBreak space={2} />
-
+        <View style={{flex: 1}}>
           {selectedTab === 'Accepted' && (
             <FlatList
               data={upcomingData}
-              contentContainerStyle={{gap: 10}}
+              contentContainerStyle={{gap: 10, margin: 10, marginTop: 0}}
               renderItem={({item}) => {
                 return (
                   <BookingCard
@@ -192,7 +207,7 @@ const Booking = () => {
           {selectedTab === 'Completed' && (
             <FlatList
               data={upcomingData}
-              contentContainerStyle={{gap: 10}}
+              contentContainerStyle={{gap: 10, marginTop: 0}}
               renderItem={({item}) => {
                 return (
                   <BookingCard
@@ -215,7 +230,7 @@ const Booking = () => {
           {selectedTab === 'Canceled' && (
             <FlatList
               data={upcomingData}
-              contentContainerStyle={{gap: 10}}
+              contentContainerStyle={{gap: 10, marginTop: 0}}
               renderItem={({item}) => {
                 return (
                   <BookingCard

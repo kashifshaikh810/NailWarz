@@ -1,18 +1,22 @@
-import { View, Text } from 'react-native'
-import React, {ReactNode} from 'react'
+import { View, Text, ScrollView } from 'react-native'
+import React, { ReactNode } from 'react'
 import AppColors from '../../utils/AppColors'
+import { responsiveHeight } from '../../utils/Responsive_Dimensions'
 
 type BgProps = {
-    children: ReactNode,
-    stylesPorp?: any
+  children: ReactNode,
+  stylesPorp?: any,
+  paddingTop?: number,
+  padding?: number,
+  bgColor?: bgColor,
 }
 
-const BackgroundScreen = ({children,stylesPorp}: BgProps) => {
+const BackgroundScreen = ({ children, bgColor, stylesPorp, padding, paddingTop }: BgProps) => {
   return (
-    <View style={[stylesPorp,{flex:1, backgroundColor:AppColors.BGCOLOURS, padding:20}]}>
-        {children}
-    </View>
-  )
-}
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[stylesPorp, { flexGrow: 1, backgroundColor: bgColor ? bgColor : AppColors.WHITE, padding: responsiveHeight(padding) ? padding : 20, paddingTop: paddingTop ? responsiveHeight(paddingTop) : null }]}>
+      {children}
+    </ScrollView>
+  );
+};
 
-export default BackgroundScreen
+export default BackgroundScreen;

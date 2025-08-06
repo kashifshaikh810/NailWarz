@@ -71,6 +71,7 @@ const SaloonsCard = ({
   return (
     <Animated.View style={component ? { transform: [{ translateX }] } : {}}>
       <TouchableOpacity
+        activeOpacity={0.9}
         style={{ alignSelf: showDeleteCard ? null : 'center' }}
         onPress={() => {
           if (component) {
@@ -79,7 +80,7 @@ const SaloonsCard = ({
             navigation.navigate('HomeDetails', { saloonId });
           }
         }}>
-        <View style={{ flexDirection: 'row' }}>
+        <View style={{ flexDirection: 'row', }}>
           <View
             style={{
               padding: 20,
@@ -89,6 +90,15 @@ const SaloonsCard = ({
               flexDirection: 'row',
               alignItems: 'center',
               backgroundColor: AppColors.WHITE,
+              marginHorizontal: responsiveWidth(-0.2),
+              marginVertical: responsiveHeight(1.5),
+
+              // Shadow
+              elevation: 7,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 5,
             }}>
             <Image
               source={{ uri: `${ImageBaseUrl}${img}` }}

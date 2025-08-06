@@ -41,7 +41,7 @@ const AllReviews = ({ navigation, route }) => {
     getAllReviewsHandler();
   }, [refresh]);
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1, padding: responsiveHeight(2) }} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: AppColors.WHITE, padding: responsiveHeight(2) }} showsVerticalScrollIndicator={false}>
       {
         isLoading ? (
           <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -79,6 +79,8 @@ const AllReviews = ({ navigation, route }) => {
                 contentContainerStyle={{
                   gap: responsiveHeight(2),
                   marginTop: responsiveHeight(2.5),
+                  margin:responsiveHeight(0.7),
+                  paddingBottom:responsiveHeight(3),
                 }}
                 showsHorizontalScrollIndicator={false}
                 data={allReviews}

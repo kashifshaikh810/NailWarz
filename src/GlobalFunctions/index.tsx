@@ -15,8 +15,8 @@ export const getSaloons = async ({
   categoryId?: string;
 }) => {
   const params = new URLSearchParams();
-  if (latitude) params.append('latitude', latitude.toString());
-  if (longitude) params.append('longitude', longitude.toString());
+  if (latitude) params.append('latitude', latitude);
+  if (longitude) params.append('longitude', longitude);
   if (saloonName) params.append('salonName', saloonName);
   if (categoryId) params.append('categoryId', categoryId);
 
@@ -64,17 +64,35 @@ export const getAllCategories = async () => {
     throw error;
   }
 };
-export const getTechnicianById = async (technicianId: string) => {
+export const getTechnicianById = async (technicianId: string, date: string) => {
   let config = {
     method: 'get',
     maxBodyLength: Infinity,
-    url: `${BaseUrl}getTechnicianById?id=${technicianId}`,
+    url: `${BaseUrl}getTechnicianById?id=${technicianId}&date=${date}`,
     headers: {},
   };
   try {
     const response = await axios.request(config);
     return response.data;
   } catch (error) {
+    throw error;
+  }
+};
+
+export const getAvailableTechnician = async (serviceId: string, date: string, time: string) => {
+  let config = {
+    method: 'get',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}getAvailableTechnician?serviceId=${serviceId}&date=${date}&time=${time}`,
+    headers: {},
+  };
+  try {
+    const response = await axios.request(config);
+
+    return response?.data;
+  } catch (error) {
+    ShowToast('error', error?.response?.data?.message);
+
     throw error;
   }
 };

@@ -7,6 +7,7 @@ interface UserState {
   userData: Record<string, any>;
   token: string;
   isLoading: boolean;
+  message?: string;
   error: string | null;
 }
 
@@ -25,23 +26,52 @@ interface LoginResponse {
 }
 
 // Async Thunk with TypeScript
+// export const UserLogin = createAsyncThunk<LoginResponse, AxiosRequestConfig>(
+//   'auth/UserLogin',
+//   async (config, { rejectWithValue }) => {
+//     try {
+//       const response = await axios.request<LoginResponse>(config);
+//       console.log('response===>>><<<<<<<', JSON.stringify(response.data));
+//       console.log('response===>>>', response.data.token);
+//       if (response.data.success) {
+//         ShowToast('success', 'Login Successful');
+//         return response?.data;
+//       } else {
+//         ShowToast('success', response?.data?.message);
+//         return rejectWithValue('Login failed');
+//       }
+//     } catch (error: any) {
+//       console.log('error', error.response.data.message);
+//       ShowToast('error', error.response.data.message);
+//       return rejectWithValue('Something went wrong');
+//     }
+//   }
+// );
+
 export const UserLogin = createAsyncThunk<LoginResponse, AxiosRequestConfig>(
   'auth/UserLogin',
   async (config, { rejectWithValue }) => {
     try {
       const response = await axios.request<LoginResponse>(config);
-      console.log('response===>>>', JSON.stringify(response.data));
-      console.log('response===>>>', response.data.token);
-      if (response.data.success) {
-        ShowToast('success', 'Login Successful');
-        return response?.data;
+      const resData = response.data;
+
+      console.log('Login Response ===>', JSON.stringify(resData));
+
+      if (resData.success) {
+        if (resData.token && resData.data) {
+          ShowToast('success', 'Login Successful');
+          return resData;
+        } else {
+          ShowToast('info', resData.message || 'OTP sent to your phone');
+          return resData; // allow reducer to check for token existence
+        }
       } else {
-        ShowToast('success', response?.data?.message);
+        ShowToast('error', resData?.message || 'Login failed');
         return rejectWithValue('Login failed');
       }
     } catch (error: any) {
-      console.log('error', error.response.data.message);
-      ShowToast('error', error.response.data.message);
+      console.log('Login Error:', error.response?.data?.message || error.message);
+      ShowToast('error', error.response?.data?.message || 'Something went wrong');
       return rejectWithValue('Something went wrong');
     }
   }
@@ -71,8 +101,16 @@ const authSlice = createSlice({
       })
       .addCase(UserLogin.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
         state.isLoading = false;
-        state.token = action.payload.token;
-        state.userData = action.payload.Data;
+        // state.token = action.payload.token;
+        // state.userData = action.payload.data;
+        if (action.payload.token && action.payload.data) {
+          state.token = action.payload.token;
+          state.userData = action.payload.data;
+          console.log('Login success — token & userData set');
+        } else {
+          // No token means OTP login initiated — no Redux update needed yet
+          console.log('Phone login flow — waiting for OTP verification');
+        }
         console.log('action.payload<<<<=====', action.payload);
       })
       .addCase(UserLogin.rejected, (state, action) => {

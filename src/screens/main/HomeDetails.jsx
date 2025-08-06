@@ -66,6 +66,15 @@ const HomeDetails = ({route}) => {
   // console.log('selectedService.price', selectedService.price);
   console.log('saloonDatasaloonData', saloonData);
   const dispatch = useDispatch();
+  const handleToggleService = item => {
+    if (selectedService?._id === item._id) {
+      // Unselect if already selected
+      setSelectedService(null);
+    } else {
+      // Select new item
+      setSelectedService(item);
+    }
+  };
 
   const getSaloonByIdHandler = async () => {
     setIsLoading(true);
@@ -99,7 +108,10 @@ const HomeDetails = ({route}) => {
   }, [menuData]);
   const getServicesHandler = async () => {
     setIsLoading2(true);
-    const response = await getServiceBySalonAndCategoryId(currentCategory,saloonId);
+    const response = await getServiceBySalonAndCategoryId(
+      currentCategory,
+      saloonId,
+    );
     setIsLoading2(false);
     setServices(response.data);
   };
@@ -107,7 +119,7 @@ const HomeDetails = ({route}) => {
     setFvrtLoading(true);
     try {
       const response = await addToFavourite(_id, saloonId);
-      console.log('response', response);
+      console.log('response', response.data);
       if (response.success) {
         ShowToast('success', response.message);
         const updatedUserData = {
@@ -140,311 +152,380 @@ const HomeDetails = ({route}) => {
   useEffect(() => {
     getAllReviewsHandler();
   }, []);
+  const formatTimeTo12Hour = time24 => {
+    const [hourStr, minuteStr] = time24.split(':');
+    let hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    return `${hour}${minute !== 0 ? `:${minuteStr}` : ''}${ampm}`;
+  };
+  const getShortDay = day => {
+    const map = {
+      Monday: 'Mon',
+      Tuesday: 'Tue',
+      Wednesday: 'Wed',
+      Thursday: 'Thu',
+      Friday: 'Fri',
+      Saturday: 'Sat',
+      Sunday: 'Sun',
+    };
+    return map[day] || day;
+  };
   return (
-    <ScrollView
-      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.APPBG}}>
-      <AppHeader
-        isFvrt={isFvrt}
-        isFvrtLoading={fvrtLoading}
-        handleFavouritePress={addToFavouriteHandler}
-        onPress={() => navigation.goBack()}
-      />
-      {isLoading ? (
-        <View style={{flex: 0.8, justifyContent: 'center'}}>
-          <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
-        </View>
-      ) : (
-        <View
-          style={{
-            paddingHorizontal: responsiveWidth(3),
-            marginVertical: responsiveHeight(2),
-          }}>
-          <FlatList
-            horizontal
-            data={saloonData?.image}
-            contentContainerStyle={{gap: responsiveHeight(2)}}
-            renderItem={({item, index}) => {
-              return (
-                <Image
-                  source={{
-                    uri: `${ImageBaseUrl}${item}`,
-                  }}
-                  style={{
-                    alignSelf: 'center',
-                    width: responsiveWidth(85),
-                    height: responsiveHeight(25),
-                    borderRadius: 15,
+    <View style={{flex: 1}}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          flexGrow: 1,
+          backgroundColor: AppColors.WHITE,
+          paddingBottom: responsiveHeight(4.5),
+        }}>
+        <AppHeader
+          isFvrt={isFvrt}
+          isFvrtLoading={fvrtLoading}
+          handleFavouritePress={addToFavouriteHandler}
+          onPress={() => navigation.goBack()}
+        />
+        {isLoading ? (
+          <View style={{flex: 0.8, justifyContent: 'center'}}>
+            <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
+          </View>
+        ) : (
+          <View
+            style={{
+              marginVertical: responsiveHeight(2),
+              backgroundColor: AppColors.WHITE,
+            }}>
+            <View style={{paddingHorizontal: responsiveHeight(2)}}>
+              <FlatList
+                horizontal
+                data={saloonData?.image}
+                contentContainerStyle={{gap: responsiveHeight(2)}}
+                renderItem={({item, index}) => {
+                  return (
+                    <Image
+                      source={{
+                        uri: `${ImageBaseUrl}${item}`,
+                      }}
+                      style={{
+                        alignSelf: 'center',
+                        width: responsiveWidth(85),
+                        height: responsiveHeight(25),
+                        borderRadius: 15,
+                      }}
+                    />
+                  );
+                }}
+              />
+              <LineBreak space={3} />
+              <AppText
+                title={saloonData?.salonName}
+                textSize={3}
+                textFontWeight
+              />
+              <LineBreak space={1} />
+
+              <View style={{gap: 10}}>
+                <View
+                  style={{gap: 12, alignItems: 'center', flexDirection: 'row'}}>
+                  <EvilIcons
+                    name={'location'}
+                    size={responsiveFontSize(2.7)}
+                    color={AppColors.DARKGRAY}
+                  />
+                  <AppText
+                    title={saloonData?.bussinessAddress}
+                    textSize={1.6}
+                    textColor={AppColors.DARKGRAY}
+                  />
+                </View>
+
+                <View
+                  style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+                  <FontAwesome
+                    name={'star'}
+                    size={responsiveFontSize(2.7)}
+                    color={AppColors.PEACHCOLOUR}
+                  />
+                  <AppText
+                    title={`${saloonData?.avgRating} (${saloonData?.totalReviews})`}
+                    textSize={1.6}
+                    textColor={AppColors.DARKGRAY}
+                  />
+                </View>
+                <FlatList
+                  data={saloonData?.workingDays}
+                  contentContainerStyle={{gap: responsiveHeight(1)}}
+                  renderItem={({item, index}) => {
+                    return item?.isActive ? (
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 12,
+                        }}>
+                        <AntDesign
+                          name={'clockcircleo'}
+                          size={responsiveFontSize(2)}
+                          color={AppColors.DARKGRAY}
+                        />
+                        <AppText
+                          // title={`${item?.startTime}-${item?.endTime}, ${item?.day}`}
+                          title={`${formatTimeTo12Hour(
+                            item?.startTime,
+                          )}-${formatTimeTo12Hour(
+                            item?.endTime,
+                          )}, ${getShortDay(item?.day)}`}
+                          textSize={1.6}
+                          textColor={AppColors.DARKGRAY}
+                        />
+                      </View>
+                    ) : null;
                   }}
                 />
-              );
-            }}
-          />
-          <LineBreak space={3} />
-          <AppText title={saloonData?.salonName} textSize={3} textFontWeight />
-          <LineBreak space={1} />
+                {/* <View style={{gap: 12, justifyContent: 'center'}}></View> */}
+              </View>
 
-          <View style={{gap: 10}}>
-            <View style={{gap: 12, alignItems: 'center', flexDirection: 'row'}}>
-              <EvilIcons
-                name={'location'}
-                size={responsiveFontSize(2.7)}
-                color={AppColors.DARKGRAY}
-              />
+              <LineBreak space={2} />
+
               <AppText
-                title={saloonData?.bussinessAddress}
-                textSize={1.6}
+                title={saloonData?.description}
+                textSize={1.9}
                 textColor={AppColors.DARKGRAY}
               />
-            </View>
 
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-              <FontAwesome
-                name={'star'}
-                size={responsiveFontSize(2.7)}
-                color={AppColors.PEACHCOLOUR}
+              <LineBreak space={3} />
+
+              <FlatList
+                data={menuData}
+                horizontal
+                contentContainerStyle={{gap: 15}}
+                renderItem={({item}) => {
+                  return (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setCurrentCategory(item?._id);
+                        // setMenu({_id: item._id});
+                      }}>
+                      <AppText
+                        title={item?.categoryName}
+                        borderBottomWidth={currentCategory === item._id ? 3 : 0}
+                        paddingBottom={currentCategory === item._id ? 4 : 0}
+                        borderBottomColor={
+                          currentCategory === item._id
+                            ? AppColors.BLUE
+                            : AppColors.WHITE
+                        }
+                        textSize={1.8}
+                        textFontWeight
+                        textColor={
+                          currentCategory === item._id
+                            ? AppColors.BLUE
+                            : AppColors.DARKGRAY
+                        }
+                      />
+                    </TouchableOpacity>
+                  );
+                }}
               />
-              <AppText
-                title={`${saloonData?.avgRating} (${saloonData?.totalReviews})`}
-                textSize={1.6}
-                textColor={AppColors.DARKGRAY}
-              />
-            </View>
-            <FlatList
-              data={saloonData?.workingDays}
-              contentContainerStyle={{gap: responsiveHeight(1)}}
-              renderItem={({item, index}) => {
-                return item?.isActive ? (
+
+              <LineBreak space={2} />
+              {isLoading2 ? (
+                <View style={{marginVertical: responsiveHeight(1)}}>
+                  <ActivityIndicator
+                    size="large"
+                    color={AppColors.BTNCOLOURS}
+                  />
+                </View>
+              ) : services?.length > 0 ? (
+                <FlatList
+                  data={services}
+                  contentContainerStyle={{
+                    gap: 15,
+                    margin: responsiveHeight(1.2),
+                    paddingBottom: responsiveHeight(1.5),
+                  }}
+                  renderItem={({item}) => {
+                    return (
+                      <TouchableOpacity
+                        // onPress={() => selectedService ? setSelectedService(null) : setSelectedService(item)}
+                        onPress={() => handleToggleService(item)}
+                        style={{
+                          borderRadius: 10,
+                          backgroundColor: AppColors.WHITE,
+                          elevation: 6,
+                          paddingHorizontal: responsiveWidth(4),
+                          paddingVertical: responsiveHeight(2),
+                        }}>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}>
+                          <View>
+                            <AppText
+                              title={item?.serviceName}
+                              textSize={2.2}
+                              textFontWeight
+                              textColor={AppColors.BLACK}
+                            />
+                            <LineBreak space={0.5} />
+                            <View style={{flexDirection: 'row', gap: 20}}>
+                              <AppText
+                                title={`$${item?.price}`}
+                                textSize={1.5}
+                                textColor={AppColors.DARKGRAY}
+                              />
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                }}>
+                                <AntDesign
+                                  name={'clockcircleo'}
+                                  size={responsiveFontSize(1.5)}
+                                  color={AppColors.DARKGRAY}
+                                />
+                                <AppText
+                                  title={'30 Mins'}
+                                  textSize={1.5}
+                                  textColor={AppColors.DARKGRAY}
+                                />
+                              </View>
+                            </View>
+                          </View>
+                          <TouchableOpacity
+                            onPress={() => handleToggleService(item)}>
+                            <AntDesign
+                              name={
+                                item?._id === selectedService?._id
+                                  ? 'checkcircle'
+                                  : 'pluscircleo'
+                              }
+                              size={responsiveFontSize(2.7)}
+                              color={
+                                item?._id === selectedService?._id
+                                  ? AppColors.BLUE
+                                  : AppColors.BLACK
+                              }
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  }}
+                />
+              ) : (
+                <AppText
+                  title={'No Services Found'}
+                  textAlignment="center"
+                  textFontWeight
+                  textSize={2.5}
+                />
+              )}
+
+              <LineBreak space={2} />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: responsiveHeight(2),
+                }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: responsiveHeight(2),
+                  }}>
+                  <AppText
+                    textColor="#0B0C16"
+                    textFontWeight
+                    title="Reviews"
+                    textSize={2.5}
+                  />
                   <View
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: 12,
+                      gap: responsiveHeight(1),
                     }}>
-                    <AntDesign
-                      name={'clockcircleo'}
-                      size={responsiveFontSize(2)}
-                      color={AppColors.DARKGRAY}
-                    />
+                    <AntDesign name="star" color="#F2A905" size={20} />
                     <AppText
-                      title={`${item?.startTime}-${item?.endTime}, ${item?.day}`}
-                      textSize={1.6}
-                      textColor={AppColors.DARKGRAY}
+                      textSize={1.9}
+                      textColor="#0B0C16"
+                      title={`${saloonData?.avgRating} (${saloonData?.totalReviews})`}
                     />
                   </View>
-                ) : null;
-              }}
-            />
-            {/* <View style={{gap: 12, justifyContent: 'center'}}></View> */}
-          </View>
-
-          <LineBreak space={2} />
-
-          <AppText
-            title={saloonData?.description}
-            textSize={1.9}
-            textColor={AppColors.DARKGRAY}
-          />
-
-          <LineBreak space={3} />
-
-          <FlatList
-            data={menuData}
-            horizontal
-            contentContainerStyle={{gap: 15}}
-            renderItem={({item}) => {
-              return (
-                <TouchableOpacity
-                  onPress={() => {
-                    setCurrentCategory(item?._id);
-                    // setMenu({_id: item._id});
-                  }}>
-                  <AppText
-                    title={item?.categoryName}
-                    borderBottomWidth={currentCategory === item._id ? 3 : 0}
-                    paddingBottom={currentCategory === item._id ? 4 : 0}
-                    borderBottomColor={
-                      currentCategory === item._id
-                        ? AppColors.BLUE
-                        : AppColors.WHITE
-                    }
-                    textSize={1.8}
-                    textFontWeight
-                    textColor={
-                      currentCategory === item._id
-                        ? AppColors.BLUE
-                        : AppColors.DARKGRAY
-                    }
-                  />
-                </TouchableOpacity>
-              );
-            }}
-          />
-
-          <LineBreak space={2} />
-          {isLoading2 ? (
-            <View style={{marginVertical: responsiveHeight(1)}}>
-              <ActivityIndicator size="large" color={AppColors.BTNCOLOURS} />
-            </View>
-          ) : services?.length > 0 ? (
-            <FlatList
-              data={services}
-              contentContainerStyle={{gap: 15}}
-              renderItem={({item}) => {
-                return (
-                  <View
-                    style={{
-                      borderRadius: 10,
-                      backgroundColor: AppColors.WHITE,
-                      paddingHorizontal: responsiveWidth(4),
-                      paddingVertical: responsiveHeight(2),
-                    }}>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}>
-                      <View>
-                        <AppText
-                          title={item?.serviceName}
-                          textSize={2.2}
-                          textFontWeight
-                          textColor={AppColors.BLACK}
-                        />
-                        <LineBreak space={0.5} />
-                        <View style={{flexDirection: 'row', gap: 20}}>
-                          <AppText
-                            title={`$${item?.price}`}
-                            textSize={1.5}
-                            textColor={AppColors.DARKGRAY}
-                          />
-                          <View
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              gap: 6,
-                            }}>
-                            <AntDesign
-                              name={'clockcircleo'}
-                              size={responsiveFontSize(1.5)}
-                              color={AppColors.DARKGRAY}
-                            />
-                            <AppText
-                              title={'30 Mins'}
-                              textSize={1.5}
-                              textColor={AppColors.DARKGRAY}
-                            />
-                          </View>
-                        </View>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => setSelectedService(item)}>
-                        <AntDesign
-                          name={
-                            item?._id === selectedService?._id
-                              ? 'checkcircle'
-                              : 'pluscircleo'
-                          }
-                          size={responsiveFontSize(2.7)}
-                          color={
-                            item?._id === selectedService?._id
-                              ? AppColors.BLUE
-                              : AppColors.BLACK
-                          }
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                );
-              }}
-            />
-          ) : (
-            <AppText
-              title={'No Services Found'}
-              textAlignment="center"
-              textFontWeight
-              textSize={2.5}
-            />
-          )}
-
-          <LineBreak space={2} />
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: responsiveHeight(2),
-            }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: responsiveHeight(2),
-              }}>
-              <AppText title="Reviews" textSize={2.5} />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: responsiveHeight(1),
-                }}>
-                <AntDesign name="star" color="#F2A905" size={20} />
-                <AppText
-                  textSize={1.9}
-                  title={`${saloonData?.avgRating} (${saloonData?.totalReviews})`}
-                />
+                </View>
+                {allReviews?.length > 0 ? (
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigation.navigate('AllReviews', {saloonId})
+                    }>
+                    <AppText
+                      title="See All"
+                      txtDecoration="underline"
+                      textSize={1.9}
+                      style={styles.textStyle}
+                      textColor={AppColors.BTNCOLOURS}
+                    />
+                  </TouchableOpacity>
+                ) : null}
               </View>
             </View>
-            {allReviews?.length > 0 ? (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('AllReviews', {saloonId})}>
-                <AppText
-                  title="See All"
-                  textSize={1.9}
-                  style={styles.textStyle}
-                />
-              </TouchableOpacity>
-            ) : null}
+            <FlatList
+              horizontal
+              contentContainerStyle={{
+                gap: responsiveHeight(2),
+                marginBottom: responsiveHeight(3),
+                // padding: responsiveHeight(1),
+                paddingHorizontal: responsiveHeight(2),
+              }}
+              showsHorizontalScrollIndicator={false}
+              data={allReviews.slice(0, 3)}
+              renderItem={({item, index}) => {
+                return <ReviewsCard data={item} />;
+              }}
+            />
           </View>
-          <FlatList
-            horizontal
-            contentContainerStyle={{
-              gap: responsiveHeight(2),
-              marginBottom: responsiveHeight(2),
-            }}
-            showsHorizontalScrollIndicator={false}
-            data={allReviews.slice(0, 3)}
-            renderItem={({item, index}) => {
-              return <ReviewsCard data={item} />;
-            }}
-          />
-          <AppButton
-            // title={`Continue (${selectedItems?.length})`}
-            title={'Continue'}
-            handlePress={() =>
-              selectedService
-                ? navigation.navigate('StylistSelect', {
-                    data: {
-                      saloonId,
-                      serviceId: selectedService?._id,
-                      serviceName: selectedService?.serviceName,
-                      price: selectedService.price,
-                      technicians: selectedService?.technicianId,
-                    },
-                  })
-                : ShowToast('error', 'Plz Select A Service To Proceed')
-            }
-          />
-        </View>
-      )}
-    </ScrollView>
+        )}
+      </ScrollView>
+      {selectedService ? (
+        <AppButton
+          // title={`Continue (${selectedItems?.length})`}
+          style={{
+            position: 'absolute',
+            bottom: responsiveHeight(1.5),
+            width: responsiveWidth(90),
+            alignSelf: 'center',
+          }}
+          title={'Continue'}
+          marginHorizontal={2}
+          handlePress={() =>
+            navigation.navigate('StylistSelect', {
+              data: {
+                saloonId,
+                serviceId: selectedService?._id,
+                serviceName: selectedService?.serviceName,
+                price: selectedService.price,
+                technicians: selectedService?.technicianId,
+              },
+            })
+          }
+        />
+      ) : null}
+    </View>
   );
 };
 
 export default HomeDetails;
 const styles = StyleSheet.create({
   textStyle: {
-    color: AppColors.BLACK,
+    color: '#C01212',
     textDecorationLine: 'underline',
     fontSize: responsiveFontSize(2.2),
     // marginTop: 10,
