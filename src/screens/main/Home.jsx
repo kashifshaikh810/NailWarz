@@ -55,7 +55,7 @@ const Home = () => {
     longitude: -122.084,
   });
   const [saloons, setSaloons] = useState([]);
-  console.log('latLng', latLng);
+  console.log('saloons', saloons);
   console.log('currentCategory', currentCategory);
   const getAllCategoriesHandler = async () => {
     setIsLoading(true);

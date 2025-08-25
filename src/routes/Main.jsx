@@ -1,6 +1,7 @@
+/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
-import {Image} from 'react-native';
+import {Image, Platform} from 'react-native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Home from '../screens/main/Home';
@@ -31,45 +32,64 @@ import EditProfile from '../screens/main/profile/EditProfile';
 import CreatePost from '../screens/main/warz/CreatePost';
 import AllReviews from '../screens/main/AllReviews';
 import SelectAnyTech from '../screens/main/SelectAnyTech';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 const Main = () => {
   return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="Home" component={MyTabs} />
-      <Stack.Screen name="CreatePost" component={CreatePost} />
-      <Tab.Screen name="HomeDetails" component={HomeDetails} />
-      <Tab.Screen name="StylistSelect" component={StylistSelect} />
-      <Tab.Screen
-        name="DateAndTimeSelection"
-        component={DateAndTimeSelection}
-      />
-      <Tab.Screen name="BookingSummary" component={BookingSummary} />
-      <Tab.Screen name="AllReviews" component={AllReviews} />
-      <Tab.Screen name="SelectPaymentMethod" component={SelectPaymentMethod} />
-      <Tab.Screen name="DownloadReceipt" component={DownloadReceipt} />
-      <Tab.Screen name="SearchLocation" component={SearchLocation} />
-      <Tab.Screen name="Community" component={Community} />
-      <Tab.Screen name="BattlePoll" component={BattlePoll} />
-      <Tab.Screen name="LiveVotingScores" component={LiveVotingScores} />
-      <Tab.Screen name="FinalScoreBoard" component={FinalScoreBoard} />
-      <Tab.Screen name="EditProfile" component={EditProfile} />
-      <Tab.Screen name="MapView" component={MapView} />
-      <Stack.Screen name="Profile" component={MyTabs} />
-      <Stack.Screen name="SelectAnyTech" component={SelectAnyTech} />
-    </Stack.Navigator>
+    <SafeAreaProvider>
+      <Stack.Navigator screenOptions={{headerShown: false}}>
+        <Stack.Screen name="Home" component={MyTabs} />
+        <Stack.Screen name="CreatePost" component={CreatePost} />
+        <Tab.Screen name="HomeDetails" component={HomeDetails} />
+        <Tab.Screen name="StylistSelect" component={StylistSelect} />
+        <Tab.Screen
+          name="DateAndTimeSelection"
+          component={DateAndTimeSelection}
+        />
+        <Tab.Screen name="BookingSummary" component={BookingSummary} />
+        <Tab.Screen name="AllReviews" component={AllReviews} />
+        <Tab.Screen
+          name="SelectPaymentMethod"
+          component={SelectPaymentMethod}
+        />
+        <Tab.Screen name="DownloadReceipt" component={DownloadReceipt} />
+        <Tab.Screen name="SearchLocation" component={SearchLocation} />
+        <Tab.Screen name="Community" component={Community} />
+        <Tab.Screen name="BattlePoll" component={BattlePoll} />
+        <Tab.Screen name="LiveVotingScores" component={LiveVotingScores} />
+        <Tab.Screen name="FinalScoreBoard" component={FinalScoreBoard} />
+        <Tab.Screen name="EditProfile" component={EditProfile} />
+        <Tab.Screen name="MapView" component={MapView} />
+        <Stack.Screen name="Profile" component={MyTabs} />
+        <Stack.Screen name="SelectAnyTech" component={SelectAnyTech} />
+      </Stack.Navigator>
+    </SafeAreaProvider>
   );
 };
 
 function MyTabs() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({
         headerShown: false,
         tabBarLabelStyle: {fontSize: responsiveFontSize(1.7)},
-        tabBarStyle: {height: responsiveHeight(8)},
+        tabBarStyle: {
+          height: responsiveHeight(8) + insets.bottom, // Dynamic height
+          paddingBottom:
+            insets.bottom > 0
+              ? insets.bottom
+              : Platform.OS === 'android'
+              ? 10
+              : 0,
+        },
         tabBarIcon: ({focused, color, size}) => {
           let iconName;
 
