@@ -7,9 +7,9 @@ import {
 } from '../utils/Responsive_Dimensions';
 import AppColors from '../utils/AppColors';
 import AppText from './AppTextComps/AppText';
-import { ImageBaseUrl } from '../BaseUrl';
+import {ImageBaseUrl} from '../BaseUrl';
 
-const PointesProfile = ({item,index}) => {
+const PointesProfile = ({item, index}) => {
   return (
     <View
       style={{
@@ -29,11 +29,11 @@ const PointesProfile = ({item,index}) => {
           textFontWeight
         />
         <Image
-          source={{uri:`${ImageBaseUrl}${item?.voter_id.image}`}}
+          source={{uri: `${ImageBaseUrl}${item?.salonImage}`}}
           style={{width: 40, height: 40, borderRadius: 100}}
         />
         <AppText
-          title={item?.voter_id.username}
+          title={item?.salonName}
           textColor={AppColors.BLACK}
           textSize={2}
           textFontWeight
@@ -41,7 +41,7 @@ const PointesProfile = ({item,index}) => {
       </View>
       <View style={{paddingHorizontal: responsiveWidth(2)}}>
         <AppText
-          title={item?.vote}
+          title={item?.vote?.length}
           textColor={AppColors.BLACK}
           textSize={2}
           textFontWeight

@@ -58,11 +58,14 @@ const Login = () => {
               marginTop: responsiveHeight(3),
               marginBottom: responsiveHeight(2),
             }}>
-            <Logo
-              logoUrl={APPImages.LOGO}
-              logoWeight={responsiveHeight(20)}
-              logoHeight={responsiveHeight(20)}
-              logoReizeMode={'contain'}
+            <Image
+              source={APPImages.logoSmall}
+              style={{
+                alignSelf: 'flex-end',
+                height: responsiveHeight(10),
+                width: responsiveWidth(15),
+              }}
+              resizeMode="contain"
             />
           </View>
 

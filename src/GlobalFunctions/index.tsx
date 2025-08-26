@@ -78,7 +78,6 @@ export const getTechnicianById = async (technicianId: string, date: string) => {
     throw error;
   }
 };
-
 export const getAvailableTechnician = async (serviceId: string, date: string, time: string) => {
   let config = {
     method: 'get',
@@ -233,35 +232,6 @@ export const getPostById = async (postId: string) => {
     throw error;
   }
 };
-export const addVote = async (userId: string, postId: string, vote: string) => {
-  let data = JSON.stringify({
-    'userId': userId,
-    'post_id': postId,
-    'vote': vote,
-  });
-
-  let config = {
-    method: 'post',
-    maxBodyLength: Infinity,
-    url: `${BaseUrl}VotePost`,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: data,
-  };
-  try {
-    const response = await axios.request(config);
-    if (response.data.success) {
-      ShowToast('success', response?.data?.message);
-    } else {
-      ShowToast('error', response?.data?.message);
-    }
-    return response.data;
-  } catch (error) {
-    ShowToast('error', error?.response?.data?.message);
-    throw error;
-  }
-};
 export const likePost = async (likeId: string, postId: string) => {
   let data = JSON.stringify({
     'likeId': likeId,
@@ -342,7 +312,6 @@ export const sharePost = async (userId: string, postId: string, message: string)
     throw error;
   }
 };
-
 export const createBooking = async (userId: string, salonId: string, serviceId: string, technicianId: string, date: string, time: string) => {
   let data = JSON.stringify({
     'userId': userId,
@@ -455,7 +424,6 @@ export const getAllFvrtsByUserId = async (userId: string) => {
     throw error;
   }
 };
-
 export const addReviews = async (salonId: string, userId: string, stars: number, message: string) => {
   let data = JSON.stringify({
     'salonId': salonId,
@@ -493,6 +461,57 @@ export const getAllReviews = async (salonId: string) => {
     return response?.data;
   } catch (error) {
     ShowToast('error', error?.response?.data?.message);
+    throw error;
+  }
+};
+export const getAllBattles = async () => {
+  let config = {
+    method: 'get',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}getAllBattle`,
+    headers: {},
+  };
+  try {
+    const response = await axios.request(config);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const getBattleById = async (battleId: string) => {
+  let config = {
+    method: 'get',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}getBattleById?battleId=${battleId}`,
+    headers: {},
+  };
+  try {
+    const response = await axios.request(config);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const addVote = async (battleId: string, salonId: string, userId: string) => {
+  let data = JSON.stringify({
+    'battleId': battleId,
+    'salonId': salonId,
+    'userId': userId,
+  });
+
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}addOrRemoveVotes`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response?.data;
+  } catch (error) {
     throw error;
   }
 };

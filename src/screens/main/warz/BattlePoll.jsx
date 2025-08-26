@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import AppColors from '../../../utils/AppColors';
 import AppHeader from '../../../components/AppHeader';
@@ -22,72 +23,73 @@ import AppText from '../../../components/AppTextComps/AppText';
 import LineBreak from '../../../components/LineBreak';
 import APPImages from '../../../assets/APPImages';
 import AppButton from '../../../components/AppButton';
-import Fontisto from 'react-native-vector-icons/Fontisto';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {ImageBaseUrl} from '../../../BaseUrl';
-import {addVote, getPostById} from '../../../GlobalFunctions';
+import {addVote, getBattleById, getPostById} from '../../../GlobalFunctions';
 import {useSelector} from 'react-redux';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-
-const yesOrNo = [
-  {id: 1, title: 'Yes'},
-  {id: 2, title: 'No'},
-];
+import {ShowToast} from '../../../GlobalFunctions/auth';
 
 const BattlePoll = ({navigation, route}) => {
   const [isSelectedYesOrNo, setIsSelectedYesOrNo] = useState('');
   const {userData} = useSelector(state => state.user);
-
-  const {_id} = route?.params;
+  const [selectedSalon, setSelectedSalon] = useState();
+  const {battleId} = route?.params;
+  const [salonId, setSalonId] = useState();
   const [isLoading, setIsLoading] = useState(false);
-  const [postLoading, setPostLoading] = useState(false);
+  const [voteLoading, setVoteLoading] = useState(false);
   const [data, setData] = useState([]);
-  console.log('data', data.Voting);
-  useEffect(() => {
-    if (data?.Voting?.length) {
-      const myVote = data.Voting.find(
-        vote => vote.voter_id?._id === userData._id,
-      );
+  console.log('salonId', salonId);
+  // useEffect(() => {
+  //   if (data?.Voting?.length) {
+  //     const myVote = data.Voting.find(
+  //       vote => vote.voter_id?._id === userData._id,
+  //     );
 
-      if (myVote) {
-        if (myVote.vote === 'Yes') {
-          setIsSelectedYesOrNo('Yes');
-        } else if (myVote.vote === 'No') {
-          setIsSelectedYesOrNo('No');
-        }
+  //     if (myVote) {
+  //       if (myVote.vote === 'Yes') {
+  //         setIsSelectedYesOrNo('Yes');
+  //       } else if (myVote.vote === 'No') {
+  //         setIsSelectedYesOrNo('No');
+  //       }
+  //     }
+  //   }
+  // }, [data]);
+  const getBattleByIdHandler = async (showLoader = true) => {
+    showLoader ? setIsLoading(true) : null;
+    const response = await getBattleById(battleId);
+    showLoader ? setIsLoading(false) : null;
+    setData(response.data.salons);
+  };
+
+  const addVoteHandler = async () => {
+    setVoteLoading(true);
+    try {
+      const response = await addVote(battleId, salonId, userData?._id);
+      if (response?.success) {
+        ShowToast('success', response.message);
+        getBattleByIdHandler(false);
       }
+      setVoteLoading(false);
+      console.log('response', response);
+    } catch (error) {
+      setVoteLoading(false);
+      return ShowToast('error', error?.response?.data?.message);
     }
-  }, [data]);
-  const getPostByIdHandler = async () => {
-    setPostLoading(true);
-    const response = await getPostById(_id);
-    setPostLoading(false);
-    setData(response.data);
   };
   console.log('isSelectedYesOrNo', isSelectedYesOrNo);
 
   useEffect(() => {
-    getPostByIdHandler();
+    getBattleByIdHandler();
   }, []);
-  const totalYesVotes =
-    data?.Voting?.filter(item => item.vote === 'Yes').length || 0;
-  console.log('totalYesVotes', totalYesVotes);
-  const addVoteHandler = async selectedValue => {
-    console.log('valye ise selected', selectedValue);
-    if (!selectedValue) {
-      return;
+  useEffect(() => {
+    // Find the salon that user already voted for
+    const votedSalon = data?.find(item => item?.vote?.includes(userData?._id));
+    if (votedSalon) {
+      setSalonId(votedSalon._id);
     }
-    setIsLoading(true);
-    const response = await addVote(userData?._id, data?._id, selectedValue);
-    if (response.success) {
-      getPostByIdHandler();
-    }
-    setIsLoading(false);
-  };
-  // useEffect(() => {
-  //   if (isSelectedYesOrNo.id === 1 || isSelectedYesOrNo.id === 2) {
-  //     addVoteHandler();
-  //   }
-  // }, [isSelectedYesOrNo]);
+  }, [data]);
 
   return (
     <View style={{flex: 1, backgroundColor: AppColors.WHITE}}>
@@ -96,122 +98,149 @@ const BattlePoll = ({navigation, route}) => {
           <ActivityIndicator size={50} color={Colors.BTNCOLOURS} />
         </View>
       ) : (
-        <View style={{flex: 1}}>
-          <AppHeader
-            onPress={() => navigation.goBack()}
-            title={'BATTLE POLL'}
-            isTextAlignCentered={true}
-          />
-
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: responsiveHeight(2),
+          }}>
           <View
             style={{
-              paddingHorizontal: responsiveWidth(4),
-              paddingVertical: responsiveHeight(1),
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}>
-            <FractionalProgressBar
-              current={totalYesVotes}
-              total={data?.Voting?.length}
-            />
-
-            <LineBreak space={2} />
-
-            <Image
-              source={{uri: `${ImageBaseUrl}${data?.Post_Image}`}}
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <MaterialIcons
+                name={'arrow-back-ios'}
+                size={responsiveFontSize(2.7)}
+                color={AppColors.BLACK}
+              />
+            </TouchableOpacity>
+            <View
               style={{
-                width: responsiveWidth(92),
-                height: responsiveHeight(30),
-                borderRadius: 7,
-              }}
-            />
-
-            <LineBreak space={2} />
-
+                flexDirection: 'row',
+                gap: responsiveHeight(1.5),
+                alignItems: 'center',
+                alignSelf: 'center',
+                // marginTop: responsiveHeight(2),
+              }}>
+              <Image
+                source={APPImages.logoSmall}
+                style={{
+                  alignSelf: 'flex-end',
+                  height: responsiveHeight(8),
+                  width: responsiveWidth(13),
+                }}
+                resizeMode="contain"
+              />
+              <AppText
+                textSize={2}
+                textFontWeight={'bold'}
+                title="Vote Nail Warz"
+              />
+            </View>
             <AppText
-              title={data?.Post_Caption}
-              textColor={AppColors.BLACK}
-              textSize={1.8}
+              onPress={() => navigation.navigate('LiveVotingScores', {data})}
+              title="Poll"
+              textSize={2}
             />
-
-            <LineBreak space={2} />
-
+          </View>
+          <AppText
+            textColor="#0B0C16"
+            title="Vote now for the next Nail Champion.
+            May the best set win!"
+            textSize={2}
+            mrgnTop={2}
+            textFontWeight="500"
+          />
+          <View>
             <FlatList
-              data={yesOrNo}
-              contentContainerStyle={{gap: 10}}
-              renderItem={({item}) => {
+              contentContainerStyle={{
+                gap: responsiveHeight(2),
+                marginTop: responsiveHeight(2),
+                margin: responsiveHeight(1),
+              }}
+              data={data}
+              renderItem={({item, index}) => {
                 return (
                   <TouchableOpacity
+                    onPress={() => setSalonId(item?._id)}
                     style={{
-                      borderWidth: 1,
-                      borderColor: AppColors.DARKGRAY,
-                      paddingHorizontal: responsiveWidth(3),
-                      paddingVertical: responsiveHeight(1),
-                      borderRadius: 7,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 10,
-                    }}
-                    onPress={() => {
-                      setIsSelectedYesOrNo(item.title);
-                      addVoteHandler(item.title);
+                      backgroundColor: AppColors.WHITE,
+                      padding: responsiveHeight(2),
+                      borderRadius: responsiveHeight(2),
+                      elevation: 5,
                     }}>
-                    <Fontisto
-                      name={
-                        isSelectedYesOrNo === item.title
-                          ? 'radio-btn-active'
-                          : 'radio-btn-passive'
-                      }
-                      size={responsiveFontSize(2.2)}
-                      color={
-                        isSelectedYesOrNo === item.title
-                          ? AppColors.BTNCOLOURS
-                          : AppColors.DARKGRAY
-                      }
-                    />
-                    <AppText
-                      title={item.title}
-                      textColor={AppColors.BLACK}
-                      textSize={1.9}
-                      textFontWeight
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}>
+                      <AppText
+                        textFontWeight="bold"
+                        title={item?.salonName}
+                        textSize={2}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setSalonId(item?._id)}
+                        style={{
+                          borderWidth: 2,
+                          borderColor: AppColors.BTNCOLOURS,
+                          // padding: responsiveHeight(0.3),
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          height: responsiveHeight(3.5),
+                          width: responsiveWidth(7),
+                          borderRadius: responsiveHeight(3),
+                        }}>
+                        {salonId === item?._id ? (
+                          <Ionicons
+                            name="checkmark-sharp"
+                            size={18}
+                            color={AppColors.BTNCOLOURS}
+                          />
+                        ) : null}
+                      </TouchableOpacity>
+                    </View>
+                    <Image
+                      style={{
+                        height: responsiveHeight(20),
+                        width: '100%',
+                        marginTop: responsiveHeight(2),
+                        borderRadius: responsiveHeight(1),
+                      }}
+                      source={{uri: `${ImageBaseUrl}${item?.salonImage}`}}
                     />
                   </TouchableOpacity>
                 );
               }}
             />
-
-            <LineBreak space={2} />
           </View>
 
           <View
             style={{
               flex: 1,
+              alignItems: 'center',
               justifyContent: 'flex-end',
-              paddingHorizontal: responsiveWidth(4),
+              marginTop: responsiveHeight(2),
             }}>
             <AppButton
-              title={'Show Results'}
-              // title={
-              //   isLoading ? (
-              //     <ActivityIndicator size={'large'} color={AppColors.WHITE} />
-              //   ) : (
-              //     'Add Vote'
-              //   )
-              // }
-              handlePress={() => {
-                navigation.navigate('LiveVotingScores', {data: data?.Voting});
-                // if (isSelectedYesOrNo.id === 1) {
-                // }
-                // else if (isSelectedYesOrNo.id === 2) {
-                //   navigation.navigate('FinalScoreBoard');
-                // }
-                // else {
-                //   Alert.alert('Action not allowed until you vote.');
-                // }
-              }}
+              width={89}
+              title={
+                voteLoading ? (
+                  <ActivityIndicator size={'large'} color={AppColors.WHITE} />
+                ) : (
+                  'Submit'
+                )
+              }
+              handlePress={() => addVoteHandler()}
             />
           </View>
 
-          <LineBreak space={3} />
-        </View>
+          {/* <LineBreak space={3} /> */}
+        </ScrollView>
       )}
     </View>
   );

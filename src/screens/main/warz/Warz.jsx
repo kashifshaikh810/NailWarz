@@ -1,11 +1,13 @@
+/* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {
   View,
-  Text,
   ScrollView,
-  FlatList,
   Image,
+  FlatList,
+  Text,
+  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -16,236 +18,202 @@ import {
   responsiveHeight,
   responsiveWidth,
 } from '../../../utils/Responsive_Dimensions';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import APPImages from '../../../assets/APPImages';
-import LineBreak from '../../../components/LineBreak';
-import AppButton from '../../../components/AppButton';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
-import {getAllPosts} from '../../../GlobalFunctions';
+import {getAllBattles} from '../../../GlobalFunctions';
+import AppIntroSlider from 'react-native-app-intro-slider';
 import {ImageBaseUrl} from '../../../BaseUrl';
-import moment from 'moment';
-import SharePost from '../../../components/SharePost';
+import Swiper from 'react-native-swiper';
+import AppButton from '../../../components/AppButton';
+import LineBreak from '../../../components/LineBreak';
+import {ShowToast} from '../../../GlobalFunctions/auth';
 
 const Warz = () => {
   const navigation = useNavigation();
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [allBattles, setAllBattles] = useState([]);
+  console.log('allbattles', allBattles);
   console.log('posts', posts);
-  const focus = useIsFocused();
-  const getAllPostsHandler = async () => {
+
+  const BattleCard = ({item}) => {
+    const [activeIndex, setActiveIndex] = useState(0);
+    return (
+      <View
+        style={{
+          backgroundColor: AppColors.WHITE,
+          elevation: 5,
+          borderRadius: 12,
+          margin: responsiveHeight(1.5),
+          overflow: 'hidden',
+        }}>
+        {/* Image Slider */}
+        <View style={{position: 'relative', height: 200}}>
+          <Swiper
+            autoplay
+            scrollEnabled={false}
+            autoplayTimeout={3}
+            loop
+            showsPagination={false}
+            onIndexChanged={index => setActiveIndex(index)}>
+            {item.salons.map(salon => (
+              <Image
+                key={salon._id}
+                source={{uri: `${ImageBaseUrl}${salon.salonImage}`}}
+                style={{width: '100%', height: 200}}
+              />
+            ))}
+          </Swiper>
+
+          {/* Overlay */}
+          <View
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              backgroundColor: 'rgba(0,0,0,0.4)',
+            }}
+          />
+
+          {/* Title */}
+          <View
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Text
+              style={{
+                fontSize: responsiveFontSize(3.5),
+                fontWeight: '800',
+                color: 'white',
+              }}>
+              {item.battleName}
+            </Text>
+          </View>
+        </View>
+
+        {/* Custom Dots + Description */}
+        <View
+          style={{
+            backgroundColor: AppColors.WHITE,
+            padding: responsiveHeight(1.5),
+          }}>
+          {/* Custom Dots */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: responsiveHeight(1),
+            }}>
+            {item.salons.map((_, i) => (
+              <View
+                key={i}
+                style={{
+                  width:
+                    activeIndex === i
+                      ? responsiveWidth(3.5)
+                      : responsiveWidth(2.8),
+                  height:
+                    activeIndex === i
+                      ? responsiveHeight(1.8)
+                      : responsiveHeight(1.6),
+                  borderRadius: responsiveHeight(2),
+                  marginHorizontal: 3,
+                  backgroundColor:
+                    activeIndex === i ? AppColors.BTNCOLOURS : '#D9D9D9',
+                }}
+              />
+            ))}
+          </View>
+
+          {/* Description */}
+          <Text
+            style={{
+              fontSize: responsiveFontSize(2),
+              color: '#0B0C16',
+              textAlign: 'center',
+            }}>
+            {item.description}
+          </Text>
+
+          <LineBreak space={2} />
+          <AppButton
+            handlePress={() =>
+              navigation.navigate(
+                item?.status === 'Start' ? 'BattlePoll' : 'FinalScoreBoard',
+                {battleId: item?.status === 'Start' ? item?._id : item},
+              )
+            }
+            title="OPEN"
+          />
+        </View>
+      </View>
+    );
+  };
+
+  const getAllBattlesHandler = async () => {
     setIsLoading(true);
-    const response = await getAllPosts();
-    setIsLoading(false);
-    setPosts(response.data);
+    try {
+      const response = await getAllBattles();
+      setIsLoading(false);
+      setAllBattles(response?.data);
+    } catch (error) {
+      setIsLoading(false);
+      return ShowToast('error', error?.response?.data?.message);
+      console.log('error', error);
+    }
   };
   useEffect(() => {
-    getAllPostsHandler();
-  }, [focus]);
+    getAllBattlesHandler();
+  }, []);
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
-      <View
-        style={{
-          flex: 1,
-          paddingHorizontal: responsiveWidth(4),
-          paddingVertical: responsiveHeight(2),
-        }}>
+      contentContainerStyle={{
+        flexGrow: 1,
+        backgroundColor: AppColors.WHITE,
+        padding: responsiveHeight(1),
+      }}>
+      <View style={{flex: 1}}>
         <View
           style={{
             flexDirection: 'row',
-            justifyContent: 'space-between',
+            gap: responsiveHeight(1.5),
             alignItems: 'center',
+            alignSelf: 'center',
+            marginTop: responsiveHeight(2),
           }}>
-          <View>
-            <AppText title="WARZ" textColor={AppColors.BLACK} textSize={2.5} />
-            <View style={{width: responsiveWidth(60)}}>
-              <AppText
-                title="Current Warriors in NAIL WARZ. VOTE NOW Below for your favorite nail set"
-                textColor={AppColors.BLACK}
-                textSize={1.4}
-              />
-            </View>
-          </View>
-          <TouchableOpacity
+          <Image
+            source={APPImages.logoSmall}
             style={{
-              borderWidth: 1,
-              padding: responsiveHeight(1.5),
-              borderRadius: 10,
-              borderColor: '#F5F5F5',
-            }}>
-            <Ionicons
-              name={'notifications-outline'}
-              size={responsiveFontSize(3)}
-              color={AppColors.BLACK}
-            />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('CreatePost')}
-          style={{
-            borderColor: 'gray',
-            borderWidth: 2,
-            borderRadius: responsiveHeight(3),
-            padding: responsiveHeight(1),
-            paddingHorizontal: responsiveHeight(2),
-            marginTop: responsiveHeight(2.5),
-            marginBottom: responsiveHeight(1),
-          }}>
-          <AppText
-            title="What's On Your Mind ?"
-            textColor={AppColors.LIGHTGRAY2}
-            textSize={2.5}
+              alignSelf: 'flex-end',
+              height: responsiveHeight(10),
+              width: responsiveWidth(15),
+            }}
+            resizeMode="contain"
           />
-        </TouchableOpacity>
-        <LineBreak space={2} />
-        <View style={{flex: 1}}>
-          {isLoading ? (
-            <View style={{flex: 1, justifyContent: 'center'}}>
-              <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
-            </View>
-          ) : (
-            <FlatList
-              data={posts}
-              contentContainerStyle={{gap: 20}}
-              renderItem={({item}) => {
-                return (
-                  <View>
-                    <TouchableOpacity
-                      style={{
-                        borderWidth: 1,
-                        paddingHorizontal: responsiveWidth(4),
-                        paddingVertical: responsiveHeight(2),
-                        borderColor: AppColors.PEACHCOLOUR,
-                        borderRadius: 10,
-                      }}
-                      onPress={() => {
-                        if (item.Post_Type === 'Post') {
-                          navigation.navigate('Community', {item});
-                        }
-                      }}>
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          gap: 10,
-                        }}>
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 10,
-                          }}>
-                          <Image
-                            source={{
-                              uri: `${ImageBaseUrl}${item.userId.image}`,
-                            }}
-                            style={{width: 45, height: 45, borderRadius: 100}}
-                          />
-                          <View>
-                            <View
-                              style={{
-                                flexDirection: 'row',
-                                gap: 7,
-                                alignItems: 'flex-end',
-                              }}>
-                              <AppText
-                                title={item.userId.username}
-                                textColor={AppColors.BLACK}
-                                textSize={1.8}
-                              />
-                              <AppText
-                                title={
-                                  item.Post_Type === 'Post'
-                                    ? 'added a new post'
-                                    : 'added a new poll'
-                                }
-                                textColor={AppColors.DARKGRAY}
-                                textSize={1.4}
-                              />
-                            </View>
-                            <AppText
-                              title={moment(item.createdAt).fromNow()}
-                              textColor={AppColors.DARKGRAY}
-                              textSize={1.5}
-                            />
-                          </View>
-                        </View>
-
-                        <AppText
-                          title={item.Post_Type === 'Post' ? 'post' : 'poll'}
-                          textColor={AppColors.BTNCOLOURS}
-                          textSize={1.7}
-                          textFontWeight
-                        />
-                      </View>
-
-                      <LineBreak space={2} />
-
-                      <View
-                        style={
-                          item.isPost
-                            ? {
-                                borderWidth: 1,
-                                borderColor: AppColors.BLUE,
-                                borderRadius: 10,
-                              }
-                            : {}
-                        }>
-                        <LineBreak space={1} />
-                        <View
-                          style={
-                            item.isPost
-                              ? {paddingHorizontal: responsiveWidth(3)}
-                              : {}
-                          }>
-                          <AppText
-                            title={item.Post_Caption}
-                            textColor={AppColors.BLACK}
-                            textSize={1.4}
-                          />
-                        </View>
-
-                        <LineBreak space={1} />
-
-                        <Image
-                          source={{uri: `${ImageBaseUrl}${item.Post_Image}`}}
-                          style={{
-                            borderRadius: 10,
-                            width: responsiveWidth(83),
-                            height: responsiveHeight(20),
-                          }}
-                        />
-                      </View>
-
-                      <LineBreak space={1.5} />
-
-                      {item.Post_Type !== 'Post' && (
-                        <AppButton
-                          title={'VOTE'}
-                          handlePress={() =>
-                            navigation.navigate('BattlePoll', {_id: item._id})
-                          }
-                        />
-                      )}
-                    </TouchableOpacity>
-                    {item.Share?.length > 0 && (
-                      <TouchableOpacity style={{marginTop: 10}}>
-                        {item.Share.map((sharedItem, index) => (
-                          <SharePost
-                            key={index}
-                            postData={item}
-                            item={sharedItem}
-                          />
-                        ))}
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                );
-              }}
-            />
-          )}
+          <AppText
+            onPress={() => navigation.navigate('LiveVotingScores')}
+            textSize={2.5}
+            textFontWeight={'bold'}
+            title="Warz"
+          />
         </View>
+        {isLoading ? (
+          <View style={{flex: 1, justifyContent: 'center'}}>
+            <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
+          </View>
+        ) : (
+          <View>
+            <FlatList
+              data={allBattles}
+              keyExtractor={item => item._id.toString()}
+              contentContainerStyle={{marginTop: responsiveHeight(2)}}
+              renderItem={({item}) => <BattleCard item={item} />}
+            />
+          </View>
+        )}
       </View>
     </ScrollView>
   );

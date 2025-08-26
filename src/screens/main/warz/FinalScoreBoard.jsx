@@ -11,56 +11,86 @@ import {responsiveWidth} from '../../../utils/Responsive_Dimensions';
 import AppButton from '../../../components/AppButton';
 import LineBreak from '../../../components/LineBreak';
 
-const voters = [
-  {id: 4, profImg: APPImages.nailsTwo, username: 'Clinton', numOfScore: 5990},
-  {id: 5, profImg: APPImages.nailsTwo, username: 'Olivia', numOfScore: 4870},
-  {id: 6, profImg: APPImages.nailsTwo, username: 'Smith', numOfScore: 3750},
-  {id: 7, profImg: APPImages.nailsTwo, username: 'Mike', numOfScore: 2341},
-];
-
-const FinalScoreBoard = () => {
+const FinalScoreBoard = ({route}) => {
   const navigation = useNavigation();
+  const {battleId} = route?.params;
+  console.log('winner', battleId.winner);
+
+  // const sortedSalons = [...battleId?.salons].sort(
+  //   (a, b) => b?.vote?.length - a?.vote?.length,
+  // );
+
+  // const topThree = sortedSalons.slice(0, 3);
+  // const rest = sortedSalons.slice(3);
+  let sortedSalons = [...battleId?.salons].sort(
+    (a, b) => b?.vote?.length - a?.vote?.length,
+  );
+
+  // ✅ If admin declared winner
+  if (battleId?.winner) {
+    const winnerSalon = sortedSalons.find(s => s._id === battleId.winner);
+
+    if (winnerSalon) {
+      // Remove winner from current list
+      sortedSalons = sortedSalons.filter(s => s._id !== battleId.winner);
+
+      // Put winner at the top
+      sortedSalons.unshift(winnerSalon);
+    }
+  }
+
+  const topThree = sortedSalons.slice(0, 3);
+  const rest = sortedSalons.slice(3);
+
   return (
-    <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
+    <ScrollView
+      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader
         onPress={() => navigation.goBack()}
         title={'FINAL SCOREBOARD'}
         isTextAlignCentered={true}
       />
-
-      <LeaderboardPodium />
-
-      <View style={{paddingHorizontal: responsiveWidth(3)}}>
+      <View>
+        <LeaderboardPodium players={topThree} />
+      </View>
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: responsiveWidth(3),
+          marginTop: responsiveWidth(4),
+        }}>
         <FlatList
-          data={voters}
+          data={rest}
+          keyExtractor={(item, index) => item?._id || index.toString()}
           contentContainerStyle={{
             borderWidth: 1,
             borderColor: AppColors.PEACHCOLOUR,
             borderRadius: 7,
           }}
-          renderItem={({item}) => {
-            return <PointesProfile item={item} />;
-          }}
+          renderItem={({item, index}) => (
+            <PointesProfile item={item} index={index + 4} /> // start from 4
+          )}
         />
 
         <LineBreak space={2} />
-
-        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-          <View style={{width: responsiveWidth(45)}}>
-            <AppButton
-              title="Save"
-              handlePress={() => navigation.goBack()}
-              //   bgColor={AppColors.DARKGRAY}
-              //   textColor={AppColors.WHITE}
-            />
-          </View>
-          <View style={{width: responsiveWidth(45)}}>
-            <AppButton
-              title="Share"
-              handlePress={() => navigation.goBack()}
-              //   bgColor={AppColors.DARKGRAY}
-              //   textColor={AppColors.WHITE}
-            />
+        <View style={{flex: 1, justifyContent: 'flex-end'}}>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+            <View style={{width: responsiveWidth(45)}}>
+              <AppButton
+                title="Save"
+                handlePress={() => navigation.goBack()}
+                //   bgColor={AppColors.DARKGRAY}
+                //   textColor={AppColors.WHITE}
+              />
+            </View>
+            <View style={{width: responsiveWidth(45)}}>
+              <AppButton
+                title="Share"
+                handlePress={() => navigation.goBack()}
+                //   bgColor={AppColors.DARKGRAY}
+                //   textColor={AppColors.WHITE}
+              />
+            </View>
           </View>
         </View>
       </View>

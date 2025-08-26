@@ -27,13 +27,12 @@ const LiveVotingScores = ({route}) => {
     <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader
         onPress={() => navigation.goBack()}
-        // title={'LIVE VOTING SCORES'}
-        title={'All Voters'}
+        title={'LIVE VOTING SCORES'}
         isTextAlignCentered={true}
       />
       <View style={{paddingHorizontal: responsiveWidth(3)}}>
         <FlatList
-          data={data}
+          data={[...data].sort((a, b) => b?.vote?.length - a?.vote?.length)}
           contentContainerStyle={{
             borderWidth: 1,
             borderColor: AppColors.PEACHCOLOUR,
