@@ -115,7 +115,7 @@ const Signup = ({navigation}) => {
           <TouchableOpacity
             onPress={() => {
               setWithEmail(true);
-              handleInputChange('email', '');
+              handleInputChange('phone', null);
             }}>
             <AppText
               textSize={1.99}
@@ -126,7 +126,7 @@ const Signup = ({navigation}) => {
           <TouchableOpacity
             onPress={() => {
               setWithEmail(false);
-              handleInputChange('phone', '');
+              handleInputChange('email', null);
             }}>
             <AppText
               textColor={withEmail ? '#000' : '#C11210'}

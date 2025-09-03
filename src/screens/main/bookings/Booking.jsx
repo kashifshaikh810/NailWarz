@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import AppColors from '../../../utils/AppColors';
-import {useNavigation} from '@react-navigation/native';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
 import AppHeader from '../../../components/AppHeader';
 import {
   responsiveHeight,
@@ -56,6 +56,7 @@ const tabs = [
 
 const Booking = () => {
   const navigation = useNavigation();
+  const focus = useIsFocused();
   const [selectedTab, setSelectedTab] = useState('Accepted');
   const [upcomingData, setUpcomingData] = useState();
   const [showCancelBookingModal, setShowCancelBookingModal] = useState(false);
@@ -102,7 +103,7 @@ const Booking = () => {
 
   useEffect(() => {
     getBookingsHandler();
-  }, [selectedTab]);
+  }, [selectedTab,focus]);
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}

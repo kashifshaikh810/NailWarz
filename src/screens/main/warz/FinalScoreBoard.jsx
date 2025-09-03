@@ -73,7 +73,7 @@ const FinalScoreBoard = ({route}) => {
         />
 
         <LineBreak space={2} />
-        <View style={{flex: 1, justifyContent: 'flex-end'}}>
+        {/* <View style={{flex: 1, justifyContent: 'flex-end'}}>
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
             <View style={{width: responsiveWidth(45)}}>
               <AppButton
@@ -92,7 +92,7 @@ const FinalScoreBoard = ({route}) => {
               />
             </View>
           </View>
-        </View>
+        </View> */}
       </View>
       <LineBreak space={2} />
     </ScrollView>

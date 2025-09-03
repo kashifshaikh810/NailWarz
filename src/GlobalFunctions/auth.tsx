@@ -16,11 +16,10 @@ export const registerUser = async (userName: string, email: string, password: st
     payload.password = password;
   }
   if (phone) {
-    payload.phone = phone;
+    payload.phone = Number(phone);
   }
 
   let data = JSON.stringify(payload);
-  console.log('dattaaaadttta',data)
 
   let config = {
     method: 'post',
@@ -42,6 +41,7 @@ export const registerUser = async (userName: string, email: string, password: st
     }
     return response.data;
   } catch (error) {
+    console.log('errorr', error.response.data)
     ShowToast('error', error.response.data.message);
     throw error;
   }
@@ -86,7 +86,7 @@ export const userLogin = async (email: string, password: string, phone: number, 
     }
   }
 };
-export const verifyOtp = async (token: string, otp: number, phone: number, dispatch: any) => {
+export const verifyOtp = async (token: string, otp: number, phone: number, email: string, dispatch: any) => {
   // let data = JSON.stringify({
   //   'token': token,
   //   'otp': otp,
@@ -100,7 +100,11 @@ export const verifyOtp = async (token: string, otp: number, phone: number, dispa
   if (phone) {
     payload.phone = Number(phone);
   }
+  if (email) {
+    payload.email = email;
+  }
   const data = JSON.stringify(payload);
+  console.log('dataa', data);
   let config = {
     method: 'post',
     maxBodyLength: Infinity,
@@ -119,11 +123,7 @@ export const verifyOtp = async (token: string, otp: number, phone: number, dispa
     if (response.data.success) {
       ShowToast('success', response.data.message);
       dispatch(setUserData(response.data?.data));
-      if (token) {
-        dispatch(setToken(token));
-      } else {
-        dispatch(setToken(response.data.token));
-      }
+      dispatch(setToken(response.data.token));
     } else {
       ShowToast('error', response.data.message);
     }
@@ -138,6 +138,8 @@ export const editProfile = async (
   image: any,
   navigation: any,
   dispatch: any,
+  stripeCustomerId: string,
+  showToast?: boolean
 ) => {
   let data = new FormData();
   data.append('userId', userId);
@@ -150,6 +152,9 @@ export const editProfile = async (
       name: 'image.jpg',
       type: 'image/jpeg',
     });
+  }
+  if (stripeCustomerId) {
+    data.append('stripeCustomerId', stripeCustomerId);
   }
   const config = {
     method: 'post',
@@ -165,13 +170,16 @@ export const editProfile = async (
   try {
     const response = await axios.request(config);
     console.log('Post Response:', response.data);
-    if (response.data.success) {
-      ShowToast('success', response.data.message);
-      dispatch(setUserData(response.data?.data));
-      navigation.goBack();
-    } else {
-      ShowToast('error', response.data.message);
-    }
+      if (response.data.success) {
+        if(showToast){
+          ShowToast('success', response.data.message);
+        }
+        dispatch(setUserData(response.data?.data));
+        navigation.goBack();
+      } else {
+        ShowToast('error', response.data.message);
+      }
+
     return response.data;
   } catch (error) {
     ShowToast('error', error.response.data.message);

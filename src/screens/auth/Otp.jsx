@@ -30,7 +30,7 @@ const Otp = ({navigation, route}) => {
       return ShowToast('error', 'Plz Enter Your Otp To Proceed!');
     }
     setIsLoading(true);
-    await verifyOtp(token, value, phone, dispatch);
+    await verifyOtp(token, value, phone, email, dispatch);
     setIsLoading(false);
   };
   return (

@@ -515,3 +515,89 @@ export const addVote = async (battleId: string, salonId: string, userId: string)
     throw error;
   }
 };
+export const createCustomer = async (token: string) => {
+  let data = '';
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}createOrGetCustomer`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      // 'Content-Type': 'application/json',
+    },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const attachCard = async (paymentMethodId: string, token: string) => {
+  let data = JSON.stringify({
+    'paymentMethodId': paymentMethodId,
+  });
+
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}attachCard`,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const getSavedCards = async (token: string) => {
+  let data = '';
+
+  let config = {
+    method: 'get',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}getSavedCards`,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const createPayment = async (bookingId: string, amount: number, currency: string, saveCard: boolean, paymentMethodId: string, token: string) => {
+  let data = JSON.stringify({
+    'bookingId': bookingId,
+    'amount': amount,
+    'currency': currency,
+    'saveCard': saveCard,
+    'paymentMethodId': paymentMethodId,
+  });
+
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}createPaymentIntent`,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};

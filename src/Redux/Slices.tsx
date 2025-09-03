@@ -14,6 +14,7 @@ interface UserState {
 const initialState: UserState = {
   userData: {},
   token: '',
+  message:'',
   isLoading: false,
   error: null,
 };

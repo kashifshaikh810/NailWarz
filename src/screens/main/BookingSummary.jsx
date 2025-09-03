@@ -38,7 +38,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 
 const BookingSummary = ({route}) => {
   const navigation = useNavigation();
-  const [paymentType, setPaymentType] = useState({id: 2});
+  const [paymentType, setPaymentType] = useState();
   const [saloonData, setSaloonData] = useState();
   const {_id} = useSelector(state => state?.user?.userData);
   const [isLoading, setIsLoading] = useState(false);
@@ -79,11 +79,17 @@ const BookingSummary = ({route}) => {
   ];
 
   const paymentDetails = [
-    {id: 1, title: 'Pay Online Now', subTitle: 'Secure your booking instantly'},
+    {
+      id: 1,
+      title: 'Pay Online Now',
+      subTitle: 'Secure your booking instantly',
+      value: 'online',
+    },
     {
       id: 2,
       title: 'Pay at Salon',
       subTitle: 'Settle payment after your appointment',
+      value: 'salon',
     },
   ];
   const getSaloonByIdHandler = async () => {
@@ -107,8 +113,15 @@ const BookingSummary = ({route}) => {
       console.log('response', response);
 
       if (response?.success) {
-        setVisibleConfirmationModal(true);
-        setBookingId(response?.data?._id);
+        if (paymentType === 'online') {
+          navigation.navigate('SelectPaymentMethod', {
+            bookingId: response?.data?._id,
+            price: price,
+          });
+        } else {
+          setBookingId(response?.data?._id);
+          setVisibleConfirmationModal(true);
+        }
         // return ShowToast('success', response.message);
       } else {
         return ShowToast('error', response.message);
@@ -231,10 +244,13 @@ const BookingSummary = ({route}) => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                 }}
-                onPress={() => {
-                  item?.id === 1 ? Alert.alert('Under Development') : null;
-                  setPaymentType({id: 2});
-                }}>
+                // onPress={() => {
+                //   item?.id === 1
+                //     ? navigation.navigate('SelectPaymentMethod')
+                //     : null;
+                //   setPaymentType({id: 2});
+                // }}
+                onPress={() => setPaymentType(item?.value)}>
                 <View>
                   <AppText
                     title={item.title}
@@ -249,7 +265,7 @@ const BookingSummary = ({route}) => {
                 </View>
                 <Fontisto
                   name={
-                    paymentType.id === item.id
+                    paymentType === item.value
                       ? 'radio-btn-active'
                       : 'radio-btn-passive'
                   }
@@ -336,11 +352,11 @@ const BookingSummary = ({route}) => {
             navigation.navigate('Home');
             setVisibleConfirmationModal(false);
           }}
-          visible={visibleConfirmationModal}
           setVisible={() => {
             navigation.navigate('DownloadReceipt', {bookingId});
             setVisibleConfirmationModal(false);
           }}
+          visible={visibleConfirmationModal}
         />
 
         <AppButton

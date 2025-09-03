@@ -36,7 +36,15 @@ const EditProfile = () => {
   };
   const editProfileHandler = async () => {
     setIsLoading(true);
-    await editProfile(userData._id, userName, imageUri, navigation, dispatch);
+    await editProfile(
+      userData._id,
+      userName,
+      imageUri,
+      navigation,
+      dispatch,
+      null,
+      true,
+    );
     setIsLoading(false);
   };
 
@@ -89,7 +97,7 @@ const EditProfile = () => {
           <View style={{gap: responsiveHeight(1)}}>
             <AppText title="User Name" textSize={1.9} textFontWeight={400} />
             <AppTextInput
-            onChangeText={(value) => setUserName(value)}
+              onChangeText={value => setUserName(value)}
               inputPlaceHolder={'Charles James'}
               containerBg={AppColors.INPUTBG}
             />

@@ -31,8 +31,13 @@ import SaloonsCard from '../../components/SaloonsCard';
 import SaloonsArray from '../../utils/SaloonsArray';
 import {useNavigation} from '@react-navigation/native';
 import Geolocation from 'react-native-geolocation-service';
-import {getAllCategories, getSaloons} from '../../GlobalFunctions';
-import {ShowToast} from '../../GlobalFunctions/auth';
+import {
+  createCustomer,
+  getAllCategories,
+  getSaloons,
+} from '../../GlobalFunctions';
+import {editProfile, ShowToast} from '../../GlobalFunctions/auth';
+import {useDispatch, useSelector} from 'react-redux';
 
 const Home = () => {
   const [serviceSelected, setServiceSelect] = useState(0);
@@ -46,6 +51,9 @@ const Home = () => {
     categoryName: '',
   });
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {token, userData} = useSelector(state => state?.user);
+  console.log('userData', userData);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoading2, setIsLoading2] = useState(false);
   const [address, setAddress] = useState('');
@@ -151,7 +159,34 @@ const Home = () => {
       console.log('getSaloonsHandler error:', error);
     }
   };
-
+  const editProfileHandler = async customerId => {
+    await editProfile(
+      userData._id,
+      null,
+      null,
+      navigation,
+      dispatch,
+      customerId,
+      false,
+    );
+  };
+  const createCustomerHandler = async () => {
+    try {
+      const response = await createCustomer(token);
+      if (response?.success) {
+        editProfileHandler(response?.stripeCustomerId);
+      }
+      console.log('response', response);
+    } catch (error) {
+      console.log('eeeerrrror',error.response)
+      return ShowToast('error', error?.response?.data?.message);
+    }
+  };
+  useEffect(() => {
+    if (!userData?.stripeCustomerId) {
+      createCustomerHandler();
+    }
+  }, []);
   useEffect(() => {
     if (latLng.latitude && latLng.longitude && currentCategory?.categoryId) {
       getSaloonsHandler();
