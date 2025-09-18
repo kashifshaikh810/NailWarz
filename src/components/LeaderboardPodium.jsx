@@ -12,11 +12,20 @@ import SVGXml from './SVGXML';
 import {AppIcons} from '../assets/Icons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AppColors from '../utils/AppColors';
+import AppText from './AppTextComps/AppText';
 
 const LeaderboardPodium = ({players = []}) => {
+  // Only players who got votes
   const filteredPlayers = players.filter(p => p?.vote?.length > 0);
-  console.log('filtered players', filteredPlayers);
-  const podiumOrder = [1, 0, 2];
+
+  // Sort by votes in descending order
+  const sortedPlayers = [...filteredPlayers].sort(
+    (a, b) => b.vote.length - a.vote.length,
+  );
+
+  // Only take top 3 players
+  const topThree = sortedPlayers.slice(0, 3);
+
   return (
     <View style={styles.container}>
       <View style={styles.row}>
@@ -24,36 +33,29 @@ const LeaderboardPodium = ({players = []}) => {
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            gap: responsiveHeight(1),
             width: '100%',
             marginTop: responsiveHeight(3),
             height: responsiveHeight(20),
           }}>
-          {podiumOrder.map(pos => {
-            const player = filteredPlayers[pos];
-            if (!player) return null;
+          {topThree.map((player, index) => {
+            const position = index + 1; // 1 = first, 2 = second, 3 = third
 
-            const position = pos + 1; // 1, 2, 3
             return (
               <View
                 key={player?._id}
                 style={[
-                  // styles.playerContainer,
                   position === 1 && styles.firstPlace,
                   position === 2 && styles.secondPlace,
                   position === 3 && styles.thirdPlace,
                 ]}>
                 {position === 1 && (
-                  <View style={{alignSelf: 'center'}}>
+                  <View style={{alignSelf: 'center',alignItems:'center'}}>
+                    <AppText textFontWeight={'300'} textSize={2} title="NAIL CHAMPION"/>
                     <SVGXml width={'50'} height={'50'} icon={AppIcons.king} />
                   </View>
                 )}
 
-                <View
-                  style={{
-                    alignItems: 'center',
-                    // top: position === 1 ? 0 : responsiveHeight(4), // 1st is taller
-                  }}>
+                <View style={{alignItems: 'center'}}>
                   {position !== 1 && (
                     <>
                       <Text
@@ -73,13 +75,15 @@ const LeaderboardPodium = ({players = []}) => {
                     </>
                   )}
                   {position !== 1 && <LineBreak space={1} />}
+
                   <Image
                     style={[
                       styles.avatar,
-                      position === 1 && styles.avatarLarge, // 1st place bigger
+                      position === 1 && styles.avatarLarge, // bigger avatar for 1st place
                     ]}
                     source={APPImages.default_user}
                   />
+
                   <Text style={styles.username}>{player?.salonName}</Text>
                   <Text style={styles.score}>{player?.vote?.length}</Text>
                 </View>
@@ -97,6 +101,7 @@ const LeaderboardPodium = ({players = []}) => {
     </View>
   );
 };
+
 
 export default LeaderboardPodium;
 

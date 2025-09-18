@@ -12,10 +12,12 @@ import AppTextInput from './AppTextInput';
 import { addReviews } from '../GlobalFunctions';
 import { ShowToast } from '../GlobalFunctions/auth';
 import { useSelector } from 'react-redux';
-const AddReviewModal = ({ modalVisible, setModalVisible,setRefresh, onBackdropPress, saloonId }) => {
+import StarRating from 'react-native-star-rating-widget';
+const AddReviewModal = ({ modalVisible, setModalVisible, setRefresh, onBackdropPress, saloonId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [reviewMsg, setReviewMsg] = useState('');
   const [totalStars, setTotalStars] = useState(2);
+  console.log('totalstars', totalStars)
   const { userData } = useSelector(state => state.user);
 
   const addReviewsHandler = async () => {
@@ -67,17 +69,19 @@ const AddReviewModal = ({ modalVisible, setModalVisible,setRefresh, onBackdropPr
             <Entypo name="cross" size={30} />
           </TouchableOpacity>
           <AppText
-            title="Give A Star"
+            title="Rate Your Experience"
             textAlignment="center"
             mrgnTop={1.2}
             textSize={3}
             textColor={AppColors.BTNCOLOURS}
           />
-          <Rating
+          {/* <Rating
             count={5}
             startingValue={2}
             defaultRating={2}
             size={30}
+            ratingColor="red"             // ⭐ filled star color (e.g., gold)
+            ratingBackgroundColor="#E0E0E0"
             onFinishRating={ratings => setTotalStars(ratings)}
             style={{ marginTop: responsiveHeight(2) }}
             starContainerStyle={{
@@ -86,6 +90,13 @@ const AddReviewModal = ({ modalVisible, setModalVisible,setRefresh, onBackdropPr
               // fallback to margin-based spacing
               columnGap: 10, // or use marginHorizontal in custom star
             }}
+          /> */}
+          <StarRating
+            starSize={45}
+            color={AppColors.RED}
+            style={{ alignSelf: 'center', marginTop: responsiveHeight(1) }}
+            rating={totalStars}
+            onChange={setTotalStars}
           />
           <View
             style={{
@@ -100,7 +111,7 @@ const AddReviewModal = ({ modalVisible, setModalVisible,setRefresh, onBackdropPr
               fntSize={2.3}
               containerBg={AppColors.INPUTBG}
               txtAlignVertical="top"
-              inputPlaceHolder="Note...."
+              inputPlaceHolder="Comment"
             />
           </View>
           <View style={{ alignItems: 'center', bottom: 5 }}>

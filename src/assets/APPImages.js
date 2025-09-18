@@ -13,4 +13,5 @@ export default APPImages = {
     Splash: require('./Splash.png'),
     bg: require('./bg.png'),
     logoSmall: require('./logoSmall.png'),
+    newLogo: require('./newLogo.png'),
 };

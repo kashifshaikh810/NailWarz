@@ -28,6 +28,7 @@ import Modal from 'react-native-modal';
 import {useSelector} from 'react-redux';
 import {addReviews} from '../GlobalFunctions';
 import {ShowToast} from '../GlobalFunctions/auth';
+import StarRating from 'react-native-star-rating-widget';
 type props = {
   img?: any,
   title?: string,
@@ -38,6 +39,8 @@ type props = {
   saloonId?: string,
   bookingId?: string,
   cancelBookingOnPress?: () => void,
+  onCardPress?: () => void,
+  disabled?: boolean,
 };
 
 const ratingsStar = [
@@ -58,6 +61,8 @@ const BookingCard = ({
   saloonId,
   bookingId,
   cancelBookingOnPress,
+  onCardPress,
+  disabled = false,
 }: props) => {
   const navigation = useNavigation();
   const {userData} = useSelector(state => state.user);
@@ -94,7 +99,9 @@ const BookingCard = ({
     <View
     // onPress={() => navigation.navigate('HomeDetails', {saloonId})}
     >
-      <View
+      <TouchableOpacity
+        disabled={disabled}
+        onPress={onCardPress}
         style={{
           padding: 20,
           paddingTop: 10,
@@ -135,7 +142,7 @@ const BookingCard = ({
             style={{
               height: responsiveHeight(10),
               width: responsiveHeight(10),
-              resizeMode: 'contain',
+              // resizeMode: 'contain',
               borderRadius: 10,
               marginRight: 10,
             }}
@@ -184,7 +191,7 @@ const BookingCard = ({
               justifyContent: 'space-between',
               alignItems: 'center',
             }}>
-            <AppButton
+            {/* <AppButton
               title="Cancel Booking"
               bgColor={AppColors.WHITE}
               textColor={AppColors.BTNCOLOURS}
@@ -199,7 +206,7 @@ const BookingCard = ({
               }
               // bgColor={AppColors.DARKGRAY}
               // textColor={AppColors.WHITE}
-            />
+            /> */}
           </View>
         )}
 
@@ -256,7 +263,7 @@ const BookingCard = ({
             />
           </View>
         )}
-      </View>
+      </TouchableOpacity>
       <Modal
         animationInTiming={600}
         animationOutTiming={600}
@@ -283,25 +290,18 @@ const BookingCard = ({
             <Entypo name="cross" size={30} />
           </TouchableOpacity>
           <AppText
-            title="Give A Star"
+            title="Rate Your Experience"
             textAlignment="center"
             mrgnTop={1.2}
             textSize={3}
             textColor={AppColors.BTNCOLOURS}
           />
-          <Rating
-            count={5}
-            startingValue={4}
-            defaultRating={4}
-            size={30}
-            onFinishRating={ratings => setTotalStars(ratings)}
-            style={{marginTop: responsiveHeight(2)}}
-            starContainerStyle={{
-              flexDirection: 'row',
-              justifyContent: 'center',
-              // fallback to margin-based spacing
-              columnGap: 10, // or use marginHorizontal in custom star
-            }}
+          <StarRating
+            starSize={45}
+            color={AppColors.RED}
+            style={{alignSelf: 'center', marginTop: responsiveHeight(1)}}
+            rating={totalStars}
+            onChange={setTotalStars}
           />
           <View
             style={{

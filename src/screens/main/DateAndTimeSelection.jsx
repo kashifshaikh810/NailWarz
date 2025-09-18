@@ -24,6 +24,8 @@ import CalendarModal from '../../components/CalendarModal';
 import {getTechnicianById} from '../../GlobalFunctions';
 import {ShowToast} from '../../GlobalFunctions/auth';
 import moment from 'moment';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../GlobalFunctions/styles';
 
 const DateAndTimeSelection = ({route}) => {
   const navigation = useNavigation();
@@ -254,9 +256,9 @@ const DateAndTimeSelection = ({route}) => {
   // console.log('formattedTime', formattedTime);
 
   return (
-    <View style={{flex: 1}}>
+    <SafeAreaView style={globalStyles.container}>
       <ScrollView style={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
-        <AppHeader onPress={() => navigation.goBack()} title="Date and time" />
+        <AppHeader onPress={() => navigation.goBack()} title="Date & Time" />
         <View
           style={{
             backgroundColor: '#B4B4B4',
@@ -442,10 +444,11 @@ const DateAndTimeSelection = ({route}) => {
               <AppText
                 title={
                   selectedDay
-                    ? 'Salon is closed on this day. Choose another date.'
+                    ? 'Salon is closed on this day. Please select another date'
                     : null
                 }
                 textSize={2.5}
+                textwidth={90}
                 textAlignment={'center'}
                 textColor={AppColors.BLACK}
                 textFontWeight
@@ -487,7 +490,7 @@ const DateAndTimeSelection = ({route}) => {
           // textColor={AppColors.WHITE}
         />
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 };
 

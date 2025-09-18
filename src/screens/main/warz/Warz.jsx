@@ -144,7 +144,7 @@ const Warz = () => {
                 {battleId: item?.status === 'Start' ? item?._id : item},
               )
             }
-            title="OPEN"
+            title="OPEN BATTLE"
           />
         </View>
       </View>
@@ -178,13 +178,13 @@ const Warz = () => {
       <View style={{flex: 1}}>
         <View
           style={{
-            flexDirection: 'row',
+            // flexDirection: 'row',
             gap: responsiveHeight(1.5),
             alignItems: 'center',
             alignSelf: 'center',
             marginTop: responsiveHeight(2),
           }}>
-          <Image
+          {/* <Image
             source={APPImages.logoSmall}
             style={{
               alignSelf: 'flex-end',
@@ -192,12 +192,19 @@ const Warz = () => {
               width: responsiveWidth(15),
             }}
             resizeMode="contain"
+          /> */}
+          <AppText
+            // onPress={() => navigation.navigate('LiveVotingScores')}
+            textSize={2.5}
+            textColor={'red'}
+            textFontWeight={'bold'}
+            title="Welcome to the War Zone"
           />
           <AppText
-            onPress={() => navigation.navigate('LiveVotingScores')}
             textSize={2.5}
-            textFontWeight={'bold'}
-            title="Warz"
+            textColor={AppColors.BLACK}
+            // textFontWeight={'bold'}
+            title="Check out the online battles!"
           />
         </View>
         {isLoading ? (

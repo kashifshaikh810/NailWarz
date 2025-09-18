@@ -25,6 +25,8 @@ import RNFS from 'react-native-fs';
 import {getBookingById} from '../../GlobalFunctions';
 import moment from 'moment';
 import RNBlobUtil from 'react-native-blob-util';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../GlobalFunctions/styles';
 
 const DownloadReceipt = ({route}) => {
   const navigation = useNavigation();
@@ -126,7 +128,7 @@ const DownloadReceipt = ({route}) => {
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: AppColors.WHITE}}>
+    <SafeAreaView style={globalStyles.container}>
       <AppHeader onPress={() => navigation.goBack()} title="Receipt" />
       {isLoading ? (
         <View style={{flex: 0.4, justifyContent: 'center'}}>
@@ -253,7 +255,7 @@ const DownloadReceipt = ({route}) => {
       </View>
 
       <LineBreak space={2} />
-    </View>
+    </SafeAreaView>
   );
 };
 

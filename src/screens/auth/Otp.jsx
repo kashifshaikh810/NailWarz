@@ -1,4 +1,11 @@
-import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
+/* eslint-disable react-native/no-inline-styles */
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import React, {useState} from 'react';
 import AppText from '../../components/AppTextComps/AppText';
 import BackgroundScreen from '../../components/AppTextComps/BackgroundScreen';
@@ -14,17 +21,39 @@ import {
   responsiveWidth,
 } from '../../utils/Responsive_Dimensions';
 import AppButton from '../../components/AppButton';
-import {ShowToast, verifyOtp} from '../../GlobalFunctions/auth';
+import {
+  forgotPasswordIntegration,
+  ShowToast,
+  verifyOtp,
+  verifyPasswordOtp,
+} from '../../GlobalFunctions/auth';
 import {useDispatch} from 'react-redux';
 
 const Otp = ({navigation, route}) => {
   const [value, setValue] = useState();
   const ref = useBlurOnFulfill({value, cellCount: 4});
   const [isLoading, setIsLoading] = useState(false);
+  const [resendOtpLoading, setResendOtpLoading] = useState(false);
   const dispatch = useDispatch();
 
-  const {token, email, phone} = route?.params;
-  console.log('value', value);
+  const {token, email, phone, forgotPassword} = route?.params;
+  console.log('forgotPassword', forgotPassword);
+  const forgotPasswordHandler = async () => {
+    setResendOtpLoading(true);
+    try {
+      const response = await forgotPasswordIntegration(email);
+      setResendOtpLoading(false);
+
+      console.log('response', response);
+      if (response.success) {
+        ShowToast('success', response.message);
+      } else {
+        ShowToast('error', response.message);
+      }
+    } catch (error) {
+      setResendOtpLoading(false);
+    }
+  };
   const handleOtpVerification = async () => {
     if (!value) {
       return ShowToast('error', 'Plz Enter Your Otp To Proceed!');
@@ -33,20 +62,44 @@ const Otp = ({navigation, route}) => {
     await verifyOtp(token, value, phone, email, dispatch);
     setIsLoading(false);
   };
+
+  const verifyPasswordOtpHandler = async () => {
+    try {
+      setIsLoading(true);
+      const response = await verifyPasswordOtp(email, value);
+      console.log('responnse', response);
+      if (response.success) {
+        ShowToast('success', response.message);
+        navigation.navigate('ResetPassword', {email});
+      } else {
+        ShowToast('error', response.message);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.log('error', error);
+    }
+  };
   return (
     <BackgroundScreen stylesPorp={{justifyContent: 'space-between'}}>
       <View>
         <View style={{gap: 10}}>
           <AppText
-            title="Verify Your Identity"
+            title={
+              forgotPassword ? 'Email Verification' : 'Verify Your Identity'
+            }
             textSize={3}
             textAlignment={'center'}
             textFontWeight
           />
           <AppText
-            title={`We’ve sent a 4-digit code to ${
-              email ? email : phone
-            } Please enter it below.`}
+            title={
+              forgotPassword
+                ? 'Please type OTP code that we give you'
+                : `We’ve sent a 4-digit code to ${
+                    email ? email : phone
+                  } Please enter it below.`
+            }
             textSize={1.9}
             textwidth={80}
             textAlignment={'center'}
@@ -73,35 +126,45 @@ const Otp = ({navigation, route}) => {
             </Text>
           )}
         />
-
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 3,
-            marginTop: 20,
-          }}>
-          <AppText
-            title="Didn’t receive a code?"
-            textSize={1.9}
-            textAlignment={'center'}
-            textColor={'#939393'}
-          />
-          <AppText
-            title="Resend"
-            textSize={1.9}
-            textAlignment={'center'}
-            textColor={AppColors.BLUE}
-          />
-        </View>
+        {resendOtpLoading ? (
+          <View style={{marginTop: responsiveHeight(5)}}>
+            <ActivityIndicator size={'large'} color={AppColors.BTNCOLOURS} />
+          </View>
+        ) : (
+          <TouchableOpacity
+            onPress={forgotPassword ? forgotPasswordHandler : null}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 3,
+              marginTop: 20,
+            }}>
+            <AppText
+              title="Didn’t receive a code?"
+              textSize={1.9}
+              textAlignment={'center'}
+              textColor={'#939393'}
+            />
+            <AppText
+              title="Resend"
+              textSize={1.9}
+              textAlignment={'center'}
+              textColor={AppColors.BLUE}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       <AppButton
-        handlePress={handleOtpVerification}
+        handlePress={
+          forgotPassword ? verifyPasswordOtpHandler : handleOtpVerification
+        }
         title={
           isLoading ? (
             <ActivityIndicator size={'large'} color={AppColors.WHITE} />
+          ) : forgotPassword ? (
+            'Verify Email'
           ) : (
             'Continue'
           )

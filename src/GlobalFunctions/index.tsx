@@ -1,13 +1,13 @@
 import axios from 'axios';
 import { BaseUrl } from '../BaseUrl';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { ShowToast } from './auth';
 
 export const getSaloons = async ({
   latitude,
   longitude,
-  saloonName,
   categoryId,
+  saloonName,
 }: {
   latitude?: number;
   longitude?: number;
@@ -22,6 +22,31 @@ export const getSaloons = async ({
 
   console.log('params', params.toString());
 
+  const config = {
+    method: 'get',
+    url: `${BaseUrl}getSalons?${params.toString()}`,
+    headers: {},
+  };
+
+  try {
+    const response = await axios.request(config);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const getAllSaloons = async ({
+  saloonName,
+  categoryId,
+}: {
+  saloonName?: string;
+  categoryId?: string;
+}) => {
+  const params = new URLSearchParams();
+  if (saloonName) params.append('salonName', saloonName);
+  if (categoryId) params.append('categoryId', categoryId);
+
+  console.log('params', params.toString());
   const config = {
     method: 'get',
     url: `${BaseUrl}getSalons?${params.toString()}`,
@@ -123,25 +148,32 @@ export const getServiceBySalonAndCategoryId = async (categoryId: string, salonId
     throw error;
   }
 };
-export const selectImage = async () => {
+export const selectImage = async (source = 'gallery') => {
   try {
     const options = {
-      mediaType: 'photo', // Allows only photos (Change to 'mixed' for both video & photo)
-      quality: 1, // Best quality (1 = 100%)
+      mediaType: 'photo',
+      quality: 1,
     };
 
-    const result = await launchImageLibrary(options);
+    let result;
+    if (source === 'camera') {
+      result = await launchCamera(options);
+    } else {
+      result = await launchImageLibrary(options);
+    }
 
     if (result.didCancel) {
       console.log('User cancelled image picker');
+      return null;
     } else if (result.errorMessage) {
       console.log('ImagePicker Error: ', result.errorMessage);
+      return null;
     } else {
-      const imagePath = await result.assets[0].uri;
-      return imagePath;
+      return result.assets?.[0]?.uri || null;
     }
   } catch (error) {
     console.log('Error selecting image:', error);
+    return null;
   }
 };
 export const createPost = async (
@@ -338,6 +370,30 @@ export const createBooking = async (userId: string, salonId: string, serviceId: 
     throw error;
   }
 };
+export const updateBooking = async (bookingId: string, technicianId: string, time: string, date: string) => {
+  let data = JSON.stringify({
+    'bookingId': bookingId,
+    'technicianId': technicianId,
+    'time': time,
+    'date': date,
+  });
+
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}updateBooking`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 export const getBookingsByIdAndStatus = async (userId: string, status: string) => {
   let config = {
     method: 'get',
@@ -362,6 +418,28 @@ export const cancelBooking = async (bookingId: string) => {
     method: 'post',
     maxBodyLength: Infinity,
     url: `${BaseUrl}updateBooking`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const cancelBookingStatus = async (bookingId: string) => {
+  let data = JSON.stringify({
+    'bookingId': bookingId,
+    'status': 'Canceled',
+  });
+
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}updateBookingStatusByUser`,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -587,11 +665,28 @@ export const createPayment = async (bookingId: string, amount: number, currency:
   let config = {
     method: 'post',
     maxBodyLength: Infinity,
-    url: `${BaseUrl}createPaymentIntent`,
+    url: `https://predemo.site/Nailwarz/api/createPaymentIntent`,
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const getAllNotifications = async (userId: string) => {
+  let data = '';
+
+  let config = {
+    method: 'get',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}getNotificationsByUserId?userId=${userId}`,
+    headers: {},
     data: data,
   };
   try {

@@ -6,6 +6,8 @@ import Signup from '../screens/auth/Signup';
 import Login from '../screens/auth/Login';
 import Otp from '../screens/auth/Otp';
 import SplashScreen from '../screens/auth/SplashScreen';
+import ForgotPassword from '../screens/auth/ForgotPassword';
+import ResetPassword from '../screens/auth/ResetPassword';
 const Stack = createStackNavigator();
 
 const Auth = () => {
@@ -17,6 +19,8 @@ const Auth = () => {
       <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="Signup" component={Signup} />
       <Stack.Screen name="Otp" component={Otp} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+      <Stack.Screen name="ResetPassword" component={ResetPassword} />
     </Stack.Navigator>
   );
 };

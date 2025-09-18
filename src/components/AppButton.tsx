@@ -15,9 +15,10 @@ type props = {
   width?: number,
   marginHorizontal?: number,
   disabled?: boolean,
-  style?:any,
+  style?: any,
+  txtSize?: number,
 };
-const AppButton = ({ title,style, disabled, width, marginHorizontal, handlePress, bgColor, textColor, borderWidth, borderColor }: props) => {
+const AppButton = ({ title, style, txtSize = 2.4, disabled, width, marginHorizontal, handlePress, bgColor, textColor, borderWidth, borderColor }: props) => {
   return (
     <TouchableOpacity
       disabled={disabled}
@@ -32,10 +33,10 @@ const AppButton = ({ title,style, disabled, width, marginHorizontal, handlePress
         borderColor: borderColor ? borderColor : null,
         borderWidth: borderWidth ? borderWidth : 0,
         width: responsiveWidth(width),
-      },style]}>
+      }, style]}>
       <AppText
         textColor={textColor ? textColor : AppColors.WHITE}
-        textSize={2.4}
+        textSize={txtSize}
         title={title ? title : "Continue"}
         textFontWeight
       />

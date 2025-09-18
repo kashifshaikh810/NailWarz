@@ -8,13 +8,15 @@ interface UserState {
   token: string;
   isLoading: boolean;
   message?: string;
+  isGoogleSignIn?: boolean;
   error: string | null;
 }
 
 const initialState: UserState = {
   userData: {},
   token: '',
-  message:'',
+  message: '',
+  isGoogleSignIn: false,
   isLoading: false,
   error: null,
 };
@@ -90,6 +92,9 @@ const authSlice = createSlice({
     setToken: (state, action) => {
       state.token = action.payload;
     },
+    setIsGoogleSignIn: (state, action) => {
+      state.isGoogleSignIn = action.payload;
+    },
     setUserData: (state, action: PayloadAction<Record<string, any>>) => {
       state.userData = action.payload;
     },
@@ -121,5 +126,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearToken, setUserData, setToken } = authSlice.actions;
+export const { clearToken, setUserData, setToken, setIsGoogleSignIn } = authSlice.actions;
 export default authSlice.reducer;

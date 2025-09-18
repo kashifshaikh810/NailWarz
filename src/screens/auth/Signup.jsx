@@ -6,8 +6,9 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
+  Alert,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import AppText from '../../components/AppTextComps/AppText';
 import {
   responsiveFontSize,
@@ -22,11 +23,20 @@ import Feather from 'react-native-vector-icons/Feather';
 import AppButton from '../../components/AppButton';
 import SocialAuthButton from '../../components/SocialAuthButton';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {registerUser, ShowToast} from '../../GlobalFunctions/auth';
+import {
+  registerUser,
+  ShowToast,
+  signInWithGoogle,
+} from '../../GlobalFunctions/auth';
 import {useNavigation} from '@react-navigation/native';
 import APPImages from '../../assets/APPImages';
 import {SvgFromXml} from 'react-native-svg';
 import {AppIcons} from '../../assets/Icons';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {setIsGoogleSignIn, setToken, setUserData} from '../../Redux/Slices';
+import {useDispatch} from 'react-redux';
+import messaging from '@react-native-firebase/messaging';
+
 const Signup = ({navigation}) => {
   const [form, setForm] = useState({
     userName: '',
@@ -38,10 +48,38 @@ const Signup = ({navigation}) => {
   const [isChecked, setIsChecked] = useState(false);
   const [withEmail, setWithEmail] = useState(true);
   const [secureTxtEntry, setSecureTxtEntry] = useState(true);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [fcmToken, setFcmToken] = useState();
+
+  const dispatch = useDispatch();
   console.log('form', form);
   const handleInputChange = (field: string, value: string) => {
     setForm(prev => ({...prev, [field]: value}));
   };
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const authStatus = await messaging().requestPermission();
+        const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+        if (enabled) {
+          const fcmToken = await messaging().getToken();
+          setFcmToken(fcmToken);
+          console.log('FCM Token:', fcmToken);
+          // Alert.alert('FCM Token', fcmToken);
+        } else {
+          console.log('FCM permission not granted');
+        }
+      } catch (error) {
+        console.error('Error getting FCM token:', error);
+      }
+    };
+
+    getToken();
+  }, []);
   const handleRegisteration = async () => {
     const {userName, email, password, phone} = form;
     // if (!withEmail) {
@@ -55,7 +93,14 @@ const Signup = ({navigation}) => {
     }
     setIsLoading(true);
     try {
-      await registerUser(userName, email, password, phone, navigation);
+      await registerUser(
+        userName,
+        email,
+        password,
+        phone,
+        fcmToken,
+        navigation,
+      );
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
@@ -63,6 +108,41 @@ const Signup = ({navigation}) => {
       return ShowToast('error', error?.response?.data?.message);
     }
   };
+
+  async function signInWithGoogleHandler() {
+    if (isSigningIn) return; // prevent multiple calls
+    setIsSigningIn(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      if (userInfo?.type === 'success') {
+        const {name} = userInfo.data.user;
+        setGoogleLoading(true);
+        const response = await signInWithGoogle(
+          name,
+          userInfo.data.user.email,
+          fcmToken,
+        );
+        setGoogleLoading(false);
+
+        if (response.success) {
+          dispatch(setIsGoogleSignIn(true));
+          dispatch(setToken(response.token));
+          dispatch(setUserData(response.data));
+        } else {
+          ShowToast('error', response.message);
+        }
+      }
+    } catch (error) {
+      setGoogleLoading(false);
+      ShowToast('error', error?.response?.data?.message);
+      console.error('Google Sign-In Error:', error);
+    } finally {
+      setGoogleLoading(false);
+
+      setIsSigningIn(false);
+    }
+  }
   console.log('form', form);
   return (
     <BackgroundScreen padding={0.1}>
@@ -251,18 +331,30 @@ const Signup = ({navigation}) => {
               }
             />
             <SocialAuthButton
+              onPress={signInWithGoogleHandler}
               txtColor={AppColors.BLACK}
               bgColor={AppColors.LIGHTGRAY}
-              title={'Continue with Google'}
+              title={
+                googleLoading ? (
+                  <ActivityIndicator
+                    size={'large'}
+                    color={AppColors.BTNCOLOURS}
+                  />
+                ) : (
+                  'Continue with Google'
+                )
+              }
               logo={
-                <SvgFromXml
-                  xml={AppIcons.google}
-                  height={responsiveFontSize(2.8)}
-                  width={responsiveFontSize(2.8)}
-                  // name={'google'}
-                  // size={responsiveFontSize(2)}
-                  // color={AppColors.BLACK}
-                />
+                !googleLoading && (
+                  <SvgFromXml
+                    xml={AppIcons.google}
+                    height={responsiveFontSize(2.8)}
+                    width={responsiveFontSize(2.8)}
+                    // name={'google'}
+                    // size={responsiveFontSize(2)}
+                    // color={AppColors.BLACK}
+                  />
+                )
               }
             />
             <View

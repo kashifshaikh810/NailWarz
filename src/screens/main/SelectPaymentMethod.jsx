@@ -2,7 +2,6 @@
 import React, {useEffect, useState} from 'react';
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   FlatList,
@@ -24,13 +23,13 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import SVGXml from '../../components/SVGXML';
 import {AppIcons} from './../../assets/Icons/index';
-import AppTextInput from '../../components/AppTextInput';
-import LoadingModal from '../../components/LoadingModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import {CardField, createPaymentMethod} from '@stripe/stripe-react-native';
 import {ShowToast} from '../../GlobalFunctions/auth';
 import {attachCard, createPayment, getSavedCards} from '../../GlobalFunctions';
 import {useSelector} from 'react-redux';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../GlobalFunctions/styles';
 
 const timesData = [
   {id: 1, time: 'Credit/ Debit Card'},
@@ -48,8 +47,8 @@ const SelectPaymentMethod = ({route}) => {
   const {token} = useSelector(state => state?.user);
   const [isLoading, setIsLoading] = useState(false);
   const [cardsLoading, setCardsLoading] = useState(false);
-  const {bookingId, price} = route?.params;
-  console.log('setSelectedCard', selectedCard);
+  const {bookingId, price, pay} = route?.params;
+  console.log('allCards', allCards);
   const [visibleConfirmationModal, setVisibleConfirmationModal] = useState({
     id: 0,
   });
@@ -118,6 +117,7 @@ const SelectPaymentMethod = ({route}) => {
         token,
       );
       setIsLoading(false);
+      console.log('ress', response);
       if (response?.success) {
         setVisibleConfirmationModal(true);
         // ShowToast('success', response?.message);
@@ -126,6 +126,7 @@ const SelectPaymentMethod = ({route}) => {
         // ShowToast('error', response?.message);
       }
     } catch (error) {
+      console.log('errror', error?.response?.data);
       setIsLoading(false);
       ShowToast('error', error?.response?.data?.message);
     }
@@ -134,251 +135,214 @@ const SelectPaymentMethod = ({route}) => {
     getSavedCardsHandler();
   }, []);
   return (
-    <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
-      <AppHeader
-        onPress={() => navigation.goBack()}
-        title="Select payment method"
-      />
+    <SafeAreaView style={globalStyles.container}>
+      <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
+        <AppHeader
+          onPress={() => navigation.goBack()}
+          title="Select Payment Method"
+        />
 
-      <View
-        style={{
-          paddingHorizontal: responsiveWidth(5),
-          marginVertical: responsiveHeight(2),
-        }}>
-        <FlatList
-          data={timesData}
-          contentContainerStyle={{gap: 15}}
-          renderItem={({item, index}) => {
-            return (
-              <View
-                style={{
-                  backgroundColor: AppColors.WHITE,
-                  borderRadius: 10,
-                  paddingHorizontal: responsiveWidth(4),
-                  paddingVertical: responsiveHeight(3),
-                  gap: 10,
-                }}>
+        <View
+          style={{
+            paddingHorizontal: responsiveWidth(5),
+            marginVertical: responsiveHeight(2),
+          }}>
+          <FlatList
+            data={timesData}
+            contentContainerStyle={{gap: 15}}
+            renderItem={({item, index}) => {
+              return (
                 <View
                   style={{
-                    flexDirection: 'row',
-                    flex: 1,
-                    justifyContent: 'space-between',
+                    backgroundColor: AppColors.WHITE,
+                    borderRadius: 10,
+                    paddingHorizontal: responsiveWidth(4),
+                    paddingVertical: responsiveHeight(3),
                     gap: 10,
-                    alignItems: 'center',
                   }}>
-                  <TouchableOpacity
+                  <View
                     style={{
                       flexDirection: 'row',
+                      flex: 1,
+                      justifyContent: 'space-between',
                       gap: 10,
                       alignItems: 'center',
-                    }}
-                    onPress={() => setIsSelectedCard({id: item.id})}>
-                    <Fontisto
-                      name={
-                        isSelectedCard.id === item.id
-                          ? 'radio-btn-active'
-                          : 'radio-btn-passive'
-                      }
-                      size={responsiveFontSize(2.5)}
-                      color={
-                        isSelectedCard.id === item.id
-                          ? AppColors.BLUE
-                          : AppColors.DARKGRAY
-                      }
-                    />
-                    <AppText
-                      title={item.time}
-                      textSize={2.2}
-                      textColor={AppColors.BLACK}
-                      textFontWeight
-                    />
-                  </TouchableOpacity>
-                  {item.iconName ? (
-                    <Fontisto
-                      name={item.iconName}
-                      size={responsiveFontSize(3.5)}
-                      color={AppColors.BLACK}
-                    />
-                  ) : (
-                    item.id == 3 && (
-                      <View
-                        style={{
-                          borderWidth: 1,
-                          borderColor: AppColors.DARKGRAY,
-                          paddingHorizontal: 7,
-                          borderRadius: 5,
-                        }}>
-                        <SVGXml
-                          width={'27'}
-                          height={'27'}
-                          icon={AppIcons.Google_Pay}
-                        />
-                      </View>
-                    )
-                  )}
-                </View>
-
-                {isSelectedCard.id == 1 && index == 0 && (
-                  <View>
-                    {/* <LineBreak space={1.5} /> */}
-                    {cardsLoading ? (
-                      <View style={{height:responsiveHeight(10),justifyContent:'center'}}>
-                        <ActivityIndicator
-                          size={'large'}
-                          color={AppColors.BTNCOLOURS}
-                        />
-                      </View>
-                    ) : (
-                      <FlatList
-                        data={allCards}
-                        renderItem={({item, index}) => {
-                          return (
-                            <TouchableOpacity
-                              onPress={() => setSelectedCard(item)}
-                              style={{
-                                flexDirection: 'row',
-                                flex: 1,
-                                justifyContent: 'space-between',
-                                gap: 10,
-                                marginTop: responsiveHeight(2),
-                                alignItems: 'center',
-                              }}>
-                              <View
-                                style={{
-                                  flexDirection: 'row',
-                                  gap: 10,
-                                  alignItems: 'center',
-                                }}>
-                                <View
-                                  style={{
-                                    borderWidth: 1,
-                                    borderColor: AppColors.DARKGRAY,
-                                    paddingHorizontal: 7,
-                                    borderRadius: 5,
-                                  }}>
-                                  <SVGXml
-                                    width={'27'}
-                                    height={'27'}
-                                    icon={AppIcons[item?.brand]}
-                                  />
-                                </View>
-                                <AppText
-                                  title={`**** ${item?.last4}`}
-                                  textSize={2}
-                                  textColor={AppColors.BLACK}
-                                />
-                              </View>
-                              <Fontisto
-                                name={
-                                  selectedCard?.paymentMethodId ===
-                                  item.paymentMethodId
-                                    ? 'radio-btn-active'
-                                    : 'radio-btn-passive'
-                                }
-                                size={responsiveFontSize(2.5)}
-                                color={
-                                  selectedCard?.paymentMethodId ===
-                                  item.paymentMethodId
-                                    ? AppColors.BLUE
-                                    : AppColors.DARKGRAY
-                                }
-                              />
-                            </TouchableOpacity>
-                          );
-                        }}
-                      />
-                    )}
-                    {/* <LineBreak space={3} />
-
+                    }}>
                     <TouchableOpacity
                       style={{
                         flexDirection: 'row',
-                        flex: 1,
-                        justifyContent: 'space-between',
                         gap: 10,
                         alignItems: 'center',
-                      }}>
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          gap: 10,
-                          alignItems: 'center',
-                        }}>
+                      }}
+                      onPress={() => setIsSelectedCard({id: item.id})}>
+                      <Fontisto
+                        name={
+                          isSelectedCard.id === item.id
+                            ? 'radio-btn-active'
+                            : 'radio-btn-passive'
+                        }
+                        size={responsiveFontSize(2.5)}
+                        color={
+                          isSelectedCard.id === item.id
+                            ? AppColors.BLUE
+                            : AppColors.DARKGRAY
+                        }
+                      />
+                      <AppText
+                        title={item.time}
+                        textSize={2.2}
+                        textColor={AppColors.BLACK}
+                        textFontWeight
+                      />
+                    </TouchableOpacity>
+                    {item.iconName ? (
+                      <Fontisto
+                        name={item.iconName}
+                        size={responsiveFontSize(3.5)}
+                        color={AppColors.BLACK}
+                      />
+                    ) : (
+                      item.id == 3 && (
                         <View
                           style={{
                             borderWidth: 1,
-                            backgroundColor: AppColors.BLUE,
+                            borderColor: AppColors.DARKGRAY,
                             paddingHorizontal: 7,
                             borderRadius: 5,
                           }}>
                           <SVGXml
                             width={'27'}
                             height={'27'}
-                            icon={AppIcons.visa}
+                            icon={AppIcons.Google_Pay}
                           />
                         </View>
-                        <AppText
-                          title="**** 2345"
-                          textSize={2}
-                          textColor={AppColors.BLACK}
-                        />
-                      </View>
-                      <Fontisto
-                        name={'radio-btn-passive'}
-                        size={responsiveFontSize(2.5)}
-                        color={AppColors.DARKGRAY}
-                      />
-                    </TouchableOpacity> */}
+                      )
+                    )}
+                  </View>
 
-                    {isAddNewCard && (
-                      <View>
-                        <LineBreak space={2} />
+                  {isSelectedCard.id == 1 && index == 0 && (
+                    <View>
+                      {/* <LineBreak space={1.5} /> */}
+                      {cardsLoading ? (
                         <View
                           style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
+                            height: responsiveHeight(10),
+                            justifyContent: 'center',
                           }}>
-                          <AppText
-                            title="Add New Card"
-                            textSize={2}
-                            textColor={AppColors.BLACK}
-                            textFontWeight
+                          <ActivityIndicator
+                            size={'large'}
+                            color={AppColors.BTNCOLOURS}
                           />
+                        </View>
+                      ) : (
+                        <FlatList
+                          data={allCards}
+                          renderItem={({item, index}) => {
+                            return (
+                              <TouchableOpacity
+                                onPress={() => setSelectedCard(item)}
+                                style={{
+                                  flexDirection: 'row',
+                                  flex: 1,
+                                  justifyContent: 'space-between',
+                                  gap: 10,
+                                  marginTop: responsiveHeight(2),
+                                  alignItems: 'center',
+                                }}>
+                                <View
+                                  style={{
+                                    flexDirection: 'row',
+                                    gap: 10,
+                                    alignItems: 'center',
+                                  }}>
+                                  <View
+                                    style={{
+                                      borderWidth: 1,
+                                      borderColor: AppColors.DARKGRAY,
+                                      paddingHorizontal: 7,
+                                      borderRadius: 5,
+                                    }}>
+                                    <SVGXml
+                                      width={'27'}
+                                      height={'27'}
+                                      icon={AppIcons[item?.brand]}
+                                    />
+                                  </View>
+                                  <AppText
+                                    title={`**** ${item?.last4}`}
+                                    textSize={2}
+                                    textColor={AppColors.BLACK}
+                                  />
+                                </View>
+                                <Fontisto
+                                  name={
+                                    selectedCard?.paymentMethodId ===
+                                    item.paymentMethodId
+                                      ? 'radio-btn-active'
+                                      : 'radio-btn-passive'
+                                  }
+                                  size={responsiveFontSize(2.5)}
+                                  color={
+                                    selectedCard?.paymentMethodId ===
+                                    item.paymentMethodId
+                                      ? AppColors.BLUE
+                                      : AppColors.DARKGRAY
+                                  }
+                                />
+                              </TouchableOpacity>
+                            );
+                          }}
+                        />
+                      )}
+                      {isAddNewCard && (
+                        <View>
+                          <LineBreak space={2} />
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                            }}>
+                            <AppText
+                              title="Add New Card"
+                              textSize={2}
+                              textColor={AppColors.BLACK}
+                              textFontWeight
+                            />
+                            <TouchableOpacity
+                              onPress={() => setIsAddNewCard(false)}>
+                              <AntDesign
+                                name={'close'}
+                                size={responsiveFontSize(2.5)}
+                                color={AppColors.BLACK}
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      )}
+
+                      {!isAddNewCard ? (
+                        <View>
+                          <LineBreak space={2} />
                           <TouchableOpacity
-                            onPress={() => setIsAddNewCard(false)}>
-                            <AntDesign
-                              name={'close'}
+                            onPress={() => setIsAddNewCard(true)}
+                            style={{flexDirection: 'row', gap: 5}}>
+                            <Entypo
+                              name={'plus'}
                               size={responsiveFontSize(2.5)}
-                              color={AppColors.BLACK}
+                              color={AppColors.BLUE}
+                            />
+                            <AppText
+                              title="Add Card"
+                              textSize={1.8}
+                              textColor={AppColors.BLUE}
+                              textFontWeight
                             />
                           </TouchableOpacity>
                         </View>
-                      </View>
-                    )}
+                      ) : null}
 
-                    {!isAddNewCard ? (
-                      <View>
-                        <LineBreak space={2} />
-                        <TouchableOpacity
-                          onPress={() => setIsAddNewCard(true)}
-                          style={{flexDirection: 'row', gap: 5}}>
-                          <Entypo
-                            name={'plus'}
-                            size={responsiveFontSize(2.5)}
-                            color={AppColors.BLUE}
-                          />
-                          <AppText
-                            title="Add Card"
-                            textSize={1.8}
-                            textColor={AppColors.BLUE}
-                            textFontWeight
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    ) : null}
-
-                    {/* <LineBreak space={1} /> */}
-                    {/* <View>
+                      {/* <LineBreak space={1} /> */}
+                      {/* <View>
                       <AppTextInput
                         containerBg="#f5f5f5"
                         inputPlaceHolder={'Card Number'}
@@ -402,98 +366,100 @@ const SelectPaymentMethod = ({route}) => {
                         inputPlaceHolder={'Card Holder Name'}
                       />
                     </View> */}
-                    {isAddNewCard && (
-                      <CardField
-                        postalCodeEnabled={false}
-                        onCardChange={card => setCardDetails(card)}
-                        placeholder={{
-                          number: '4242 4242 4242 4242',
-                        }}
-                        cardStyle={{
-                          backgroundColor: '#f5f5f5', // light gray background
-                          textColor: '#000000', // text color
-                          borderRadius: 12, // rounded corners
-                          fontSize: 16, // font size
-                          placeholderColor: '#a9a9a9', // placeholder color
-                          borderColor: '#d3d3d3',
-                        }}
-                        style={{
-                          width: '100%',
-                          height: 55,
-                          marginVertical: 20,
-                          borderRadius: 12,
-                        }}
-                      />
-                    )}
-                  </View>
-                )}
-              </View>
-            );
-          }}
-        />
+                      {isAddNewCard && (
+                        <CardField
+                          postalCodeEnabled={false}
+                          onCardChange={card => setCardDetails(card)}
+                          placeholder={{
+                            number: '4242 4242 4242 4242',
+                          }}
+                          cardStyle={{
+                            backgroundColor: '#f5f5f5', // light gray background
+                            textColor: '#000000', // text color
+                            borderRadius: 12, // rounded corners
+                            fontSize: 16, // font size
+                            placeholderColor: '#a9a9a9', // placeholder color
+                            borderColor: '#d3d3d3',
+                          }}
+                          style={{
+                            width: '100%',
+                            height: 55,
+                            marginVertical: 20,
+                            borderRadius: 12,
+                          }}
+                        />
+                      )}
+                    </View>
+                  )}
+                </View>
+              );
+            }}
+          />
 
-        {/* <LoadingModal /> */}
-        <ConfirmationModal
-          iconName={'check'}
-          title={'You nail appointment is confirmed!'}
-          subTitle={
-            'Thank you for your payment. We look forward to seeing you soon.'
-          }
-          buttonOneTitle={'View Receipt'}
-          buttonTwoTitle={'Back to Home'}
-          visible={visibleConfirmationModal}
-          // setVisible={() => {
-          //   navigation.navigate('DownloadReceipt');
-          //   setVisibleConfirmationModal(false);
-          // }}
-          handleBackPress={() => {
-            navigation.navigate('Home');
-            setVisibleConfirmationModal(false);
-          }}
-          setVisible={() => {
-            navigation.navigate('DownloadReceipt', {bookingId});
-            setVisibleConfirmationModal(false);
-          }}
-        />
+          {/* <LoadingModal /> */}
+          <ConfirmationModal
+            iconName={'check'}
+            title={'You nail appointment is confirmed!'}
+            subTitle={
+              'Thank you for your payment. We look forward to seeing you soon.'
+            }
+            buttonOneTitle={'View Receipt'}
+            buttonTwoTitle={'Back to Home'}
+            visible={visibleConfirmationModal}
+            // setVisible={() => {
+            //   navigation.navigate('DownloadReceipt');
+            //   setVisibleConfirmationModal(false);
+            // }}
+            handleBackPress={() => {
+              navigation.navigate('Home');
+              setVisibleConfirmationModal(false);
+            }}
+            setVisible={() => {
+              navigation.navigate('DownloadReceipt', {bookingId});
+              setVisibleConfirmationModal(false);
+            }}
+          />
 
-        <ConfirmationModal
-          iconName={'close'}
-          title={'Payment Failed'}
-          subTitle={
-            'We couldn"t process your payment. Please check your card details or try another payment method.'
-          }
-          handleBackPress={() => {
-            setShowPaymentFailedModal(false);
-          }}
-          setVisible={() => {
-            setShowPaymentFailedModal(false);
-          }}
-          buttonOneTitle={'Try Again'}
-          buttonTwoTitle={'Change Payment Method'}
-          isChangeColor={true}
-          visible={showPaymentFailedModal}
-        />
+          <ConfirmationModal
+            iconName={'close'}
+            title={'Payment Failed'}
+            subTitle={
+              'We couldn"t process your payment. Please check your card details or try another payment method.'
+            }
+            handleBackPress={() => {
+              setShowPaymentFailedModal(false);
+            }}
+            setVisible={() => {
+              setShowPaymentFailedModal(false);
+            }}
+            buttonOneTitle={'Try Again'}
+            buttonTwoTitle={'Change Payment Method'}
+            isChangeColor={true}
+            visible={showPaymentFailedModal}
+          />
 
-        <LineBreak space={4} />
+          <LineBreak space={4} />
 
-        <AppButton
-          title={
-            isLoading ? (
-              <ActivityIndicator size={'large'} color={AppColors.WHITE} />
-            ) : isAddNewCard ? (
-              'Save Card'
-            ) : (
-              'Pay Now'
-            )
-          }
-          handlePress={isAddNewCard ? handleAddCard : createPaymentHandler}
-          //   bgColor={AppColors.DARKGRAY}
-          //   textColor={AppColors.WHITE}
-        />
+          <AppButton
+            disabled={!pay && !cardDetails?.complete}
+            title={
+              isLoading ? (
+                <ActivityIndicator size={'large'} color={AppColors.WHITE} />
+              ) : isAddNewCard || !pay ? (
+                'Save Card'
+              ) : (
+                'Pay Now'
+              )
+            }
+            handlePress={isAddNewCard ? handleAddCard : createPaymentHandler}
+            bgColor={!pay && !cardDetails?.complete && '#CCCCCC'}
+            //   textColor={AppColors.WHITE}
+          />
 
-        <LineBreak space={2} />
-      </View>
-    </ScrollView>
+          <LineBreak space={2} />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

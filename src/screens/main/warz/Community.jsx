@@ -38,6 +38,7 @@ import AppTextInput from '../../../components/AppTextInput';
 import AppButton from '../../../components/AppButton';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 const Community = ({navigation, route}) => {
   const {userData} = useSelector(state => state.user);
@@ -103,7 +104,7 @@ const Community = ({navigation, route}) => {
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: AppColors.BLACK}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: AppColors.BLACK}}>
       <View>
         <View
           style={{
@@ -338,7 +339,10 @@ const Community = ({navigation, route}) => {
             <View style={{flex: 1}}>
               <FlatList
                 data={allComments}
-                contentContainerStyle={{gap: responsiveHeight(3),marginTop:responsiveHeight(5)}}
+                contentContainerStyle={{
+                  gap: responsiveHeight(3),
+                  marginTop: responsiveHeight(5),
+                }}
                 renderItem={({item}) => {
                   console.log('item..................', item);
                   return (
@@ -352,7 +356,11 @@ const Community = ({navigation, route}) => {
                         }}>
                         {item?.userId?.image ? (
                           <Image
-                          style={{height:responsiveHeight(5.5),width:responsiveWidth(11),borderRadius:responsiveHeight(3)}}
+                            style={{
+                              height: responsiveHeight(5.5),
+                              width: responsiveWidth(11),
+                              borderRadius: responsiveHeight(3),
+                            }}
                             source={{
                               uri: `${ImageBaseUrl}${item?.userId.image}`,
                             }}
@@ -419,7 +427,7 @@ const Community = ({navigation, route}) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 

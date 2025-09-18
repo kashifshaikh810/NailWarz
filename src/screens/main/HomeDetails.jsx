@@ -37,6 +37,8 @@ import {useDispatch, useSelector} from 'react-redux';
 import {ShowToast} from '../../GlobalFunctions/auth';
 import {setUserData} from '../../Redux/Slices';
 import ReviewsCard from '../../components/ReviewsCard';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../GlobalFunctions/styles';
 
 const cardData = [
   {id: 1, colorName: 'Solid Color', amount: '$10.00', time: '30 Mins'},
@@ -173,7 +175,7 @@ const HomeDetails = ({route}) => {
     return map[day] || day;
   };
   return (
-    <View style={{flex: 1}}>
+    <SafeAreaView style={globalStyles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
@@ -513,12 +515,14 @@ const HomeDetails = ({route}) => {
                 serviceName: selectedService?.serviceName,
                 price: selectedService.price,
                 technicians: selectedService?.technicianId,
+                reschedule: false,
+                myBookingId: null,
               },
             })
           }
         />
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 };
 

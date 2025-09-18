@@ -30,6 +30,7 @@ import {addVote, getBattleById, getPostById} from '../../../GlobalFunctions';
 import {useSelector} from 'react-redux';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {ShowToast} from '../../../GlobalFunctions/auth';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 const BattlePoll = ({navigation, route}) => {
   const [isSelectedYesOrNo, setIsSelectedYesOrNo] = useState('');
@@ -92,142 +93,157 @@ const BattlePoll = ({navigation, route}) => {
   }, [data]);
 
   return (
-    <View style={{flex: 1, backgroundColor: AppColors.WHITE}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
       {isLoading ? (
         <View style={{flex: 1, justifyContent: 'center'}}>
           <ActivityIndicator size={50} color={Colors.BTNCOLOURS} />
         </View>
       ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            flexGrow: 1,
-            padding: responsiveHeight(2),
-          }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
+        <View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: 1,
+              padding: responsiveHeight(2),
+              paddingBottom: responsiveHeight(10),
             }}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <MaterialIcons
-                name={'arrow-back-ios'}
-                size={responsiveFontSize(2.7)}
-                color={AppColors.BLACK}
-              />
-            </TouchableOpacity>
             <View
               style={{
                 flexDirection: 'row',
-                gap: responsiveHeight(1.5),
                 alignItems: 'center',
-                alignSelf: 'center',
-                // marginTop: responsiveHeight(2),
+                justifyContent: 'space-between',
               }}>
-              <Image
-                source={APPImages.logoSmall}
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <MaterialIcons
+                  name={'arrow-back-ios'}
+                  size={responsiveFontSize(2.7)}
+                  color="red"
+                />
+              </TouchableOpacity>
+              <View
                 style={{
-                  alignSelf: 'flex-end',
-                  height: responsiveHeight(8),
-                  width: responsiveWidth(13),
-                }}
-                resizeMode="contain"
-              />
+                  flexDirection: 'row',
+                  gap: responsiveHeight(1.5),
+                  alignItems: 'center',
+                  alignSelf: 'center',
+                  // marginTop: responsiveHeight(2),
+                }}>
+                <Image
+                  source={APPImages.logoSmall}
+                  style={{
+                    alignSelf: 'flex-end',
+                    height: responsiveHeight(8),
+                    width: responsiveWidth(13),
+                  }}
+                  resizeMode="contain"
+                />
+                <AppText
+                  textSize={2}
+                  textColor="red"
+                  textFontWeight={'bold'}
+                  title="Vote Nail Warz"
+                />
+              </View>
               <AppText
+                onPress={() => navigation.navigate('LiveVotingScores', {data})}
+                title="Poll"
                 textSize={2}
-                textFontWeight={'bold'}
-                title="Vote Nail Warz"
               />
             </View>
             <AppText
-              onPress={() => navigation.navigate('LiveVotingScores', {data})}
-              title="Poll"
+              textColor="#0B0C16"
+              title="Vote now for the next Nail Champion."
               textSize={2}
+              mrgnTop={2}
+              textFontWeight="500"
             />
-          </View>
-          <AppText
-            textColor="#0B0C16"
-            title="Vote now for the next Nail Champion.
-            May the best set win!"
-            textSize={2}
-            mrgnTop={2}
-            textFontWeight="500"
-          />
-          <View>
-            <FlatList
-              contentContainerStyle={{
-                gap: responsiveHeight(2),
-                marginTop: responsiveHeight(2),
-                margin: responsiveHeight(1),
-              }}
-              data={data}
-              renderItem={({item, index}) => {
-                return (
-                  <TouchableOpacity
-                    onPress={() => setSalonId(item?._id)}
-                    style={{
-                      backgroundColor: AppColors.WHITE,
-                      padding: responsiveHeight(2),
-                      borderRadius: responsiveHeight(2),
-                      elevation: 5,
-                    }}>
-                    <View
+            <AppText
+              textColor="#0B0C16"
+              title="May the best set win!"
+              textSize={2}
+              // mrgnTop={2}
+              textFontWeight="500"
+            />
+            <View>
+              <FlatList
+                contentContainerStyle={{
+                  gap: responsiveHeight(2),
+                  marginTop: responsiveHeight(2),
+                  margin: responsiveHeight(1),
+                }}
+                data={data}
+                renderItem={({item, index}) => {
+                  return (
+                    <TouchableOpacity
+                      onPress={() => setSalonId(item?._id)}
                       style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
+                        backgroundColor: AppColors.WHITE,
+                        padding: responsiveHeight(2),
+                        borderRadius: responsiveHeight(2),
+                        elevation: 5,
                       }}>
-                      <AppText
-                        textFontWeight="bold"
-                        title={item?.salonName}
-                        textSize={2}
-                      />
-                      <TouchableOpacity
-                        onPress={() => setSalonId(item?._id)}
+                      <View
                         style={{
-                          borderWidth: 2,
-                          borderColor: AppColors.BTNCOLOURS,
-                          // padding: responsiveHeight(0.3),
-                          justifyContent: 'center',
+                          flexDirection: 'row',
                           alignItems: 'center',
-                          height: responsiveHeight(3.5),
-                          width: responsiveWidth(7),
-                          borderRadius: responsiveHeight(3),
+                          justifyContent: 'space-between',
                         }}>
-                        {salonId === item?._id ? (
-                          <Ionicons
-                            name="checkmark-sharp"
-                            size={18}
-                            color={AppColors.BTNCOLOURS}
-                          />
-                        ) : null}
-                      </TouchableOpacity>
-                    </View>
-                    <Image
-                      style={{
-                        height: responsiveHeight(20),
-                        width: '100%',
-                        marginTop: responsiveHeight(2),
-                        borderRadius: responsiveHeight(1),
-                      }}
-                      source={{uri: `${ImageBaseUrl}${item?.salonImage}`}}
-                    />
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          </View>
+                        <AppText
+                          textFontWeight="bold"
+                          title={item?.salonName}
+                          textSize={2}
+                        />
+                        <TouchableOpacity
+                          onPress={() => setSalonId(item?._id)}
+                          style={{
+                            borderWidth: 2,
+                            borderColor: AppColors.BTNCOLOURS,
+                            // padding: responsiveHeight(0.3),
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: responsiveHeight(3.5),
+                            width: responsiveWidth(7),
+                            borderRadius: responsiveHeight(3),
+                          }}>
+                          {salonId === item?._id ? (
+                            <Ionicons
+                              name="checkmark-sharp"
+                              size={18}
+                              color={AppColors.BTNCOLOURS}
+                            />
+                          ) : null}
+                        </TouchableOpacity>
+                      </View>
+                      <Image
+                        style={{
+                          height: responsiveHeight(20),
+                          width: '100%',
+                          marginTop: responsiveHeight(2),
+                          borderRadius: responsiveHeight(1),
+                        }}
+                        source={{uri: `${ImageBaseUrl}${item?.salonImage}`}}
+                      />
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            </View>
 
+            {/* <LineBreak space={3} /> */}
+          </ScrollView>
           <View
             style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              marginTop: responsiveHeight(2),
+              // flex: 1,
+              alignSelf: 'center',
+              // justifyContent: 'flex-end',
+              // marginTop: responsiveHeight(2),
+              position: 'absolute',
+              bottom: 10,
             }}>
             <AppButton
+              disabled={!salonId}
               width={89}
+              bgColor={!salonId ? AppColors.disabled : AppColors.BTNCOLOURS}
               title={
                 voteLoading ? (
                   <ActivityIndicator size={'large'} color={AppColors.WHITE} />
@@ -238,11 +254,9 @@ const BattlePoll = ({navigation, route}) => {
               handlePress={() => addVoteHandler()}
             />
           </View>
-
-          {/* <LineBreak space={3} /> */}
-        </ScrollView>
+        </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 

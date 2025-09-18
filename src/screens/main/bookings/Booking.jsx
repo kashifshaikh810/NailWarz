@@ -57,6 +57,9 @@ const tabs = [
 const Booking = () => {
   const navigation = useNavigation();
   const focus = useIsFocused();
+  //   useEffect(() => {
+  //    getBookingsHandler();
+  //  }, [focus]);
   const [selectedTab, setSelectedTab] = useState('Accepted');
   const [upcomingData, setUpcomingData] = useState();
   const [showCancelBookingModal, setShowCancelBookingModal] = useState(false);
@@ -74,8 +77,8 @@ const Booking = () => {
         setUpcomingData(response?.data);
       } else {
         setUpcomingData('');
-
-        ShowToast('error', response.message);
+        // alert(response.message);
+        // ShowToast('error', response.message);
       }
       setIsLoading(false);
     } catch (err) {
@@ -84,26 +87,12 @@ const Booking = () => {
     }
   };
 
-  const handleCancelBooking = async bookingId => {
-    setIsLoading(true);
-    try {
-      const response = await cancelBooking(bookingId);
-      console.log('response', response);
-      setIsLoading(false);
-      if (response?.success) {
-        ShowToast('success', response?.message);
-      } else {
-        ShowToast('error', response?.message);
-      }
-    } catch (err) {
-      setIsLoading(false);
-      ShowToast('error', error?.response?.data?.message);
-    }
-  };
-
   useEffect(() => {
-    getBookingsHandler();
-  }, [selectedTab,focus]);
+    if (focus) {
+      getBookingsHandler();
+    }
+  }, [selectedTab, focus]);
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -181,74 +170,123 @@ const Booking = () => {
         </View>
       ) : (
         <View style={{flex: 1}}>
-          {selectedTab === 'Accepted' && (
-            <FlatList
-              data={upcomingData}
-              contentContainerStyle={{gap: 10, margin: 10, marginTop: 0}}
-              renderItem={({item}) => {
-                return (
-                  <BookingCard
-                    title={item?.salonId?.salonName}
-                    img={item?.salonId?.image[0]}
-                    location={item?.salonId?.location?.locationName}
-                    date={moment(item?.date, 'DD-MM-YYYY').format(
-                      'ddd, MMM DD',
-                    )}
-                    saloonId={item?.salonId?._id}
-                    service={item?.serviceId?.serviceName}
-                    bookingType="up_coming"
-                    bookingId={item?._id}
-                    cancelBookingOnPress={() => handleCancelBooking(item?._id)}
-                  />
-                );
-              }}
-            />
-          )}
+          {selectedTab === 'Accepted' &&
+            (upcomingData?.length > 0 ? (
+              <FlatList
+                data={upcomingData}
+                contentContainerStyle={{gap: 10, margin: 10, marginTop: 0}}
+                renderItem={({item}) => {
+                  return (
+                    <BookingCard
+                      onCardPress={() =>
+                        navigation.navigate('BookingDetails', {data: item})
+                      }
+                      title={item?.salonId?.salonName}
+                      img={item?.salonId?.image[0]}
+                      location={item?.salonId?.location?.locationName}
+                      date={moment(item?.date, 'DD-MM-YYYY').format(
+                        'ddd, MMM DD',
+                      )}
+                      saloonId={item?.salonId?._id}
+                      service={item?.serviceId?.serviceName}
+                      bookingType="up_coming"
+                      bookingId={item?._id}
+                      cancelBookingOnPress={() =>
+                        handleCancelBooking(item?._id)
+                      }
+                    />
+                  );
+                }}
+              />
+            ) : (
+              <View
+                style={{
+                  flex: 0.8,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <AppText
+                  title="No Bookings Found"
+                  textSize={3}
+                  textColor={AppColors.BLACK}
+                />
+              </View>
+            ))}
 
-          {selectedTab === 'Completed' && (
-            <FlatList
-              data={upcomingData}
-              contentContainerStyle={{gap: 10, marginTop: 0}}
-              renderItem={({item}) => {
-                return (
-                  <BookingCard
-                    title={item?.salonId?.salonName}
-                    img={item?.salonId?.image[0]}
-                    location={item?.salonId?.location?.locationName}
-                    date={moment(item?.date, 'DD-MM-YYYY').format(
-                      'ddd, MMM DD',
-                    )}
-                    bookingId={item?._id}
-                    saloonId={item?.salonId?._id}
-                    service={item?.serviceId?.serviceName}
-                    bookingType="completed"
-                  />
-                );
-              }}
-            />
-          )}
+          {selectedTab === 'Completed' &&
+            (upcomingData?.length > 0 ? (
+              <FlatList
+                data={upcomingData}
+                contentContainerStyle={{gap: 10, marginTop: 0}}
+                renderItem={({item}) => {
+                  return (
+                    <BookingCard
+                      disabled
+                      title={item?.salonId?.salonName}
+                      img={item?.salonId?.image[0]}
+                      location={item?.salonId?.location?.locationName}
+                      date={moment(item?.date, 'DD-MM-YYYY').format(
+                        'ddd, MMM DD',
+                      )}
+                      bookingId={item?._id}
+                      saloonId={item?.salonId?._id}
+                      service={item?.serviceId?.serviceName}
+                      bookingType="completed"
+                    />
+                  );
+                }}
+              />
+            ) : (
+              <View
+                style={{
+                  flex: 0.8,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <AppText
+                  title="No Bookings Found"
+                  textSize={3}
+                  textColor={AppColors.BLACK}
+                />
+              </View>
+            ))}
 
-          {selectedTab === 'Canceled' && (
-            <FlatList
-              data={upcomingData}
-              contentContainerStyle={{gap: 10, marginTop: 0}}
-              renderItem={({item}) => {
-                return (
-                  <BookingCard
-                    title={item?.salonId?.salonName}
-                    img={item?.salonId?.image[0]}
-                    location={item?.salonId?.location?.locationName}
-                    date={moment(item?.date, 'DD-MM-YYYY').format(
-                      'ddd, MMM DD',
-                    )}
-                    saloonId={item?.salonId?._id}
-                    service={item?.serviceId?.serviceName}
-                    bookingType="canceled"
-                  />
-                );
-              }}
-            />
-          )}
+          {selectedTab === 'Canceled' &&
+            (upcomingData.length > 0 ? (
+              <FlatList
+                data={upcomingData}
+                contentContainerStyle={{gap: 10, marginTop: 0}}
+                renderItem={({item}) => {
+                  return (
+                    <BookingCard
+                      disabled
+                      title={item?.salonId?.salonName}
+                      img={item?.salonId?.image[0]}
+                      location={item?.salonId?.location?.locationName}
+                      date={moment(item?.date, 'DD-MM-YYYY').format(
+                        'ddd, MMM DD',
+                      )}
+                      saloonId={item?.salonId?._id}
+                      service={item?.serviceId?.serviceName}
+                      bookingType="canceled"
+                    />
+                  );
+                }}
+              />
+            ) : (
+              <View
+                style={{
+                  flex: 0.8,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <AppText
+                  title="No Bookings Found"
+                  textSize={3}
+                  textColor={AppColors.BLACK}
+                />
+              </View>
+            ))}
         </View>
       )}
     </ScrollView>

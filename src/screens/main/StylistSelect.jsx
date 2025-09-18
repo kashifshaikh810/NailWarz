@@ -24,6 +24,8 @@ import LineBreak from '../../components/LineBreak';
 import AppButton from '../../components/AppButton';
 import {ImageBaseUrl} from '../../BaseUrl';
 import {ShowToast} from '../../GlobalFunctions/auth';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../GlobalFunctions/styles';
 
 const StylistSelect = ({route}) => {
   const navigation = useNavigation();
@@ -35,128 +37,129 @@ const StylistSelect = ({route}) => {
   console.log('selectedTechnician', selectedTechnician);
   console.log('data======<><><><><><><><><><>', data);
   return (
-    <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
-      <AppHeader
-        onPress={() => navigation.goBack()}
-        title="Choose Your Nail Technician"
-      />
-      <View
-        style={{
-          backgroundColor: '#B4B4B4',
-          height: 0.5,
-          elevation: 5,
-          width: '100%',
-        }}
-      />
-
-      <View
-        style={{
-          paddingHorizontal: responsiveWidth(3),
-          marginVertical: responsiveHeight(2),
-        }}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('SelectAnyTech', {data})}
-          // onPress={() => {
-          //   if (data?.technicians?.length > 0) {
-          //     const randomIndex = Math.floor(
-          //       Math.random() * data.technicians.length,
-          //     );
-          //     const randomTechnician = data.technicians[randomIndex];
-          //     setSelectedTechnician(randomTechnician._id);
-          //     setTechnicianName(randomTechnician.fullName);
-          //     setSelectRandomTech(true);
-          //   }
-          // }}
+    <SafeAreaView style={globalStyles.container}>
+      <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
+        <AppHeader
+          onPress={() => navigation.goBack()}
+          title="Choose Your Nail Technician"
+        />
+        <View
           style={{
-            flexDirection: 'row',
-            paddingLeft: responsiveWidth(10),
-            borderRadius: 10,
-            borderWidth: selectRandomTech ? 2 : null,
-            borderColor: selectRandomTech ? AppColors.BLUE : null,
-            gap: responsiveWidth(8),
-            paddingHorizontal: responsiveWidth(5),
-            paddingVertical: responsiveHeight(3),
-            alignItems: 'center',
-            backgroundColor: AppColors.WHITE,
-            elevation: 6,
+            backgroundColor: '#B4B4B4',
+            height: 0.5,
+            elevation: 5,
+            width: '100%',
+          }}
+        />
+
+        <View
+          style={{
+            paddingHorizontal: responsiveWidth(3),
+            marginVertical: responsiveHeight(2),
           }}>
-          <Feather
-            name={'users'}
-            size={responsiveFontSize(3)}
-            color={AppColors.BLUE}
-          />
-          <View>
-            <AppText
-              title="Select Any Nail Technician"
-              textSize={2}
-              textColor={AppColors.BLACK}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('SelectAnyTech', {data})}
+            // onPress={() => {
+            //   if (data?.technicians?.length > 0) {
+            //     const randomIndex = Math.floor(
+            //       Math.random() * data.technicians.length,
+            //     );
+            //     const randomTechnician = data.technicians[randomIndex];
+            //     setSelectedTechnician(randomTechnician._id);
+            //     setTechnicianName(randomTechnician.fullName);
+            //     setSelectRandomTech(true);
+            //   }
+            // }}
+            style={{
+              flexDirection: 'row',
+              paddingLeft: responsiveWidth(10),
+              borderRadius: 10,
+              borderWidth: selectRandomTech ? 2 : null,
+              borderColor: selectRandomTech ? AppColors.BLUE : null,
+              gap: responsiveWidth(8),
+              paddingHorizontal: responsiveWidth(5),
+              paddingVertical: responsiveHeight(3),
+              alignItems: 'center',
+              backgroundColor: AppColors.WHITE,
+              elevation: 6,
+            }}>
+            <Feather
+              name={'users'}
+              size={responsiveFontSize(3)}
+              color={AppColors.BLUE}
             />
+            <View>
+              <AppText
+                title="Select Any Nail Technician"
+                textSize={2}
+                textColor={AppColors.BLACK}
+              />
 
-            <AppText
-              title="Next available nail technician"
-              textSize={1.8}
-              textColor={AppColors.DARKGRAY}
-            />
-          </View>
-        </TouchableOpacity>
+              <AppText
+                title="Next available nail technician"
+                textSize={1.8}
+                textColor={AppColors.DARKGRAY}
+              />
+            </View>
+          </TouchableOpacity>
 
-        <LineBreak space={2} />
+          <LineBreak space={2} />
 
-        <FlatList
-          data={data?.technicians}
-          contentContainerStyle={{margin: 10}}
-          ItemSeparatorComponent={() => <LineBreak space={2} />}
-          renderItem={({item}) => {
-            return (
-              <TouchableOpacity
-                onPress={() => {
-                  setSelectedTechnician(item._id);
-                  setTechnicianName(item.fullName);
-                }}
-                style={{
-                  flexDirection: 'row',
-                  paddingLeft: responsiveWidth(5),
-                  borderRadius: 10,
-                  gap: responsiveWidth(5),
-                  paddingVertical: responsiveHeight(3),
-                  alignItems: 'center',
-                  backgroundColor:
-                    selectedTechnician === item._id
-                      ? AppColors.BTNCOLOURS
-                      : AppColors.WHITE,
-                  elevation: 5,
-                }}>
-                <Image
-                  source={{uri: `${ImageBaseUrl}${item?.image}`}}
-                  style={{
-                    width: responsiveWidth(15),
-                    height: responsiveHeight(8),
-                    borderRadius: responsiveHeight(1),
+          <FlatList
+            data={data?.technicians}
+            contentContainerStyle={{margin: 10}}
+            ItemSeparatorComponent={() => <LineBreak space={2} />}
+            renderItem={({item}) => {
+              return (
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedTechnician(item._id);
+                    setTechnicianName(item.fullName);
                   }}
-                />
-                <View>
-                  <AppText
-                    title={item?.fullName}
-                    textSize={2.2}
-                    textColor={
+                  style={{
+                    flexDirection: 'row',
+                    paddingLeft: responsiveWidth(5),
+                    borderRadius: 10,
+                    gap: responsiveWidth(5),
+                    paddingVertical: responsiveHeight(3),
+                    alignItems: 'center',
+                    backgroundColor:
                       selectedTechnician === item._id
-                        ? AppColors.WHITE
-                        : AppColors.BLACK
-                    }
+                        ? AppColors.BTNCOLOURS
+                        : AppColors.WHITE,
+                    elevation: 5,
+                  }}>
+                  <Image
+                    source={{uri: `${ImageBaseUrl}${item?.image}`}}
+                    style={{
+                      width: responsiveWidth(15),
+                      height: responsiveHeight(8),
+                      borderRadius: responsiveHeight(1),
+                    }}
                   />
+                  <View>
+                    <AppText
+                      title={item?.fullName}
+                      textSize={2.2}
+                      textColor={
+                        selectedTechnician === item._id
+                          ? AppColors.WHITE
+                          : AppColors.BLACK
+                      }
+                    />
 
-                  <AppText
-                    textwidth={65}
-                    title={item.designation}
-                    textSize={1.9}
-                    textColor={
-                      selectedTechnician === item._id
-                        ? AppColors.WHITE
-                        : AppColors.DARKGRAY
-                    }
-                  />
-                </View>
-                {/* <View
+                    <AppText
+                      textwidth={65}
+                      title={item.designation}
+                      textSize={1.9}
+                      textColor={
+                        selectedTechnician === item._id
+                          ? AppColors.WHITE
+                          : AppColors.DARKGRAY
+                      }
+                    />
+                  </View>
+                  {/* <View
                   style={{
                     flexDirection: 'row',
                     flex: 1,
@@ -191,33 +194,34 @@ const StylistSelect = ({route}) => {
                     />
                   </View>
                 </View> */}
-              </TouchableOpacity>
-            );
-          }}
-        />
+                </TouchableOpacity>
+              );
+            }}
+          />
 
-        <LineBreak space={4} />
+          <LineBreak space={4} />
 
-        <AppButton
-          disabled={selectedTechnician ? false : true}
-          title="Select & Continue"
-          bgColor={selectedTechnician ? AppColors.BTNCOLOURS : '#CCCCCC'}
-          handlePress={() => {
-            if (selectedTechnician) {
-              navigation.navigate('DateAndTimeSelection', {
-                data: {
-                  ...data,
-                  selectedTechnician,
-                  technicianName,
-                },
-              });
-            } else {
-              return ShowToast('error', 'Plz Select A Stylist To Proceed');
-            }
-          }}
-        />
-      </View>
-    </ScrollView>
+          <AppButton
+            disabled={selectedTechnician ? false : true}
+            title="Select & Continue"
+            bgColor={selectedTechnician ? AppColors.BTNCOLOURS : '#CCCCCC'}
+            handlePress={() => {
+              if (selectedTechnician) {
+                navigation.navigate('DateAndTimeSelection', {
+                  data: {
+                    ...data,
+                    selectedTechnician,
+                    technicianName,
+                  },
+                });
+              } else {
+                return ShowToast('error', 'Plz Select A Stylist To Proceed');
+              }
+            }}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

@@ -23,11 +23,17 @@ import {
 } from '../../utils/Responsive_Dimensions';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import AppButton from '../../components/AppButton';
-import {createBooking, getSaloonById} from '../../GlobalFunctions';
+import {
+  createBooking,
+  getSaloonById,
+  updateBooking,
+} from '../../GlobalFunctions';
 import moment from 'moment';
 import {useSelector} from 'react-redux';
 import {ShowToast} from '../../GlobalFunctions/auth';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../GlobalFunctions/styles';
 
 // const pricingDetails = [
 //   {id: 1, title: 'Dip Powder Nails', amount: '$10.00'},
@@ -38,7 +44,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 
 const BookingSummary = ({route}) => {
   const navigation = useNavigation();
-  const [paymentType, setPaymentType] = useState();
+  const [paymentType, setPaymentType] = useState('online');
   const [saloonData, setSaloonData] = useState();
   const {_id} = useSelector(state => state?.user?.userData);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,13 +63,15 @@ const BookingSummary = ({route}) => {
     selectedTime,
     selectedDate,
     selectedDay,
+    reschedule,
+    myBookingId,
   } = route?.params?.data;
   const time12hr = selectedTime?.value;
   const time24hr = moment(time12hr, ['h:mm A']).format('HH:mm');
   const [bookingId, setBookingId] = useState();
   console.log('serviceId', serviceId);
   console.log('selectedDate', selectedDate);
-  console.log('selectedDay', selectedDay);
+  console.log('route?.params', route?.params);
   console.log('selectedTime===>>>>>>', selectedTime);
   // selectedTime: isSelectedTime,
   //               selectedDate: isSelectedDate?.date,
@@ -75,28 +83,34 @@ const BookingSummary = ({route}) => {
       title: 'Date',
       date: `${selectedDay} ${selectedDate} at ${selectedTime?.value}`,
     },
-    {id: 2, title: 'Stylist', date: `${technicianName} - 30 Mins`},
-  ];
-
-  const paymentDetails = [
-    {
-      id: 1,
-      title: 'Pay Online Now',
-      subTitle: 'Secure your booking instantly',
-      value: 'online',
-    },
-    {
-      id: 2,
-      title: 'Pay at Salon',
-      subTitle: 'Settle payment after your appointment',
-      value: 'salon',
-    },
+    {id: 2, title: 'Nail Technician', date: `${technicianName} - 30 Mins`},
   ];
   const getSaloonByIdHandler = async () => {
     setSaloonLoading(true);
     const response = await getSaloonById(saloonId);
     setSaloonLoading(false);
     setSaloonData(response.data);
+  };
+  const updateBookingHandler = async () => {
+    setIsLoading(true);
+    try {
+      const response = await updateBooking(
+        myBookingId,
+        selectedTechnician,
+        selectedTime.value,
+        selectedBookingDate,
+      );
+      setIsLoading(false);
+      if (response.success) {
+        ShowToast('success', 'Appointment Rescheduled Successfully');
+        navigation.navigate('Home');
+      } else {
+        ShowToast('error', response.message);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      return ShowToast('error', error?.response?.data?.message);
+    }
   };
   const createBookingHandler = async () => {
     setIsLoading(true);
@@ -113,10 +127,11 @@ const BookingSummary = ({route}) => {
       console.log('response', response);
 
       if (response?.success) {
-        if (paymentType === 'online') {
+        if (!reschedule) {
           navigation.navigate('SelectPaymentMethod', {
             bookingId: response?.data?._id,
             price: price,
+            pay: true,
           });
         } else {
           setBookingId(response?.data?._id);
@@ -136,108 +151,116 @@ const BookingSummary = ({route}) => {
     getSaloonByIdHandler();
   }, []);
   return (
-    <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
-      <AppHeader onPress={() => navigation.goBack()} title="Booking Summary" />
-      <View
-        style={{
-          backgroundColor: '#B4B4B4',
-          height: 0.5,
-          elevation: 5,
-          width: '100%',
-        }}
-      />
-      <LineBreak space={1.5} />
-      {saloonLoading ? (
-        <View style={{height: responsiveHeight(10), justifyContent: 'center'}}>
-          <ActivityIndicator size={40} color={AppColors.BTNCOLOURS} />
-        </View>
-      ) : (
-        <FlatList
-          data={[
-            {
-              id: 1,
-              img: saloonData?.image[0],
-              title: saloonData?.salonName,
-              location: saloonData?.bussinessAddress,
-              KM: 2,
-              Rating: saloonData?.avgRating,
-              TotalNoOfRating: saloonData?.totalReviews,
-            },
-          ]}
-          contentContainerStyle={{gap: 10}}
-          renderItem={({item}) => {
-            return (
-              <SaloonsCard
-                showDeleteCard={false}
-                title={item.title}
-                KM={item.KM}
-                textWidth={55}
-                saloonId={saloonId}
-                Rating={item.Rating}
-                TotalNoOfRating={item.TotalNoOfRating}
-                img={item.img}
-                location={item.location}
-              />
-            );
+    <SafeAreaView style={globalStyles.container}>
+      <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
+        <AppHeader
+          onPress={() => navigation.goBack()}
+          title="Booking Summary"
+        />
+        <View
+          style={{
+            backgroundColor: '#B4B4B4',
+            height: 0.5,
+            elevation: 5,
+            width: '100%',
           }}
         />
-      )}
+        <LineBreak space={1.5} />
+        {saloonLoading ? (
+          <View
+            style={{height: responsiveHeight(10), justifyContent: 'center'}}>
+            <ActivityIndicator size={40} color={AppColors.BTNCOLOURS} />
+          </View>
+        ) : (
+          <FlatList
+            data={[
+              {
+                id: 1,
+                img: saloonData?.image[0],
+                title: saloonData?.salonName,
+                location: saloonData?.bussinessAddress,
+                KM: 2,
+                Rating: saloonData?.avgRating,
+                TotalNoOfRating: saloonData?.totalReviews,
+              },
+            ]}
+            contentContainerStyle={{gap: 10}}
+            renderItem={({item}) => {
+              return (
+                <SaloonsCard
+                  showDeleteCard={false}
+                  title={item.title}
+                  KM={item.KM}
+                  textWidth={55}
+                  saloonId={saloonId}
+                  Rating={item.Rating}
+                  TotalNoOfRating={item.TotalNoOfRating}
+                  img={item.img}
+                  location={item.location}
+                />
+              );
+            }}
+          />
+        )}
 
-      <LineBreak space={2} />
-
-      <View
-        style={{
-          backgroundColor: AppColors.WHITE,
-          paddingHorizontal: responsiveWidth(4),
-        }}>
         <LineBreak space={2} />
 
-        <AppText
-          title="Booking details"
-          textSize={2.5}
-          textColor={AppColors.BLACK}
-          textFontWeight
-        />
+        <View
+          style={{
+            backgroundColor: AppColors.WHITE,
+            paddingHorizontal: responsiveWidth(4),
+          }}>
+          <LineBreak space={2} />
 
-        <LineBreak space={1.5} />
+          <AppText
+            title="Booking details"
+            textSize={2.5}
+            textColor={AppColors.BLACK}
+            textFontWeight
+          />
 
-        <FlatList
-          data={bookingDetails}
-          contentContainerStyle={{gap: 10}}
-          renderItem={({item}) => {
-            return (
-              <View>
-                <AppText
-                  title={item.title}
-                  textSize={2}
-                  textColor={AppColors.BLACK}
-                />
-                <AppText
-                  title={item.date}
-                  textSize={1.7}
-                  textColor={AppColors.DARKGRAY}
-                />
-              </View>
-            );
-          }}
-        />
+          <LineBreak space={1.5} />
 
-        <LineBreak space={4} />
+          <FlatList
+            data={bookingDetails}
+            contentContainerStyle={{gap: 10}}
+            renderItem={({item}) => {
+              return (
+                <View>
+                  <AppText
+                    title={item.title}
+                    textSize={2}
+                    textColor={AppColors.BLACK}
+                  />
+                  <AppText
+                    title={item.date}
+                    textSize={1.7}
+                    textColor={AppColors.DARKGRAY}
+                  />
+                </View>
+              );
+            }}
+          />
 
-        <AppText
-          title="Payment"
-          textSize={2.5}
-          textColor={AppColors.BLACK}
-          textFontWeight
-        />
+          {reschedule ? null : (
+            <View>
+              <LineBreak space={4} />
+              <AppText
+                title="Payment"
+                textSize={2.5}
+                textColor={AppColors.BLACK}
+                textFontWeight
+              />
 
-        <LineBreak space={1.5} />
-
-        <FlatList
-          data={paymentDetails}
-          contentContainerStyle={{gap: 10}}
-          renderItem={({item}) => {
-            return (
+              <LineBreak space={1.5} />
+              {/* <FlatList
+              data={paymentDetails}
+              contentContainerStyle={{gap: 10}}
+              renderItem={({item}) => {
+                return (
+                );
+              }}
+            /> */}
               <TouchableOpacity
                 style={{
                   flexDirection: 'row',
@@ -250,45 +273,40 @@ const BookingSummary = ({route}) => {
                 //     : null;
                 //   setPaymentType({id: 2});
                 // }}
-                onPress={() => setPaymentType(item?.value)}>
+              >
                 <View>
                   <AppText
-                    title={item.title}
+                    title="Pay Online Now"
                     textSize={2}
                     textColor={AppColors.BLACK}
                   />
                   <AppText
-                    title={item.subTitle}
+                    title="Secure your booking instantly"
                     textSize={1.7}
                     textColor={AppColors.DARKGRAY}
                   />
                 </View>
                 <Fontisto
-                  name={
-                    paymentType === item.value
-                      ? 'radio-btn-active'
-                      : 'radio-btn-passive'
-                  }
+                  name={'radio-btn-active'}
                   size={responsiveFontSize(2.5)}
                   color={AppColors.BLUE}
                 />
               </TouchableOpacity>
-            );
-          }}
-        />
+            </View>
+          )}
 
-        <LineBreak space={4} />
+          <LineBreak space={4} />
 
-        <AppText
-          title="Price Details"
-          textSize={2.5}
-          textColor={AppColors.BLACK}
-          textFontWeight
-        />
+          <AppText
+            title="Price Details"
+            textSize={2.5}
+            textColor={AppColors.BLACK}
+            textFontWeight
+          />
 
-        <LineBreak space={1.5} />
+          {/* <LineBreak space={1.5} /> */}
 
-        {/* <FlatList
+          {/* <FlatList
           data={pricingDetails}
           contentContainerStyle={{gap: 10}}
           renderItem={({item}) => {
@@ -297,84 +315,89 @@ const BookingSummary = ({route}) => {
           }}
         /> */}
 
-        <TouchableOpacity
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: 10,
-          }}>
-          <AppText
-            title={serviceName}
-            textSize={2}
-            textColor={AppColors.DARKGRAY}
-            textFontWeight={true}
-          />
-          <AppText
-            title={`$${price}`}
-            textSize={2}
-            textColor={AppColors.DARKGRAY}
-            textFontWeight={true}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: 20,
-          }}>
-          <AppText
-            title={'Total'}
-            textSize={2.5}
-            textColor={AppColors.BLACK}
-            textFontWeight={true}
-          />
-          <AppText
-            title={`$${price}`}
-            textSize={2.5}
-            textColor={AppColors.BLACK}
-            textFontWeight={true}
-          />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 10,
+            }}>
+            <AppText
+              title={serviceName}
+              textSize={2}
+              textColor={AppColors.DARKGRAY}
+              textFontWeight={true}
+            />
+            <AppText
+              title={`$${price}`}
+              textSize={2}
+              textColor={AppColors.DARKGRAY}
+              textFontWeight={true}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 20,
+            }}>
+            <AppText
+              title={'Total'}
+              textSize={2.5}
+              textColor={AppColors.BLACK}
+              textFontWeight={true}
+            />
+            <AppText
+              title={`$${price}`}
+              textSize={2.5}
+              textColor={AppColors.BLACK}
+              textFontWeight={true}
+            />
+          </TouchableOpacity>
 
-        <LineBreak space={4} />
+          <LineBreak space={4} />
 
-        <ConfirmationModal
-          iconName={'check'}
-          title={'Your appointment is confirmed!'}
-          subTitle={
-            'Thank you for booking through Nail Warz. We look forward to seeing you soon! Please leave a review of your service!'
-          }
-          buttonOneTitle={'View Receipt'}
-          buttonTwoTitle={'Back to Home'}
-          handleBackPress={() => {
-            navigation.navigate('Home');
-            setVisibleConfirmationModal(false);
-          }}
-          setVisible={() => {
-            navigation.navigate('DownloadReceipt', {bookingId});
-            setVisibleConfirmationModal(false);
-          }}
-          visible={visibleConfirmationModal}
-        />
+          <ConfirmationModal
+            iconName={'check'}
+            title={'Your appointment is confirmed!'}
+            subTitle={
+              'Thank you for booking through Nail Warz. We look forward to seeing you soon! Please leave a review of your service!'
+            }
+            buttonOneTitle={'View Receipt'}
+            buttonTwoTitle={'Back to Home'}
+            handleBackPress={() => {
+              navigation.navigate('Home');
+              setVisibleConfirmationModal(false);
+            }}
+            setVisible={() => {
+              navigation.navigate('DownloadReceipt', {bookingId});
+              setVisibleConfirmationModal(false);
+            }}
+            visible={visibleConfirmationModal}
+          />
 
-        <AppButton
-          title={
-            isLoading ? (
-              <ActivityIndicator size={'large'} color={AppColors.WHITE} />
-            ) : (
-              'Proceed'
-            )
-          }
-          handlePress={createBookingHandler}
-          // bgColor={AppColors.DARKGRAY}
-          // textColor={AppColors.WHITE}
-        />
+          <AppButton
+            title={
+              isLoading ? (
+                <ActivityIndicator size={'large'} color={AppColors.WHITE} />
+              ) : reschedule ? (
+                'Reschedule'
+              ) : (
+                'Complete Booking'
+              )
+            }
+            handlePress={
+              reschedule ? updateBookingHandler : createBookingHandler
+            }
+            // bgColor={AppColors.DARKGRAY}
+            // textColor={AppColors.WHITE}
+          />
 
-        <LineBreak space={2} />
-      </View>
-    </ScrollView>
+          <LineBreak space={2} />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

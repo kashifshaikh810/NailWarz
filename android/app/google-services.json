@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "994635612004",
+    "project_id": "nail-war-app-2025",
+    "storage_bucket": "nail-war-app-2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994635612004:android:eb7564b853f3aae60a8471",
+        "android_client_info": {
+          "package_name": "com.nailwarz"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYKEggiPmB3dUdzVYx5PoE0HFulx30Zpo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

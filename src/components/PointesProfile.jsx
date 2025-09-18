@@ -22,12 +22,12 @@ const PointesProfile = ({item, index}) => {
         alignItems: 'center',
       }}>
       <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-        <AppText
+        {/* <AppText
           title={`${index}-`}
           textColor={AppColors.BLACK}
           textSize={2}
           textFontWeight
-        />
+        /> */}
         <Image
           source={{uri: `${ImageBaseUrl}${item?.salonImage}`}}
           style={{width: 40, height: 40, borderRadius: 100}}
@@ -42,7 +42,7 @@ const PointesProfile = ({item, index}) => {
       <View style={{paddingHorizontal: responsiveWidth(2)}}>
         <AppText
           title={item?.vote?.length}
-          textColor={AppColors.BLACK}
+          textColor={AppColors.RED}
           textSize={2}
           textFontWeight
         />

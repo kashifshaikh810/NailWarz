@@ -8,6 +8,8 @@ import APPImages from '../../../assets/APPImages';
 import {responsiveWidth} from '../../../utils/Responsive_Dimensions';
 import LineBreak from '../../../components/LineBreak';
 import PointesProfile from '../../../components/PointesProfile';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../../GlobalFunctions/styles';
 
 // const voters = [
 //   {id: 1, profImg: APPImages.nailsTwo, username: 'Alicia', numOfScore: 7050},
@@ -24,28 +26,30 @@ const LiveVotingScores = ({route}) => {
   const {data} = route?.params;
   console.log('data', data);
   return (
-    <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
-      <AppHeader
-        onPress={() => navigation.goBack()}
-        title={'LIVE VOTING SCORES'}
-        isTextAlignCentered={true}
-      />
-      <View style={{paddingHorizontal: responsiveWidth(3)}}>
-        <FlatList
-          data={[...data].sort((a, b) => b?.vote?.length - a?.vote?.length)}
-          contentContainerStyle={{
-            borderWidth: 1,
-            borderColor: AppColors.PEACHCOLOUR,
-            borderRadius: 7,
-          }}
-          renderItem={({item, index}) => {
-            return <PointesProfile item={item} index={index + 1} />;
-          }}
+    <SafeAreaView style={globalStyles.container}>
+      <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
+        <AppHeader
+          onPress={() => navigation.goBack()}
+          title={'LIVE VOTING SCORES'}
+          isTextAlignCentered={true}
         />
-      </View>
+        <View style={{paddingHorizontal: responsiveWidth(3)}}>
+          <FlatList
+            data={[...data].sort((a, b) => b?.vote?.length - a?.vote?.length)}
+            contentContainerStyle={{
+              borderWidth: 1,
+              borderColor: AppColors.PEACHCOLOUR,
+              borderRadius: 7,
+            }}
+            renderItem={({item, index}) => {
+              return <PointesProfile item={item} index={index + 1} />;
+            }}
+          />
+        </View>
 
-      <LineBreak space={4} />
-    </ScrollView>
+        <LineBreak space={4} />
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

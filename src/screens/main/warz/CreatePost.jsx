@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {
   View,
   Text,
@@ -21,6 +22,8 @@ import {createPost, selectImage} from '../../../GlobalFunctions';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
 import {ShowToast} from '../../../GlobalFunctions/auth';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../../GlobalFunctions/styles';
 
 const CreatePost = ({navigation}) => {
   const [value, setValue] = useState();
@@ -57,96 +60,98 @@ const CreatePost = ({navigation}) => {
   };
 
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
-      {isLoading ? (
-        <View style={{flex: 1, justifyContent: 'center'}}>
-          <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
-        </View>
-      ) : (
-        <View>
-          <AppHeader
-            isBtn
-            handleBtnPress={handleCreatePost}
-            onPress={() => navigation.goBack()}
-            title="Create Post"
-          />
-          <AppTextInput
-            onChangeText={value => setCaption(value)}
-            multiline
-            fntSize={2.3}
-            inputPlaceHolder="What's On Your Mind ?"
-          />
-          <View style={{paddingHorizontal: responsiveHeight(2)}}>
-            {/* <AppText title="Plz Select The Post Type" textSize={2} textFontWeight={300}/> */}
-            <PickerCard
-              value={value}
-              setValue={setValue}
-              items={postType}
-              placeHolder="Post Type"
-              mrgnTop={responsiveHeight(2)}
-            />
+    <SafeAreaView style={globalStyles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+        {isLoading ? (
+          <View style={{flex: 1, justifyContent: 'center'}}>
+            <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
           </View>
-          {imageUri ? (
-            <View
-              style={{
-                paddingHorizontal: responsiveHeight(2),
-                marginTop: responsiveHeight(4),
-                justifyContent: 'flex-end',
-              }}>
-              <TouchableOpacity
-                onPress={() => setImageUri('')}
-                style={{
-                  position: 'absolute',
-                  backgroundColor: AppColors.BTNCOLOURS,
-                  borderRadius: responsiveHeight(2),
-                  top: responsiveHeight(2),
-                  zIndex: 100,
-                  right: responsiveHeight(4),
-                }}>
-                <Entypo name="cross" color={AppColors.WHITE} size={35} />
-              </TouchableOpacity>
-              <Image
-                source={{uri: imageUri}}
-                style={{
-                  height: responsiveHeight(40),
-                  borderRadius: responsiveHeight(1),
-                  width: '100%',
-                }}
+        ) : (
+          <View>
+            <AppHeader
+              isBtn
+              handleBtnPress={handleCreatePost}
+              onPress={() => navigation.goBack()}
+              title="Create Post"
+            />
+            <AppTextInput
+              onChangeText={value => setCaption(value)}
+              multiline
+              fntSize={2.3}
+              inputPlaceHolder="What's On Your Mind ?"
+            />
+            <View style={{paddingHorizontal: responsiveHeight(2)}}>
+              {/* <AppText title="Plz Select The Post Type" textSize={2} textFontWeight={300}/> */}
+              <PickerCard
+                value={value}
+                setValue={setValue}
+                items={postType}
+                placeHolder="Post Type"
+                mrgnTop={responsiveHeight(2)}
               />
             </View>
-          ) : (
-            <View
-              style={{
-                alignSelf: 'center',
-                marginTop: responsiveHeight(10),
-                gap: responsiveHeight(1),
-              }}>
-              <TouchableOpacity
-                onPress={selectImageHandler}
+            {imageUri ? (
+              <View
                 style={{
-                  width: responsiveWidth(90),
-                  alignItems: 'center',
-                  elevation: 15,
-                  backgroundColor: 'white',
-                  borderRadius: responsiveHeight(1),
-                  borderWidth: 1,
-                  marginBottom: responsiveHeight(3),
-                  padding: 20, // important for visible shadow around content
+                  paddingHorizontal: responsiveHeight(2),
+                  marginTop: responsiveHeight(4),
+                  justifyContent: 'flex-end',
                 }}>
-                <AntDesign name="upload" size={80} />
-                <AppText
-                  mrgnTop={1.5}
-                  textSize={2.6}
-                  title="Tap to Upload Image"
+                <TouchableOpacity
+                  onPress={() => setImageUri('')}
+                  style={{
+                    position: 'absolute',
+                    backgroundColor: AppColors.BTNCOLOURS,
+                    borderRadius: responsiveHeight(2),
+                    top: responsiveHeight(2),
+                    zIndex: 100,
+                    right: responsiveHeight(4),
+                  }}>
+                  <Entypo name="cross" color={AppColors.WHITE} size={35} />
+                </TouchableOpacity>
+                <Image
+                  source={{uri: imageUri}}
+                  style={{
+                    height: responsiveHeight(40),
+                    borderRadius: responsiveHeight(1),
+                    width: '100%',
+                  }}
                 />
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      )}
-    </ScrollView>
+              </View>
+            ) : (
+              <View
+                style={{
+                  alignSelf: 'center',
+                  marginTop: responsiveHeight(10),
+                  gap: responsiveHeight(1),
+                }}>
+                <TouchableOpacity
+                  onPress={selectImageHandler}
+                  style={{
+                    width: responsiveWidth(90),
+                    alignItems: 'center',
+                    elevation: 15,
+                    backgroundColor: 'white',
+                    borderRadius: responsiveHeight(1),
+                    borderWidth: 1,
+                    marginBottom: responsiveHeight(3),
+                    padding: 20, // important for visible shadow around content
+                  }}>
+                  <AntDesign name="upload" size={80} />
+                  <AppText
+                    mrgnTop={1.5}
+                    textSize={2.6}
+                    title="Tap to Upload Image"
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

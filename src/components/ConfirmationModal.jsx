@@ -3,6 +3,7 @@ import React from 'react';
 import {View, Modal, ActivityIndicator} from 'react-native';
 import {
   responsiveFontSize,
+  responsiveHeight,
   responsiveWidth,
 } from '../utils/Responsive_Dimensions';
 import AppText from './AppTextComps/AppText';
@@ -22,6 +23,12 @@ const ConfirmationModal = ({
   handleBackPress,
   visible,
   setVisible,
+  flexDirection,
+  btn1Width,
+  btn2Width,
+  isLoading = false,
+  justifyContent,
+  btnContainerWidth,
 }) => {
   const navigation = useNavigation();
 
@@ -42,61 +49,83 @@ const ConfirmationModal = ({
             alignItems: 'center',
             width: responsiveWidth(90),
           }}>
-          <View
-            style={{
-              backgroundColor: AppColors.BTNCOLOURS,
-              padding: 10,
-              borderRadius: 100,
-            }}>
-            <AntDesign
-              name={iconName}
-              size={responsiveFontSize(5)}
-              color={AppColors.WHITE}
-            />
-          </View>
+          {isLoading ? (
+            <View
+              style={{height: responsiveHeight(20), justifyContent: 'center'}}>
+              <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
+            </View>
+          ) : (
+            <View style={{}}>
+              <View
+                style={{
+                  backgroundColor: AppColors.BTNCOLOURS,
+                  // padding: 10,
+                  width: responsiveWidth(17),
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  alignSelf: 'center',
+                  height: responsiveHeight(8.2),
+                  borderRadius: 100,
+                }}>
+                <AntDesign
+                  name={iconName}
+                  size={responsiveFontSize(5)}
+                  color={AppColors.WHITE}
+                />
+              </View>
 
-          <LineBreak space={2} />
+              <LineBreak space={2} />
 
-          <AppText
-            title={title}
-            textSize={2.5}
-            textColor={AppColors.BLACK}
-            textFontWeight
-            textAlignment={'center'}
-          />
+              <AppText
+                title={title}
+                textSize={2.5}
+                textColor={AppColors.BLACK}
+                textFontWeight
+                textAlignment={'center'}
+              />
 
-          <LineBreak space={1} />
+              <LineBreak space={1} />
+              <AppText
+                title={subTitle}
+                textSize={2}
+                textColor={AppColors.DARKGRAY}
+                textAlignment={'center'}
+              />
 
-          <AppText
-            title={subTitle}
-            textSize={2}
-            textColor={AppColors.DARKGRAY}
-            textAlignment={'center'}
-          />
+              <LineBreak space={2} />
+              <View
+                style={{
+                  width: btnContainerWidth,
+                  flexDirection: flexDirection,
+                  justifyContent: justifyContent,
+                }}>
+                <AppButton
+                  width={btn1Width && btn1Width}
+                  title={buttonOneTitle}
+                  handlePress={setVisible}
+                  //   bgColor={AppColors.DARKGRAY}
+                  //   textColor={AppColors.WHITE}
+                />
 
-          <LineBreak space={2} />
-
-          <View style={{width: '100%'}}>
-            <AppButton
-              title={buttonOneTitle}
-              handlePress={setVisible}
-              //   bgColor={AppColors.DARKGRAY}
-              //   textColor={AppColors.WHITE}
-            />
-
-            <LineBreak space={2} />
-
-            <AppButton
-              title={buttonTwoTitle}
-              handlePress={handleBackPress}
-              bgColor={AppColors.WHITE}
-              textColor={isChangeColor ? AppColors.BTNCOLOURS : AppColors.BLUE}
-              borderWidth={2}
-              borderColor={
-                isChangeColor ? AppColors.BTNCOLOURS : AppColors.BLUE
-              }
-            />
-          </View>
+                <LineBreak space={2} />
+                {buttonTwoTitle && (
+                  <AppButton
+                    width={btn2Width && btn2Width}
+                    title={buttonTwoTitle}
+                    handlePress={handleBackPress}
+                    bgColor={AppColors.WHITE}
+                    textColor={
+                      isChangeColor ? AppColors.BTNCOLOURS : AppColors.BLUE
+                    }
+                    borderWidth={2}
+                    borderColor={
+                      isChangeColor ? AppColors.BTNCOLOURS : AppColors.BLUE
+                    }
+                  />
+                )}
+              </View>
+            </View>
+          )}
         </View>
       </View>
     </Modal>

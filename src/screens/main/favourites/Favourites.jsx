@@ -85,7 +85,7 @@ const Favourites = () => {
   return (
     <ScrollView
       contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
-      <AppHeader onPress={() => navigation.goBack()} title="Favourites" />
+      <AppHeader onPress={() => navigation.goBack()} title="Favorites" />
          <View
                 style={{
                   backgroundColor: '#B4B4B4',

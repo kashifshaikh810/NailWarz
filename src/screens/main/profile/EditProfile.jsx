@@ -1,6 +1,12 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState} from 'react';
-import {View, Image, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import AppColors from '../../../utils/AppColors';
 import {useNavigation} from '@react-navigation/native';
 import AppHeader from '../../../components/AppHeader';
@@ -20,6 +26,8 @@ import {useDispatch, useSelector} from 'react-redux';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {selectImage} from '../../../GlobalFunctions';
 import {ImageBaseUrl} from '../../../BaseUrl';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../../GlobalFunctions/styles';
 
 const EditProfile = () => {
   const navigation = useNavigation();
@@ -29,10 +37,32 @@ const EditProfile = () => {
   const {userData} = useSelector(state => state.user);
   const dispatch = useDispatch();
   // console.log('_id', _id);
-
-  const selectImageHandler = async () => {
-    const response = await selectImage();
-    setImageUri(response);
+  const showImagePickerOptions = () => {
+    Alert.alert(
+      'Select an Option',
+      'Do you want to upload an image or click one from the camera?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Camera',
+          onPress: () => selectImageHandler(true), // true → camera
+        },
+        {
+          text: 'Upload',
+          onPress: () => selectImageHandler(false), // false → gallery
+        },
+      ],
+      {cancelable: true},
+    );
+  };
+  const selectImageHandler = async (fromCamera = false) => {
+    const response = await selectImage(fromCamera ? 'camera' : 'gallery');
+    if (response) {
+      setImageUri(response);
+    }
   };
   const editProfileHandler = async () => {
     setIsLoading(true);
@@ -44,14 +74,14 @@ const EditProfile = () => {
       dispatch,
       null,
       true,
+      null,
     );
     setIsLoading(false);
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: AppColors.WHITE}}>
+    <SafeAreaView style={globalStyles.container}>
       <AppHeader onPress={() => navigation.goBack()} title="Edit Profile" />
-
       <View style={{paddingHorizontal: responsiveWidth(5)}}>
         <View style={{alignItems: 'center'}}>
           <View
@@ -76,7 +106,7 @@ const EditProfile = () => {
             />
             <View style={{position: 'absolute', bottom: 0, right: 0}}>
               <TouchableOpacity
-                onPress={selectImageHandler}
+                onPress={showImagePickerOptions}
                 style={{
                   backgroundColor: AppColors.BLACK,
                   padding: 8,
@@ -134,7 +164,7 @@ const EditProfile = () => {
           </View>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

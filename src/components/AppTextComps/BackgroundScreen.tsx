@@ -1,7 +1,10 @@
+/* eslint-disable react-native/no-inline-styles */
 import { View, Text, ScrollView } from 'react-native'
 import React, { ReactNode } from 'react'
 import AppColors from '../../utils/AppColors'
 import { responsiveHeight } from '../../utils/Responsive_Dimensions'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { globalStyles } from '../../GlobalFunctions/styles'
 
 type BgProps = {
   children: ReactNode,
@@ -13,9 +16,11 @@ type BgProps = {
 
 const BackgroundScreen = ({ children, bgColor, stylesPorp, padding, paddingTop }: BgProps) => {
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[stylesPorp, { flexGrow: 1, backgroundColor: bgColor ? bgColor : AppColors.WHITE, padding: responsiveHeight(padding) ? padding : 20, paddingTop: paddingTop ? responsiveHeight(paddingTop) : null }]}>
-      {children}
-    </ScrollView>
+    <SafeAreaView style={globalStyles.container}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[stylesPorp, { flexGrow: 1, backgroundColor: bgColor ? bgColor : AppColors.WHITE, padding: responsiveHeight(padding) ? padding : 20, paddingTop: paddingTop ? responsiveHeight(paddingTop) : null }]}>
+        {children}
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

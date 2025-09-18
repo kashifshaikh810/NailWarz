@@ -1,15 +1,23 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
-import {View, Text, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import AppText from './AppTextComps/AppText';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   responsiveFontSize,
   responsiveHeight,
+  responsiveWidth,
 } from '../utils/Responsive_Dimensions';
 import AppColors from '../utils/AppColors';
 import AppButton from './AppButton';
+import APPImages from '../assets/APPImages';
 
 const AppHeader = ({
   onPress,
@@ -21,30 +29,34 @@ const AppHeader = ({
   title,
   isTextAlignCentered,
   style,
+  isLogo = false,
 }) => {
-  console.log('sifvrt',isFvrt)
+  console.log('sifvrt', isFvrt);
   return (
     <View
-      style={[{
-        flexDirection: 'row',
-        backgroundColor: AppColors.WHITE,
-        gap: title ? 10 : 0,
-        paddingTop: title ? responsiveHeight(3) : 10,
-        paddingBottom: title ? responsiveHeight(3) : 10,
-        justifyContent:
-          title && !isTextAlignCentered ? 'flex-start' : 'space-between',
-        alignItems: 'center',
-        paddingVertical: responsiveHeight(2),
-        paddingHorizontal: responsiveHeight(2),
-      },style]}>
+      style={[
+        {
+          flexDirection: 'row',
+          backgroundColor: AppColors.WHITE,
+          gap: title ? 10 : 0,
+          paddingTop: title ? responsiveHeight(3) : 10,
+          paddingBottom: title ? responsiveHeight(3) : 10,
+          justifyContent:
+            title && !isTextAlignCentered ? 'flex-start' : 'space-between',
+          alignItems: 'center',
+          paddingVertical: responsiveHeight(2),
+          paddingHorizontal: responsiveHeight(2),
+        },
+        style,
+      ]}>
       <TouchableOpacity onPress={onPress}>
         <MaterialIcons
           name={'arrow-back-ios'}
           size={responsiveFontSize(2.7)}
-          color={AppColors.BLACK}
+          color={'red'}
         />
       </TouchableOpacity>
-      <AppText title={title} textSize={2.4} textFontWeight />
+      <AppText textColor={'red'} title={title} textSize={2.4} textFontWeight />
       {title ? (
         <View />
       ) : isFvrtLoading ? (
@@ -70,6 +82,19 @@ const AppHeader = ({
           <AppButton handlePress={handleBtnPress} width={25} title="Post" />
         </View>
       ) : null}
+      {isLogo && (
+        <View style={{flex: responsiveHeight(0.06), alignItems: 'center'}}>
+          <Image
+            source={APPImages.logoSmall}
+            style={{
+              // alignSelf: 'center',
+              height: responsiveHeight(8),
+              width: responsiveWidth(15),
+            }}
+            resizeMode="contain"
+          />
+        </View>
+      )}
     </View>
   );
 };

@@ -15,6 +15,8 @@ import { getAvailableTechnician } from '../../GlobalFunctions';
 import { ShowToast } from '../../GlobalFunctions/auth';
 import { ImageBaseUrl } from '../../BaseUrl';
 import { useSelector } from 'react-redux';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { globalStyles } from '../../GlobalFunctions/styles';
 const SelectAnyTech = ({ navigation, route }) => {
   const { data } = route?.params;
   const [selectedDateFromCalendar, setSelectedDateFromCalendar] = useState('');
@@ -31,7 +33,7 @@ const SelectAnyTech = ({ navigation, route }) => {
     image: '',
   });
   const { _id } = useSelector(state => state?.user?.userData);
-  console.log('technicians', technicians);
+  console.log('data', data);
   console.log('technicianDetails', technicianDetails);
 
   const handleDateSelection = (dateStr) => {
@@ -120,7 +122,7 @@ const SelectAnyTech = ({ navigation, route }) => {
     );
   };
   return (
-    <View style={{ backgroundColor: AppColors.WHITE, flex: 1 }}>
+    <SafeAreaView style={globalStyles.container}>
       <AppHeader onPress={() => navigation.goBack()} title="Date and time" />
       <View
         style={{
@@ -297,7 +299,7 @@ const SelectAnyTech = ({ navigation, route }) => {
           minimumDate={new Date()} // Optional: disable past dates
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 

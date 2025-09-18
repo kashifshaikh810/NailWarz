@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,9 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {useDispatch, useSelector} from 'react-redux';
 import {clearToken} from '../../../Redux/Slices';
 import {BaseUrl, ImageBaseUrl} from '../../../BaseUrl';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {deleteUser, ShowToast} from '../../../GlobalFunctions/auth';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 
 const profileMenus = [
   {
@@ -43,25 +46,13 @@ const profileMenus = [
     ),
     title: 'Settings',
     mrgnTop: 0,
-    bottomWidth: 1,
+    // bottomWidth: 1,
     borderTopRadius: 10,
+    borderBottomRadius: 10,
+    navTo: 'Settings',
   },
   {
     id: 2,
-    iconName: (
-      <FontAwesome
-        name={'user-circle-o'}
-        size={responsiveFontSize(2.5)}
-        color={AppColors.BTNCOLOURS}
-      />
-    ),
-    title: 'Account Details',
-    mrgnTop: 0,
-    bottomWidth: 0,
-    borderBottomRadius: 10,
-  },
-  {
-    id: 3,
     iconName: (
       <FontAwesome5
         name={'wallet'}
@@ -75,7 +66,7 @@ const profileMenus = [
     borderTopRadius: 10,
   },
   {
-    id: 4,
+    id: 3,
     iconName: (
       <Ionicons
         name={'shield-checkmark-outline'}
@@ -83,53 +74,13 @@ const profileMenus = [
         color={AppColors.BTNCOLOURS}
       />
     ),
-    title: 'Privacy and safety',
+    title: 'Privacy & Safety',
     mrgnTop: 0,
     bottomWidth: 1,
+    navTo: 'InstructionsScreen',
   },
   {
-    id: 5,
-    iconName: (
-      <MaterialCommunityIcons
-        name={'hand-front-left-outline'}
-        size={responsiveFontSize(2.5)}
-        color={AppColors.BTNCOLOURS}
-      />
-    ),
-    title: 'Accessibility, display and languages',
-    mrgnTop: 0,
-    bottomWidth: 1,
-  },
-  {
-    id: 6,
-    iconName: (
-      <Fontisto
-        name={'bell'}
-        size={responsiveFontSize(2.5)}
-        color={AppColors.BTNCOLOURS}
-      />
-    ),
-    title: 'Notifications',
-    mrgnTop: 0,
-    bottomWidth: 0,
-    borderBottomRadius: 10,
-  },
-  {
-    id: 7,
-    iconName: (
-      <AntDesign
-        name={'message1'}
-        size={responsiveFontSize(2.5)}
-        color={AppColors.BTNCOLOURS}
-      />
-    ),
-    title: 'Help and Services',
-    mrgnTop: 2,
-    bottomWidth: 1,
-    borderTopRadius: 10,
-  },
-  {
-    id: 8,
+    id: 4,
     iconName: (
       <Feather
         name={'alert-circle'}
@@ -140,9 +91,66 @@ const profileMenus = [
     title: 'About',
     mrgnTop: 0,
     bottomWidth: 1,
+    navTo: 'InstructionsScreen',
   },
   {
-    id: 9,
+    id: 5,
+    iconName: (
+      <AntDesign
+        name="delete"
+        size={responsiveFontSize(2.5)}
+        color={AppColors.BTNCOLOURS}
+      />
+    ),
+    title: 'Delete Account',
+    mrgnTop: 0,
+    borderBottomRadius: 10,
+    // bottomWidth: 1,
+    navTo: 'Auth',
+  },
+  // {
+  //   id: 6,
+  //   iconName: (
+  //     <Fontisto
+  //       name={'bell'}
+  //       size={responsiveFontSize(2.5)}
+  //       color={AppColors.BTNCOLOURS}
+  //     />
+  //   ),
+  //   title: 'Notifications',
+  //   mrgnTop: 0,
+  //   bottomWidth: 0,
+  //   borderBottomRadius: 10,
+  // },
+  // {
+  //   id: 7,
+  //   iconName: (
+  //     <AntDesign
+  //       name={'message1'}
+  //       size={responsiveFontSize(2.5)}
+  //       color={AppColors.BTNCOLOURS}
+  //     />
+  //   ),
+  //   title: 'Help and Services',
+  //   mrgnTop: 2,
+  //   bottomWidth: 1,
+  //   borderTopRadius: 10,
+  // },
+  // {
+  //   id: 8,
+  //   iconName: (
+  //     <Feather
+  //       name={'alert-circle'}
+  //       size={responsiveFontSize(2.5)}
+  //       color={AppColors.BTNCOLOURS}
+  //     />
+  //   ),
+  //   title: 'About',
+  //   mrgnTop: 0,
+  //   bottomWidth: 1,
+  // },
+  {
+    id: 6,
     iconName: (
       <AntDesign
         name={'logout'}
@@ -151,8 +159,9 @@ const profileMenus = [
       />
     ),
     title: 'Logout',
-    mrgnTop: 0,
+    mrgnTop: 1,
     bottomWidth: 0,
+    borderTopRadius: 10,
     borderBottomRadius: 10,
     navTo: 'Auth',
   },
@@ -161,8 +170,49 @@ const profileMenus = [
 const Profile = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {userData} = useSelector(state => state.user);
-  console.log('userdata===',userData)
+  const {userData, isGoogleSignIn} = useSelector(state => state.user);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  // GoogleSignin.configure({});
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId:
+        '985993038096-pg0pmp2tdn6hpv9pij38arci06kpuc4p.apps.googleusercontent.com', // ✅ must be web client
+      offlineAccess: true,
+    });
+  }, []);
+  const googleSignOut = async () => {
+    try {
+      await GoogleSignin.signOut();
+      dispatch(clearToken());
+      console.log('User signed out successfully');
+    } catch (error) {
+      console.error('Google Sign-Out Error:', error);
+    }
+  };
+
+  const deleteAccountHandler = async () => {
+    setIsLoading(true);
+    try {
+      const response = await deleteUser(userData?._id);
+      if (response.success) {
+        setDeleteModalVisible(false);
+        if (isGoogleSignIn) {
+          googleSignOut();
+        } else {
+          dispatch(clearToken());
+        }
+        ShowToast('success', 'Account Deleted Successfully');
+      } else {
+        ShowToast('error', response.message);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      ShowToast('error', error?.response?.data?.message);
+      setIsLoading(false);
+    }
+  };
+  console.log('userdata===', userData);
   return (
     <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader onPress={() => navigation.goBack()} title="Profile" />
@@ -228,11 +278,23 @@ const Profile = () => {
                 }}
                 onPress={() => {
                   if (item.title === 'Logout') {
-                    dispatch(clearToken());
+                    if (isGoogleSignIn) {
+                      googleSignOut();
+                    } else {
+                      dispatch(clearToken());
+                    }
                     return;
+                  } else if (item.title === 'Delete Account') {
+                    setDeleteModalVisible(true);
+                  } else if (item.title === 'Payment Method') {
+                    navigation.navigate('SelectPaymentMethod', {
+                      bookingId: null,
+                      price: null,
+                      pay: false,
+                    });
                   }
                   if (item.navTo) {
-                    navigation.navigate(item.navTo);
+                    navigation.navigate(item.navTo, {type: item?.title});
                   }
                 }}>
                 <View
@@ -258,6 +320,29 @@ const Profile = () => {
         />
 
         <LineBreak space={3} />
+        <ConfirmationModal
+          flexDirection="row"
+          isLoading={isLoading}
+          justifyContent="space-between"
+          btn1Width={39}
+          btn2Width={39}
+          iconName={'delete'}
+          title={'Delete Account'}
+          subTitle={'Are you sure you want to delete this account'}
+          buttonTwoTitle={'Cancel'}
+          buttonOneTitle={'Confirm'}
+          visible={deleteModalVisible}
+          // setVisible={() => {
+          //   navigation.navigate('DownloadReceipt');
+          //   setVisibleConfirmationModal(false);
+          // }}
+          handleBackPress={() => {
+            setDeleteModalVisible(false);
+          }}
+          setVisible={() => {
+            deleteAccountHandler();
+          }}
+        />
       </View>
     </ScrollView>
   );
