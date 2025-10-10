@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import AppColors from '../../../utils/AppColors';
-import {useNavigation} from '@react-navigation/native';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
 import AppHeader from '../../../components/AppHeader';
 import {
   responsiveFontSize,
@@ -23,7 +23,7 @@ import LineBreak from '../../../components/LineBreak';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -33,139 +33,7 @@ import {BaseUrl, ImageBaseUrl} from '../../../BaseUrl';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {deleteUser, ShowToast} from '../../../GlobalFunctions/auth';
 import ConfirmationModal from '../../../components/ConfirmationModal';
-
-const profileMenus = [
-  {
-    id: 1,
-    iconName: (
-      <Fontisto
-        name={'player-settings'}
-        size={responsiveFontSize(2.5)}
-        color={AppColors.BTNCOLOURS}
-      />
-    ),
-    title: 'Settings',
-    mrgnTop: 0,
-    // bottomWidth: 1,
-    borderTopRadius: 10,
-    borderBottomRadius: 10,
-    navTo: 'Settings',
-  },
-  {
-    id: 2,
-    iconName: (
-      <FontAwesome5
-        name={'wallet'}
-        size={responsiveFontSize(2.5)}
-        color={AppColors.BTNCOLOURS}
-      />
-    ),
-    title: 'Payment Method',
-    mrgnTop: 2,
-    bottomWidth: 1,
-    borderTopRadius: 10,
-  },
-  {
-    id: 3,
-    iconName: (
-      <Ionicons
-        name={'shield-checkmark-outline'}
-        size={responsiveFontSize(2.5)}
-        color={AppColors.BTNCOLOURS}
-      />
-    ),
-    title: 'Privacy & Safety',
-    mrgnTop: 0,
-    bottomWidth: 1,
-    navTo: 'InstructionsScreen',
-  },
-  {
-    id: 4,
-    iconName: (
-      <Feather
-        name={'alert-circle'}
-        size={responsiveFontSize(2.5)}
-        color={AppColors.BTNCOLOURS}
-      />
-    ),
-    title: 'About',
-    mrgnTop: 0,
-    bottomWidth: 1,
-    navTo: 'InstructionsScreen',
-  },
-  {
-    id: 5,
-    iconName: (
-      <AntDesign
-        name="delete"
-        size={responsiveFontSize(2.5)}
-        color={AppColors.BTNCOLOURS}
-      />
-    ),
-    title: 'Delete Account',
-    mrgnTop: 0,
-    borderBottomRadius: 10,
-    // bottomWidth: 1,
-    navTo: 'Auth',
-  },
-  // {
-  //   id: 6,
-  //   iconName: (
-  //     <Fontisto
-  //       name={'bell'}
-  //       size={responsiveFontSize(2.5)}
-  //       color={AppColors.BTNCOLOURS}
-  //     />
-  //   ),
-  //   title: 'Notifications',
-  //   mrgnTop: 0,
-  //   bottomWidth: 0,
-  //   borderBottomRadius: 10,
-  // },
-  // {
-  //   id: 7,
-  //   iconName: (
-  //     <AntDesign
-  //       name={'message1'}
-  //       size={responsiveFontSize(2.5)}
-  //       color={AppColors.BTNCOLOURS}
-  //     />
-  //   ),
-  //   title: 'Help and Services',
-  //   mrgnTop: 2,
-  //   bottomWidth: 1,
-  //   borderTopRadius: 10,
-  // },
-  // {
-  //   id: 8,
-  //   iconName: (
-  //     <Feather
-  //       name={'alert-circle'}
-  //       size={responsiveFontSize(2.5)}
-  //       color={AppColors.BTNCOLOURS}
-  //     />
-  //   ),
-  //   title: 'About',
-  //   mrgnTop: 0,
-  //   bottomWidth: 1,
-  // },
-  {
-    id: 6,
-    iconName: (
-      <AntDesign
-        name={'logout'}
-        size={responsiveFontSize(2.5)}
-        color={AppColors.BTNCOLOURS}
-      />
-    ),
-    title: 'Logout',
-    mrgnTop: 1,
-    bottomWidth: 0,
-    borderTopRadius: 10,
-    borderBottomRadius: 10,
-    navTo: 'Auth',
-  },
-];
+import {getWalletByUserId} from '../../../GlobalFunctions';
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -173,6 +41,156 @@ const Profile = () => {
   const {userData, isGoogleSignIn} = useSelector(state => state.user);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const {token} = useSelector(state => state.user);
+  const [walletDetails, setWalletDetails] = useState();
+  const focus = useIsFocused();
+ 
+  const profileMenus = [
+    {
+      id: 1,
+      iconName: (
+        <Fontisto
+          name={'player-settings'}
+          size={responsiveFontSize(2.5)}
+          color={AppColors.BTNCOLOURS}
+        />
+      ),
+      title: 'Settings',
+      mrgnTop: 0,
+      // bottomWidth: 1,
+      borderTopRadius: 10,
+      borderBottomRadius: 10,
+      navTo: 'Settings',
+    },
+    {
+      id: 2,
+      iconName: (
+        <FontAwesome5
+          name={'wallet'}
+          size={responsiveFontSize(2.5)}
+          color={AppColors.BTNCOLOURS}
+        />
+      ),
+      title: 'Payment Method',
+      mrgnTop: 2,
+      bottomWidth: 1,
+      borderTopRadius: 10,
+    },
+    {
+      id: 3,
+      iconName: (
+        <FontAwesome6
+          name={'money-bill-wave'}
+          size={responsiveFontSize(2.5)}
+          color={AppColors.BTNCOLOURS}
+        />
+      ),
+      title: 'Wallet',
+      mrgnTop: 0,
+      bottomWidth: 1,
+      rightTxt: `$ ${walletDetails?.balance || '0'}.00`,
+    },
+    {
+      id: 4,
+      iconName: (
+        <Ionicons
+          name={'shield-checkmark-outline'}
+          size={responsiveFontSize(2.5)}
+          color={AppColors.BTNCOLOURS}
+        />
+      ),
+      title: 'Privacy & Safety',
+      mrgnTop: 0,
+      bottomWidth: 1,
+      navTo: 'InstructionsScreen',
+    },
+    {
+      id: 5,
+      iconName: (
+        <Feather
+          name={'alert-circle'}
+          size={responsiveFontSize(2.5)}
+          color={AppColors.BTNCOLOURS}
+        />
+      ),
+      title: 'About',
+      mrgnTop: 0,
+      bottomWidth: 1,
+      navTo: 'InstructionsScreen',
+    },
+    {
+      id: 6,
+      iconName: (
+        <AntDesign
+          name="delete"
+          size={responsiveFontSize(2.5)}
+          color={AppColors.BTNCOLOURS}
+        />
+      ),
+      title: 'Delete Account',
+      mrgnTop: 0,
+      borderBottomRadius: 10,
+      // bottomWidth: 1,
+      navTo: 'Auth',
+    },
+    // {
+    //   id: 6,
+    //   iconName: (
+    //     <Fontisto
+    //       name={'bell'}
+    //       size={responsiveFontSize(2.5)}
+    //       color={AppColors.BTNCOLOURS}
+    //     />
+    //   ),
+    //   title: 'Notifications',
+    //   mrgnTop: 0,
+    //   bottomWidth: 0,
+    //   borderBottomRadius: 10,
+    // },
+    // {
+    //   id: 7,
+    //   iconName: (
+    //     <AntDesign
+    //       name={'message1'}
+    //       size={responsiveFontSize(2.5)}
+    //       color={AppColors.BTNCOLOURS}
+    //     />
+    //   ),
+    //   title: 'Help and Services',
+    //   mrgnTop: 2,
+    //   bottomWidth: 1,
+    //   borderTopRadius: 10,
+    // },
+    // {
+    //   id: 8,
+    //   iconName: (
+    //     <Feather
+    //       name={'alert-circle'}
+    //       size={responsiveFontSize(2.5)}
+    //       color={AppColors.BTNCOLOURS}
+    //     />
+    //   ),
+    //   title: 'About',
+    //   mrgnTop: 0,
+    //   bottomWidth: 1,
+    // },
+    {
+      id: 7,
+      iconName: (
+        <AntDesign
+          name={'logout'}
+          size={responsiveFontSize(2.5)}
+          color={AppColors.BTNCOLOURS}
+        />
+      ),
+      title: 'Logout',
+      mrgnTop: 1,
+      bottomWidth: 0,
+      borderTopRadius: 10,
+      borderBottomRadius: 10,
+      navTo: 'Auth',
+    },
+  ];
   // GoogleSignin.configure({});
   useEffect(() => {
     GoogleSignin.configure({
@@ -212,6 +230,22 @@ const Profile = () => {
       setIsLoading(false);
     }
   };
+
+  const getWalletHandler = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getWalletByUserId(token);
+      setWalletDetails(response.data);
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getWalletHandler();
+  }, [focus]);
+
   console.log('userdata===', userData);
   return (
     <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
@@ -261,6 +295,7 @@ const Profile = () => {
                 activeOpacity={0.6}
                 style={{
                   backgroundColor: '#eaeaea',
+
                   marginTop: responsiveHeight(item.mrgnTop),
                   paddingHorizontal: responsiveWidth(4),
                   borderTopLeftRadius: item.borderTopRadius
@@ -299,21 +334,36 @@ const Profile = () => {
                 }}>
                 <View
                   style={{
-                    borderBottomColor: AppColors.DARKGRAY,
-                    borderBottomWidth:
-                      item.bottomWidth === 1 ? item.bottomWidth : 0,
-                    paddingVertical: responsiveHeight(2),
                     flexDirection: 'row',
-                    gap: 10,
+                    justifyContent: 'space-between',
                     alignItems: 'center',
                   }}>
-                  {item.iconName}
-                  <AppText
-                    title={item?.title}
-                    textColor={AppColors.BLACK}
-                    textSize={2}
-                  />
+                  <View
+                    style={{
+                      //
+                      paddingVertical: responsiveHeight(2),
+                      flexDirection: 'row',
+                      gap: 10,
+                      alignItems: 'center',
+                    }}>
+                    {item.iconName}
+                    <AppText
+                      title={item?.title}
+                      textColor={AppColors.BLACK}
+                      textSize={2}
+                    />
+                  </View>
+                  {item.rightTxt ? (
+                    <AppText textSize={2.2} title={item.rightTxt} />
+                  ) : null}
                 </View>
+                <View
+                  style={{
+                    borderBottomWidth:
+                      item.bottomWidth === 1 ? item.bottomWidth : 0,
+                    borderBottomColor: AppColors.DARKGRAY,
+                  }}
+                />
               </TouchableOpacity>
             );
           }}

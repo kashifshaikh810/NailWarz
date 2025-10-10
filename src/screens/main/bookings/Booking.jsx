@@ -175,7 +175,9 @@ const Booking = () => {
               <FlatList
                 data={upcomingData}
                 contentContainerStyle={{gap: 10, margin: 10, marginTop: 0}}
-                renderItem={({item}) => {
+                renderItem={({item}) => 
+                  {
+                    console.log('iterj',item)
                   return (
                     <BookingCard
                       onCardPress={() =>
@@ -257,6 +259,7 @@ const Booking = () => {
                 data={upcomingData}
                 contentContainerStyle={{gap: 10, marginTop: 0}}
                 renderItem={({item}) => {
+                  console.log('itemjhg',item);
                   return (
                     <BookingCard
                       disabled

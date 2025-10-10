@@ -41,6 +41,7 @@ import Settings from '../screens/main/Settings';
 import InstructionsScreen from '../screens/main/InstructionsScreen';
 import Accessebility from '../screens/main/Accessebility';
 import Notification from '../screens/main/Notification';
+import Wallet from '../screens/main/Wallet';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -71,6 +72,7 @@ const Main = () => {
       <Stack.Screen name="FinalScoreBoard" component={FinalScoreBoard} />
       <Stack.Screen name="EditProfile" component={EditProfile} />
       <Stack.Screen name="MapViewScreen" component={MapView} />
+      <Stack.Screen name="Wallet" component={Wallet} />
       {/* <Stack.Screen name="Profile" component={MyTabs} /> */}
       <Stack.Screen name="SelectAnyTech" component={SelectAnyTech} />
       <Stack.Screen name="Settings" component={Settings} />
@@ -99,7 +101,7 @@ function MyTabs() {
         //       : 0,
         // },
         tabBarStyle: {
-          paddingBottom: insets.bottom || 10,
+          // paddingBottom: insets.bottom || 10,
           height: 60 + insets.bottom, // fixed safe height
         },
         tabBarIcon: ({focused, color, size}) => {

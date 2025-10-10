@@ -98,6 +98,7 @@ export const getTechnicianById = async (technicianId: string, date: string) => {
   };
   try {
     const response = await axios.request(config);
+    console.log('responsedasdfs.data', response.data);
     return response.data;
   } catch (error) {
     throw error;
@@ -344,7 +345,7 @@ export const sharePost = async (userId: string, postId: string, message: string)
     throw error;
   }
 };
-export const createBooking = async (userId: string, salonId: string, serviceId: string, technicianId: string, date: string, time: string) => {
+export const createBooking = async (userId: string, salonId: string, serviceId: string, technicianId: string, date: string, time: string,amount:number) => {
   let data = JSON.stringify({
     'userId': userId,
     'salonId': salonId,
@@ -352,6 +353,7 @@ export const createBooking = async (userId: string, salonId: string, serviceId: 
     'technicianId': technicianId,
     'date': date,
     'time': time,
+    'totalAmount': amount,
   });
 
   let config = {
@@ -665,7 +667,7 @@ export const createPayment = async (bookingId: string, amount: number, currency:
   let config = {
     method: 'post',
     maxBodyLength: Infinity,
-    url: `https://predemo.site/Nailwarz/api/createPaymentIntent`,
+    url: 'https://predemo.site/Nailwarz/api/createPaymentIntent',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
@@ -687,6 +689,48 @@ export const getAllNotifications = async (userId: string) => {
     maxBodyLength: Infinity,
     url: `${BaseUrl}getNotificationsByUserId?userId=${userId}`,
     headers: {},
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const getWalletByUserId = async (token: string) => {
+  let data = '';
+
+  let config = {
+    method: 'get',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}getWalletByUserId`,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const payWithWallet = async (userId: string, bookingId: string, bookingAmount: number) => {
+  let data = JSON.stringify({
+    'userId': userId,
+    'bookingId': bookingId,
+    'bookingAmount': bookingAmount,
+  });
+
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}paymentWithWallet`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
     data: data,
   };
   try {

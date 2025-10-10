@@ -129,7 +129,7 @@ const DownloadReceipt = ({route}) => {
 
   return (
     <SafeAreaView style={globalStyles.container}>
-      <AppHeader onPress={() => navigation.goBack()} title="Receipt" />
+      <AppHeader onPress={() => navigation.navigate('Home')} title="Receipt" />
       {isLoading ? (
         <View style={{flex: 0.4, justifyContent: 'center'}}>
           <ActivityIndicator size={40} color={AppColors.BTNCOLOURS} />

@@ -26,6 +26,8 @@ import AppButton from '../../components/AppButton';
 import {
   createBooking,
   getSaloonById,
+  getWalletByUserId,
+  payWithWallet,
   updateBooking,
 } from '../../GlobalFunctions';
 import moment from 'moment';
@@ -47,11 +49,13 @@ const BookingSummary = ({route}) => {
   const [paymentType, setPaymentType] = useState('online');
   const [saloonData, setSaloonData] = useState();
   const {_id} = useSelector(state => state?.user?.userData);
+
   const [isLoading, setIsLoading] = useState(false);
   const [saloonLoading, setSaloonLoading] = useState(false);
   const [visibleConfirmationModal, setVisibleConfirmationModal] = useState({
     id: 0,
   });
+  const [showPaymentFailedModal, setShowPaymentFailedModal] = useState(false);
   const {
     saloonId,
     selectedTechnician,
@@ -68,8 +72,13 @@ const BookingSummary = ({route}) => {
   } = route?.params?.data;
   const time12hr = selectedTime?.value;
   const time24hr = moment(time12hr, ['h:mm A']).format('HH:mm');
+  const [activePaymentMethod, setActivePaymentMethod] = useState(1);
   const [bookingId, setBookingId] = useState();
-  console.log('serviceId', serviceId);
+  const [walletDetails, setWalletDetails] = useState();
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [isPayWithWallet, setIsPayWithWallet] = useState(false);
+  const {token} = useSelector(state => state.user);
+  console.log('walletDetails', walletDetails);
   console.log('selectedDate', selectedDate);
   console.log('route?.params', route?.params);
   console.log('selectedTime===>>>>>>', selectedTime);
@@ -84,6 +93,14 @@ const BookingSummary = ({route}) => {
       date: `${selectedDay} ${selectedDate} at ${selectedTime?.value}`,
     },
     {id: 2, title: 'Nail Technician', date: `${technicianName} - 30 Mins`},
+  ];
+  const paymentDetails = [
+    {id: 1, title: 'Pay Online Now', subTitle: 'Secure your booking instantly'},
+    {
+      id: 2,
+      title: 'Pay With Wallet',
+      subTitle: 'Pay conveniently using your wallet balance',
+    },
   ];
   const getSaloonByIdHandler = async () => {
     setSaloonLoading(true);
@@ -112,7 +129,42 @@ const BookingSummary = ({route}) => {
       return ShowToast('error', error?.response?.data?.message);
     }
   };
+  const getWalletHandler = async () => {
+    try {
+      const response = await getWalletByUserId(token);
+      setWalletDetails(response.data);
+    } catch (error) {
+      console.log('error', error);
+    }
+  };
+  const payWithWalletHandler = async () => {
+    setPaymentLoading(true);
+    try {
+      const response = await payWithWallet(_id, bookingId, price);
+      setPaymentLoading(false);
+      if (response.success) {
+        // ShowToast('success', response.message);
+        setIsPayWithWallet(false);
+        setVisibleConfirmationModal(true);
+        getWalletHandler();
+      } else {
+        setIsPayWithWallet(false);
+        setShowPaymentFailedModal(true);
+      }
+      console.log('response', response);
+    } catch (error) {
+      setPaymentLoading(false);
+      setIsPayWithWallet(false);
+      setShowPaymentFailedModal(true);
+      ShowToast('error', error?.response?.data?.message);
+    }
+  };
   const createBookingHandler = async () => {
+    if (activePaymentMethod === 2) {
+      if (price > walletDetails?.balance) {
+        return ShowToast('error', 'Insufficient Wallet Balance');
+      }
+    }
     setIsLoading(true);
     try {
       const response = await createBooking(
@@ -122,17 +174,28 @@ const BookingSummary = ({route}) => {
         selectedTechnician,
         selectedBookingDate,
         selectedTime.value,
+        price,
       );
       setIsLoading(false);
       console.log('response', response);
 
       if (response?.success) {
         if (!reschedule) {
-          navigation.navigate('SelectPaymentMethod', {
-            bookingId: response?.data?._id,
-            price: price,
-            pay: true,
-          });
+          if (activePaymentMethod === 1) {
+            navigation.navigate('SelectPaymentMethod', {
+              bookingId: response?.data?._id,
+              price: price,
+              pay: true,
+            });
+          } else {
+            // navigation.navigate('Wallet', {
+            //   bookingId: response?.data?._id,
+            //   price: price,
+            //   userId: _id,
+            // });
+            setBookingId(response?.data?._id);
+            setIsPayWithWallet(true);
+          }
         } else {
           setBookingId(response?.data?._id);
           setVisibleConfirmationModal(true);
@@ -149,6 +212,10 @@ const BookingSummary = ({route}) => {
   };
   useEffect(() => {
     getSaloonByIdHandler();
+  }, []);
+
+  useEffect(() => {
+    getWalletHandler();
   }, []);
   return (
     <SafeAreaView style={globalStyles.container}>
@@ -253,48 +320,67 @@ const BookingSummary = ({route}) => {
               />
 
               <LineBreak space={1.5} />
-              {/* <FlatList
-              data={paymentDetails}
-              contentContainerStyle={{gap: 10}}
-              renderItem={({item}) => {
-                return (
-                );
-              }}
-            /> */}
-              <TouchableOpacity
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
+              <FlatList
+                data={paymentDetails}
+                contentContainerStyle={{gap: 10}}
+                renderItem={({item}) => {
+                  return (
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                      onPress={() => {
+                        setActivePaymentMethod(item.id);
+                      }}>
+                      <View>
+                        <AppText
+                          title={item.title}
+                          textSize={2}
+                          textColor={AppColors.BLACK}
+                        />
+                        <AppText
+                          title={item.subTitle}
+                          textSize={1.7}
+                          textColor={AppColors.DARKGRAY}
+                        />
+                      </View>
+                      <Fontisto
+                        name={
+                          item.id === activePaymentMethod
+                            ? 'radio-btn-active'
+                            : 'radio-btn-passive'
+                        }
+                        size={responsiveFontSize(2.5)}
+                        color={AppColors.BLUE}
+                      />
+                    </TouchableOpacity>
+                  );
                 }}
-                // onPress={() => {
-                //   item?.id === 1
-                //     ? navigation.navigate('SelectPaymentMethod')
-                //     : null;
-                //   setPaymentType({id: 2});
-                // }}
-              >
-                <View>
-                  <AppText
-                    title="Pay Online Now"
-                    textSize={2}
-                    textColor={AppColors.BLACK}
-                  />
-                  <AppText
-                    title="Secure your booking instantly"
-                    textSize={1.7}
-                    textColor={AppColors.DARKGRAY}
-                  />
-                </View>
-                <Fontisto
-                  name={'radio-btn-active'}
-                  size={responsiveFontSize(2.5)}
-                  color={AppColors.BLUE}
-                />
-              </TouchableOpacity>
+              />
             </View>
           )}
-
+          {activePaymentMethod === 2 ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: responsiveHeight(1.5),
+              }}>
+              <AppText
+                textSize={2}
+                textColor={AppColors.BLACK}
+                title="Current Balance"
+              />
+              <AppText
+                title={`$ ${walletDetails?.balance || '0'}.00`}
+                textSize={1.7}
+                textColor={AppColors.DARKGRAY}
+              />
+            </View>
+          ) : null}
           <LineBreak space={4} />
 
           <AppText
@@ -379,16 +465,23 @@ const BookingSummary = ({route}) => {
 
           <AppButton
             title={
-              isLoading ? (
+              isLoading || paymentLoading ? (
                 <ActivityIndicator size={'large'} color={AppColors.WHITE} />
               ) : reschedule ? (
                 'Reschedule'
+              ) : isPayWithWallet ? (
+                'Pay Now With Wallet'
               ) : (
                 'Complete Booking'
               )
             }
             handlePress={
-              reschedule ? updateBookingHandler : createBookingHandler
+              // payWithWalletHandler(response?.data?._id, price);
+              reschedule
+                ? updateBookingHandler
+                : isPayWithWallet
+                ? payWithWalletHandler
+                : createBookingHandler
             }
             // bgColor={AppColors.DARKGRAY}
             // textColor={AppColors.WHITE}
@@ -396,6 +489,46 @@ const BookingSummary = ({route}) => {
 
           <LineBreak space={2} />
         </View>
+        <ConfirmationModal
+          iconName={'check'}
+          title={'You nail appointment is confirmed!'}
+          subTitle={
+            'Thank you for your payment. We look forward to seeing you soon.'
+          }
+          buttonOneTitle={'View Receipt'}
+          buttonTwoTitle={'Back to Home'}
+          visible={visibleConfirmationModal}
+          // setVisible={() => {
+          //   navigation.navigate('DownloadReceipt');
+          //   setVisibleConfirmationModal(false);
+          // }}
+          handleBackPress={() => {
+            navigation.navigate('Home');
+            setVisibleConfirmationModal(false);
+          }}
+          setVisible={() => {
+            navigation.navigate('DownloadReceipt', {bookingId});
+            setVisibleConfirmationModal(false);
+          }}
+        />
+
+        <ConfirmationModal
+          iconName={'close'}
+          title={'Payment Failed'}
+          subTitle={
+            'We couldn"t process your payment. Please check your card details or try another payment method.'
+          }
+          handleBackPress={() => {
+            setShowPaymentFailedModal(false);
+          }}
+          setVisible={() => {
+            setShowPaymentFailedModal(false);
+          }}
+          buttonOneTitle={'Try Again'}
+          buttonTwoTitle={'Change Payment Method'}
+          isChangeColor={true}
+          visible={showPaymentFailedModal}
+        />
       </ScrollView>
     </SafeAreaView>
   );

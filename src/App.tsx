@@ -10,11 +10,16 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { setupNotificationListeners } from './assets/Utils/NotificationService';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import SystemNavigationBar from 'react-native-system-navigation-bar';
+
 const App = () => {
   useEffect(() => {
     setupNotificationListeners(); // 👈 single entry
   }, []);
-
+  useEffect(() => {
+    // hide nav bar when app loads
+    SystemNavigationBar.stickyImmersive();
+  }, []);
   return (
     <SafeAreaProvider>
       <Provider store={store}>
