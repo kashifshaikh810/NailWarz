@@ -22,7 +22,7 @@ const Notification = ({navigation}) => {
   const {_id} = useSelector(state => state?.user?.userData);
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
+  console.log('data', data);
   const getAllNotificationHandler = async () => {
     setIsLoading(true);
     try {
@@ -60,17 +60,21 @@ const Notification = ({navigation}) => {
                 return (
                   <TouchableOpacity
                     onPress={() => {
-                      navigation.navigate('StylistSelect', {
-                        data: {
-                          saloonId: item?.salonId?._id,
-                          serviceId: item?.bookingId?.serviceId?._id,
-                          serviceName: item?.bookingId?.serviceId?.serviceName,
-                          price: item?.bookingId?.serviceId?.price,
-                          technicians: item?.bookingId?.serviceId?.technicianId,
-                          reschedule: true,
-                          myBookingId: item?.bookingId?._id,
-                        },
-                      });
+                      item?.type === 'Reschedule'
+                        ? navigation.navigate('StylistSelect', {
+                            data: {
+                              saloonId: item?.salonId?._id,
+                              serviceId: item?.bookingId?.serviceId?._id,
+                              serviceName:
+                                item?.bookingId?.serviceId?.serviceName,
+                              price: item?.bookingId?.serviceId?.price,
+                              technicians:
+                                item?.bookingId?.serviceId?.technicianId,
+                              reschedule: true,
+                              myBookingId: item?.bookingId?._id,
+                            },
+                          })
+                        : null;
                     }}
                     style={{
                       borderWidth: 1,
