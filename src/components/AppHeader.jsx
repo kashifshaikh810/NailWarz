@@ -29,6 +29,8 @@ const AppHeader = ({
   title,
   isTextAlignCentered,
   style,
+  showHeartIcon,
+  giveGap = false,
   isLogo = false,
 }) => {
   console.log('sifvrt', isFvrt);
@@ -44,7 +46,7 @@ const AppHeader = ({
           justifyContent:
             title && !isTextAlignCentered ? 'flex-start' : 'space-between',
           alignItems: 'center',
-          paddingVertical: responsiveHeight(2),
+          // paddingVertical: responsiveHeight(2),
           paddingHorizontal: responsiveHeight(2),
         },
         style,
@@ -56,12 +58,18 @@ const AppHeader = ({
           color={'red'}
         />
       </TouchableOpacity>
-      <AppText textColor={'red'} title={title} textSize={2.4} textFontWeight />
-      {title ? (
+      <AppText
+        mrgnLeft={giveGap ? 3.5 : 1}
+        textColor={'red'}
+        title={title}
+        textSize={2.3}
+        textFontWeight
+      />
+      {title && !showHeartIcon ? (
         <View />
       ) : isFvrtLoading ? (
         <ActivityIndicator size={30} color={AppColors.BTNCOLOURS} />
-      ) : (
+      ) : showHeartIcon ? (
         <TouchableOpacity
           onPress={handleFavouritePress}
           style={{
@@ -76,7 +84,7 @@ const AppHeader = ({
             color={isFvrt ? AppColors.BTNCOLOURS : AppColors.BLACK}
           />
         </TouchableOpacity>
-      )}
+      ) : null}
       {isBtn ? (
         <View style={{alignItems: 'flex-end', flex: 1}}>
           <AppButton handlePress={handleBtnPress} width={25} title="Post" />

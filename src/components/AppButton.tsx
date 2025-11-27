@@ -18,7 +18,7 @@ type props = {
   style?: any,
   txtSize?: number,
 };
-const AppButton = ({ title, style, txtSize = 2.4, disabled, width, marginHorizontal, handlePress, bgColor, textColor, borderWidth, borderColor }: props) => {
+const AppButton = ({ title, style, txtSize = 2.2, disabled, width, marginHorizontal, handlePress, bgColor, textColor, borderWidth, borderColor }: props) => {
   return (
     <TouchableOpacity
       disabled={disabled}

@@ -61,14 +61,14 @@ const AllReviews = ({ navigation, route }) => {
                       color={AppColors.RED}
                     />
                   </TouchableOpacity>
-                  <AppText title="Reviews" textFontWeight textSize={2.5} textColor={AppColors.RED} />
+                  <AppText title="Reviews" textFontWeight textSize={2.2} textColor={AppColors.RED} />
                 </View>
 
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <FontAwesome
                     name={'star'}
-                    size={responsiveFontSize(2.7)}
-                    color={AppColors.PEACHCOLOUR}
+                    size={18}
+                    color={AppColors.RED}
                   />
                   <AppText
                     title={`${avgAndTotalRatings?.averageRating} (${avgAndTotalRatings?.totalReviews})`}

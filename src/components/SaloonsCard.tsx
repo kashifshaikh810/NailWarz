@@ -13,6 +13,8 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
 import { ImageBaseUrl } from '../BaseUrl';
+import StarRating from 'react-native-star-rating-widget';
+import moment from 'moment';
 
 type props = {
   img?: any;
@@ -29,6 +31,7 @@ type props = {
   saloonId?: string;
   showDeleteCard?: boolean;
   textWidth?: number;
+  workingDays?: any;
   setShowRemoveModal?: any;
 };
 
@@ -46,11 +49,15 @@ const SaloonsCard = ({
   isShowDeleteIcon,
   textWidth,
   showDeleteCard = true,
+  workingDays,
   setShowRemoveModal,
 }: props) => {
   const navigation = useNavigation();
   const translateX = useRef(new Animated.Value(0)).current;
   const isOpen = isShowDeleteIcon?.id === itemId;
+  console.log('workingDays,,,,,,,,', workingDays);
+  console.log('workingDays?.isActive,,,,,,,,', workingDays?.isActive);
+  const roundedRating = Math.round(Rating * 2) / 2;
 
   const handlePress = () => {
     if (!isOpen) {
@@ -103,11 +110,11 @@ const SaloonsCard = ({
             <Image
               source={{ uri: `${ImageBaseUrl}${img}` }}
               style={{
-                height: responsiveHeight(10),
-                width: responsiveHeight(13),
+                height: responsiveHeight(12),
+                width: responsiveHeight(12),
                 // resizeMode: 'contain',
                 borderRadius: 10,
-                marginRight: 10,
+                marginRight: responsiveHeight(2),
               }}
             />
             <View
@@ -120,7 +127,7 @@ const SaloonsCard = ({
                 <AppText
                   title={title}
                   textColor={AppColors.BLACK}
-                  textSize={2.5}
+                  textSize={2.1}
                   textFontWeight
                 />
                 <View
@@ -133,24 +140,36 @@ const SaloonsCard = ({
                   <AppText
                     title={location}
                     textwidth={textWidth}
-                    textSize={2}
+                    numberOfLines={1}
+                    textSize={1.7}
                     textColor={AppColors.DARKGRAY}
                   />
                 </View>
-                <View
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Entypo
-                    name={'star'}
-                    size={responsiveFontSize(2.5)}
-                    color={'#FFD33C'}
-                  />
-                  <AppText title={Rating} textSize={2} textFontWeight />
-                  <AppText
-                    title={`(${TotalNoOfRating})`}
-                    textSize={1.5}
-                    textColor={AppColors.DARKGRAY}
-                  />
-                </View>
+                {roundedRating ? (
+                  <View
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: responsiveHeight(1.5) }}>
+                    <StarRating
+                      starSize={responsiveHeight(2.2)}
+                      color={AppColors.RED}
+                      rating={roundedRating}
+                      maxStars={5}
+                      starStyle={{ marginHorizontal: 1.5 }}
+                      onChange={() => console.log('first')}
+                    />
+                    <AppText
+                      title={`${TotalNoOfRating}`}
+                      textSize={2}
+                      textColor="#989898"
+                    />
+                  </View>
+                ) : null}
+
+                <AppText
+                  title={workingDays?.isActive ? `Open Until ${moment(workingDays?.endTime, "HH:mm").format("hh:mm A")}` : 'Closed'}
+                  textSize={1.7}
+                  textColor={AppColors.RED}
+                />
+
               </View>
             </View>
           </View>

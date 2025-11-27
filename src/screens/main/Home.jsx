@@ -42,6 +42,7 @@ import {
 import {editProfile, ShowToast} from '../../GlobalFunctions/auth';
 import {useDispatch, useSelector} from 'react-redux';
 import {setUserData} from '../../Redux/Slices';
+import moment from 'moment';
 
 const Home = () => {
   const [serviceSelected, setServiceSelect] = useState(0);
@@ -56,16 +57,24 @@ const Home = () => {
   console.log('userData', userData);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoading2, setIsLoading2] = useState(false);
-  const [address, setAddress] = useState('');
   const [searchedSalon, setSearchedSalon] = useState();
   const [isNearby, setIsNearby] = useState(true);
+  const [address, setAddress] = useState('');
   const [latLng, setLatLng] = useState({
     latitude: 37.4219983,
     longitude: -122.084,
   });
   const [saloons, setSaloons] = useState([]);
-  console.log('saloons', saloons);
-  console.log('currentCategory', currentCategory);
+  console.log('isNearby', isNearby);
+  const currentDate = new Date();
+  const momentDay = moment().day();
+  const index = momentDay === 0 ? 6 : momentDay - 1;
+  console.log('current', moment(currentDate).day());
+  console.log('momentDay', momentDay);
+  console.log(
+    'currentCategory',
+    saloons[0]?.workingDays[moment(currentDate).day() - 1],
+  );
 
   useEffect(() => {
     const initLocation = async () => {
@@ -179,7 +188,7 @@ const Home = () => {
     } catch (error) {
       setIsLoading2(false);
       ShowToast('error', 'Failed to fetch saloons');
-      console.log('getSaloonsHandler error:', error);
+      console.log('getSaloonsHandler error:', error.response);
     }
   };
 
@@ -266,13 +275,13 @@ const Home = () => {
               size={responsiveFontSize(5)}
             />
             <View>
-              <AppText textColor={'#D1D1D1'} title="Location" textSize={2} />
+              <AppText textColor={'#D1D1D1'} title="Location" textSize={1.9} />
               <AppText
                 textColor={'#D1D1D1'}
                 title={address}
-                textwidth={45}
-                numberOfLines={1}
-                textSize={1.9}
+                textwidth={60}
+                numberOfLines={2}
+                textSize={1.8}
                 textFontWeight
               />
             </View>
@@ -325,51 +334,51 @@ const Home = () => {
               padding: 20,
               marginTop: 20,
             }}>
-            <LinearGradient
-              colors={[
-                AppColors.WHITE,
-                AppColors.BLUE,
-                AppColors.BLUE,
-                AppColors.BLUE,
-              ]}
-              end={{x: 0, y: 1}}
+            <View
               style={{
                 position: 'absolute',
-                zIndex: 1,
-                width: responsiveWidth(90),
-                height: responsiveHeight(20),
-                opacity: 0.5,
-              }}
-            />
-            <View style={{position: 'absolute', zIndex: 2, padding: 20}}>
-              <AppText
-                title="Morning Special!"
-                textSize={2}
-                textFontWeight
-                textColor={AppColors.WHITE}
-              />
-              <AppText
-                title="Get 20% Off"
-                textSize={3}
-                textFontWeight
-                textColor={AppColors.WHITE}
-              />
-              <AppText
-                title="On All Nail Service Between 9-10 AM."
-                textSize={1.5}
-                textColor={AppColors.WHITE}
-              />
+                zIndex: 2,
+                padding: 20,
+              }}>
+              <View style={{gap: responsiveHeight(0.1)}}>
+                <AppText
+                  title="Compete For Nail Champion"
+                  textSize={2}
+                  styles={{fontWeight: '800'}}
+                  textColor={AppColors.WHITE}
+                />
+                <AppText
+                  title="Get 20% Off"
+                  textSize={2.5}
+                  textColor={AppColors.WHITE}
+                  styles={{fontWeight: '900'}}
+                />
+                <AppText textSize={1.7} textColor={AppColors.WHITE}>
+                  Get your next manicure for{' '}
+                  <Text
+                    style={{
+                      fontWeight: 'bold',
+                      fontSize: responsiveFontSize(1.7),
+                    }}>
+                    FREE
+                  </Text>{' '}
+                  on us!
+                </AppText>
+              </View>
               <TouchableOpacity
+                onPress={() => navigation.navigate('BattleForm')}
                 style={{
                   backgroundColor: AppColors.WHITE,
                   alignSelf: 'flex-start',
                   padding: 10,
-                  borderRadius: 10,
-                  marginTop: 10,
+                  paddingHorizontal: responsiveHeight(2),
+                  borderRadius: responsiveHeight(4),
+                  marginTop: responsiveHeight(1.5),
                 }}>
                 <AppText
-                  title="Book Now"
-                  textColor={AppColors.BLACK}
+                  styles={{fontWeight: '900'}}
+                  title="Enter the War"
+                  textColor="#D80F0F"
                   textSize={2}
                 />
               </TouchableOpacity>
@@ -381,7 +390,7 @@ const Home = () => {
               <AppText
                 title="Services"
                 textColor={AppColors.BLACK}
-                textSize={3}
+                textSize={2.5}
                 textFontWeight
                 styles={{marginLeft: 20}}
               />
@@ -425,7 +434,7 @@ const Home = () => {
                   /> */}
                         <AppText
                           title={item?.categoryName}
-                          textSize={2}
+                          textSize={1.9}
                           textColor={logic ? AppColors.WHITE : '#A0A0A0'}
                         />
                       </TouchableOpacity>
@@ -445,9 +454,9 @@ const Home = () => {
                 marginHorizontal: 20,
               }}>
               <AppText
-                title={isNearby ? 'Nearby Salons' : 'Salons'}
+                title={isNearby ? 'Salons Near You' : 'Salons'}
                 textColor={AppColors.BLACK}
-                textSize={3}
+                textSize={2.5}
                 textFontWeight
               />
 
@@ -464,7 +473,7 @@ const Home = () => {
                   <AppText
                     title="View on Map"
                     textColor={AppColors.BLUE}
-                    textSize={2}
+                    textSize={1.9}
                   />
                 </View>
               </TouchableOpacity>
@@ -492,8 +501,10 @@ const Home = () => {
                       saloonId={item?._id}
                       Rating={item?.avgRating}
                       TotalNoOfRating={item?.totalReviews}
+                      workingDays={item?.workingDays[index]}
                       img={item?.image?.length && item?.image[0]}
-                      location={item?.location?.locationName}
+                      location={item?.bussinessAddress}
+                      textWidth={48}
                     />
                   );
                 }}

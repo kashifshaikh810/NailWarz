@@ -78,7 +78,9 @@ const BookingSummary = ({route}) => {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [isPayWithWallet, setIsPayWithWallet] = useState(false);
   const {token} = useSelector(state => state.user);
-  console.log('walletDetails', walletDetails);
+  const momentDay = moment().day();
+  const index = momentDay === 0 ? 6 : momentDay - 1;
+  console.log('saloonData', saloonData);
   console.log('selectedDate', selectedDate);
   console.log('route?.params', route?.params);
   console.log('selectedTime===>>>>>>', selectedTime);
@@ -140,7 +142,7 @@ const BookingSummary = ({route}) => {
   const payWithWalletHandler = async () => {
     setPaymentLoading(true);
     try {
-      const response = await payWithWallet(_id, bookingId, price);
+      const response = await payWithWallet(_id, bookingId, price + 11);
       setPaymentLoading(false);
       if (response.success) {
         // ShowToast('success', response.message);
@@ -174,7 +176,7 @@ const BookingSummary = ({route}) => {
         selectedTechnician,
         selectedBookingDate,
         selectedTime.value,
-        price,
+        price + 11,
       );
       setIsLoading(false);
       console.log('response', response);
@@ -249,6 +251,7 @@ const BookingSummary = ({route}) => {
                 KM: 2,
                 Rating: saloonData?.avgRating,
                 TotalNoOfRating: saloonData?.totalReviews,
+                workingDays: saloonData?.workingDays[index],
               },
             ]}
             contentContainerStyle={{gap: 10}}
@@ -258,10 +261,12 @@ const BookingSummary = ({route}) => {
                   showDeleteCard={false}
                   title={item.title}
                   KM={item.KM}
-                  textWidth={55}
+                  textWidth={48}
                   saloonId={saloonId}
                   Rating={item.Rating}
-                  TotalNoOfRating={item.TotalNoOfRating}
+                  TotalNoOfRating={item?.TotalNoOfRating}
+                  workingDays={item?.workingDays}
+                  // workingDays={item?.workingDays[index]}
                   img={item.img}
                   location={item.location}
                 />
@@ -281,7 +286,7 @@ const BookingSummary = ({route}) => {
 
           <AppText
             title="Booking details"
-            textSize={2.5}
+            textSize={2.2}
             textColor={AppColors.BLACK}
             textFontWeight
           />
@@ -314,7 +319,7 @@ const BookingSummary = ({route}) => {
               <LineBreak space={4} />
               <AppText
                 title="Payment"
-                textSize={2.5}
+                textSize={2.2}
                 textColor={AppColors.BLACK}
                 textFontWeight
               />
@@ -337,7 +342,7 @@ const BookingSummary = ({route}) => {
                       <View>
                         <AppText
                           title={item.title}
-                          textSize={2}
+                          textSize={1.9}
                           textColor={AppColors.BLACK}
                         />
                         <AppText
@@ -385,7 +390,7 @@ const BookingSummary = ({route}) => {
 
           <AppText
             title="Price Details"
-            textSize={2.5}
+            textSize={2.2}
             textColor={AppColors.BLACK}
             textFontWeight
           />
@@ -401,7 +406,7 @@ const BookingSummary = ({route}) => {
           }}
         /> */}
 
-          <TouchableOpacity
+          <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -410,17 +415,57 @@ const BookingSummary = ({route}) => {
             }}>
             <AppText
               title={serviceName}
-              textSize={2}
+              textSize={1.9}
               textColor={AppColors.DARKGRAY}
               textFontWeight={true}
             />
             <AppText
               title={`$${price}`}
-              textSize={2}
+              textSize={1.9}
               textColor={AppColors.DARKGRAY}
               textFontWeight={true}
             />
-          </TouchableOpacity>
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 10,
+            }}>
+            <AppText
+              title="Platform Charges"
+              textSize={1.9}
+              textColor={AppColors.DARKGRAY}
+              textFontWeight={true}
+            />
+            <AppText
+              title="$5"
+              textSize={1.9}
+              textColor={AppColors.DARKGRAY}
+              textFontWeight={true}
+            />
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 10,
+            }}>
+            <AppText
+              title="Discount"
+              textSize={1.9}
+              textColor={AppColors.DARKGRAY}
+              textFontWeight={true}
+            />
+            <AppText
+              title="$6"
+              textSize={1.9}
+              textColor={AppColors.DARKGRAY}
+              textFontWeight={true}
+            />
+          </View>
           <TouchableOpacity
             style={{
               flexDirection: 'row',
@@ -430,13 +475,13 @@ const BookingSummary = ({route}) => {
             }}>
             <AppText
               title={'Total'}
-              textSize={2.5}
+              textSize={2}
               textColor={AppColors.BLACK}
               textFontWeight={true}
             />
             <AppText
-              title={`$${price}`}
-              textSize={2.5}
+              title={`$${price + 11}`}
+              textSize={2}
               textColor={AppColors.BLACK}
               textFontWeight={true}
             />
@@ -531,6 +576,9 @@ const BookingSummary = ({route}) => {
         />
       </ScrollView>
     </SafeAreaView>
+    // <View>
+    //   <Text>kfdj</Text>
+    // </View>
   );
 };
 

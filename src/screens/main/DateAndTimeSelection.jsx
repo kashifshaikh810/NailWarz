@@ -277,7 +277,7 @@ const DateAndTimeSelection = ({route}) => {
           <AppText
             mrgnLeft={2}
             title="Select Date"
-            textSize={2.5}
+            textSize={2.2}
             textColor={AppColors.BLACK}
             textFontWeight
           />
@@ -385,7 +385,7 @@ const DateAndTimeSelection = ({route}) => {
               <AppText
                 mrgnLeft={2}
                 title="Select Time"
-                textSize={2.5}
+                textSize={2.2}
                 textColor={AppColors.BLACK}
                 textFontWeight
               />
@@ -418,7 +418,7 @@ const DateAndTimeSelection = ({route}) => {
                     }>
                     <AppText
                       title={item.time}
-                      textSize={2}
+                      textSize={1.9}
                       textColor={AppColors.BLACK}
                       textFontWeight
                     />

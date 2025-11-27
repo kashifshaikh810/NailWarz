@@ -28,6 +28,7 @@ import SwipeableItem, {SwipeableItemProps} from 'react-native-swipeable-item';
 import AppText from '../../../components/AppTextComps/AppText';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {setUserData} from '../../../Redux/Slices';
+import moment from 'moment';
 
 const Favourites = () => {
   const navigation = useNavigation();
@@ -40,10 +41,12 @@ const Favourites = () => {
     shown: false,
   });
   const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const momentDay = moment().day();
+  const index = momentDay === 0 ? 6 : momentDay - 1;
   const isFocus = useIsFocused();
   const [saloonId, setSaloonId] = useState('');
   const dispatch = useDispatch();
-  console.log('userData?._id', userData?._id);
+  console.log('allSaloons', allSaloons);
   const getAllFvrts = async () => {
     setIsLoading(true);
     try {
@@ -86,15 +89,15 @@ const Favourites = () => {
     <ScrollView
       contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader onPress={() => navigation.goBack()} title="Favorites" />
-         <View
-                style={{
-                  backgroundColor: '#B4B4B4',
-                  height: 0.5,
-                  elevation: 5,
-                  width: '100%',
-                  marginBottom:responsiveHeight(1.5),
-                }}
-              />
+      <View
+        style={{
+          backgroundColor: '#B4B4B4',
+          height: 0.5,
+          elevation: 5,
+          width: '100%',
+          marginBottom: responsiveHeight(1.5),
+        }}
+      />
       {/* <LineBreak space={2} /> */}
       <RemoveFavouritesModal
         loading2={loading2}
@@ -128,6 +131,7 @@ const Favourites = () => {
                 renderUnderlayLeft={() => (
                   <TouchableOpacity
                     onPress={() => {
+                      console.log('iteeem', item);
                       // ✅ Use a short delay to prevent swipe conflict
                       setShowRemoveModal(true);
                       setSaloonId(item?._id);
@@ -136,7 +140,7 @@ const Favourites = () => {
                       backgroundColor: '#FA52521A',
                       // flex: 1,
                       marginTop: responsiveHeight(1.4),
-                      height: responsiveHeight(15.2),
+                      height: responsiveHeight(17.2),
                       alignSelf: 'flex-end',
                       justifyContent: 'center',
                       alignItems: 'center',
@@ -165,8 +169,12 @@ const Favourites = () => {
                   Rating={item.avgRating}
                   TotalNoOfRating={item.totalReviews}
                   img={item?.image[0]}
-                  location={item.locationName}
+                  textWidth={48}
+                  location={item?.bussinessAddress}
                   itemId={item.userData?._id}
+                  workingDays={
+                    item?.workingDays ? item?.workingDays[index] : null
+                  }
                   isShowDeleteIcon={isShowDeleteIcon}
                   setIsShowDeleteIcon={setIsShowDeleteIcon}
                   setShowRemoveModal={setShowRemoveModal}

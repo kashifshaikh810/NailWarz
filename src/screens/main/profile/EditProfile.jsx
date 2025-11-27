@@ -124,7 +124,7 @@ const EditProfile = () => {
 
           <LineBreak space={7} />
 
-          <View style={{gap: responsiveHeight(1)}}>
+          <View style={{gap: responsiveHeight(1), width: '100%'}}>
             <AppText title="User Name" textSize={1.9} textFontWeight={400} />
             <AppTextInput
               onChangeText={value => setUserName(value)}

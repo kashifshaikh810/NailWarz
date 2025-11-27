@@ -39,7 +39,9 @@ import {setUserData} from '../../Redux/Slices';
 import ReviewsCard from '../../components/ReviewsCard';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
-
+import StarRating from 'react-native-star-rating-widget';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import moment from 'moment';
 const cardData = [
   {id: 1, colorName: 'Solid Color', amount: '$10.00', time: '30 Mins'},
   {
@@ -65,9 +67,17 @@ const HomeDetails = ({route}) => {
   const [allReviews, setAllReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoading2, setIsLoading2] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [expandedText, setExpandedText] = useState(false);
+  const [activeDays, setActiveDays] = useState([]);
+  const [firstDay, setFirstDay] = useState(null);
+
   // console.log('selectedService.price', selectedService.price);
-  console.log('saloonDatasaloonData', saloonData);
+  console.log('saloonData', saloonData);
   const dispatch = useDispatch();
+  // const roundedRating = 2;
+  const roundedRating = Math.round(saloonData?.avgRating * 2) / 2;
+
   const handleToggleService = item => {
     if (selectedService?._id === item._id) {
       // Unselect if already selected
@@ -98,8 +108,15 @@ const HomeDetails = ({route}) => {
     getSaloonByIdHandler();
   }, []);
   useEffect(() => {
-    if (saloonData?.categoryId?.length > 0) {
-      setMenuData(saloonData.categoryId);
+    if (saloonData) {
+      const active = saloonData?.workingDays?.filter(d => d?.isActive);
+      setActiveDays(active);
+      setFirstDay(active[0]); // ✔ correct
+    }
+  }, [saloonData]);
+  useEffect(() => {
+    if (saloonData?.salonCategoryId?.length > 0) {
+      setMenuData(saloonData.salonCategoryId);
       // setMenu({_id: saloonData.categoryId[0]._id}); // 👈 make first one active
     }
   }, [saloonData]);
@@ -155,7 +172,7 @@ const HomeDetails = ({route}) => {
     getAllReviewsHandler();
   }, []);
   const formatTimeTo12Hour = time24 => {
-    const [hourStr, minuteStr] = time24.split(':');
+    const [hourStr, minuteStr] = time24?.split(':');
     let hour = parseInt(hourStr, 10);
     const minute = parseInt(minuteStr, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -186,6 +203,10 @@ const HomeDetails = ({route}) => {
         <AppHeader
           isFvrt={isFvrt}
           isFvrtLoading={fvrtLoading}
+          title="Salon Details"
+          showHeartIcon
+          giveGap={3.5}
+          style={{justifyContent: 'space-between'}}
           handleFavouritePress={addToFavouriteHandler}
           onPress={() => navigation.goBack()}
         />
@@ -196,7 +217,7 @@ const HomeDetails = ({route}) => {
         ) : (
           <View
             style={{
-              marginVertical: responsiveHeight(2),
+              marginBottom: responsiveHeight(2),
               backgroundColor: AppColors.WHITE,
             }}>
             <View style={{paddingHorizontal: responsiveHeight(2)}}>
@@ -212,8 +233,10 @@ const HomeDetails = ({route}) => {
                       }}
                       style={{
                         alignSelf: 'center',
-                        width: responsiveWidth(85),
-                        height: responsiveHeight(25),
+                        width: responsiveWidth(
+                          saloonData?.image?.length === 1 ? 90 : 85,
+                        ),
+                        height: responsiveHeight(22),
                         borderRadius: 15,
                       }}
                     />
@@ -221,82 +244,191 @@ const HomeDetails = ({route}) => {
                 }}
               />
               <LineBreak space={3} />
-              <AppText
-                title={saloonData?.salonName}
-                textSize={3}
-                textFontWeight
-              />
-              <LineBreak space={1} />
-
-              <View style={{gap: 10}}>
+              <View
+                style={{
+                  backgroundColor: AppColors.WHITE,
+                  elevation: 5,
+                  padding: responsiveHeight(2),
+                  borderRadius: responsiveHeight(1),
+                }}>
                 <View
-                  style={{gap: 12, alignItems: 'center', flexDirection: 'row'}}>
-                  <EvilIcons
-                    name={'location'}
-                    size={responsiveFontSize(2.7)}
-                    color={AppColors.DARKGRAY}
-                  />
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}>
                   <AppText
-                    title={saloonData?.bussinessAddress}
-                    textSize={1.6}
-                    textColor={AppColors.DARKGRAY}
+                    title={saloonData?.salonName}
+                    textSize={2.3}
+                    textFontWeight
                   />
+                  {roundedRating ? (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        // marginTop: responsiveHeight(2),
+                        gap: responsiveHeight(1.5),
+                      }}>
+                      <StarRating
+                        starSize={responsiveHeight(2.2)}
+                        color={AppColors.RED}
+                        rating={roundedRating}
+                        maxStars={5}
+                        starStyle={{marginHorizontal: 1.5}}
+                        onChange={() => console.log('first')}
+                      />
+                      <AppText
+                        title={`${saloonData?.totalReviews}`}
+                        textSize={2}
+                        textColor="#989898"
+                      />
+                    </View>
+                  ) : null}
                 </View>
+                <LineBreak space={2} />
 
-                <View
-                  style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-                  <FontAwesome
-                    name={'star'}
-                    size={responsiveFontSize(2.7)}
-                    color={AppColors.PEACHCOLOUR}
-                  />
-                  <AppText
-                    title={`${saloonData?.avgRating} (${saloonData?.totalReviews})`}
-                    textSize={1.6}
-                    textColor={AppColors.DARKGRAY}
-                  />
-                </View>
-                <FlatList
-                  data={saloonData?.workingDays}
-                  contentContainerStyle={{gap: responsiveHeight(1)}}
-                  renderItem={({item, index}) => {
-                    return item?.isActive ? (
-                      <View
+                <View style={{gap: responsiveHeight(1.5)}}>
+                  <View
+                    style={{
+                      gap: responsiveHeight(1),
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                    }}>
+                    <Ionicons
+                      name={'call-outline'}
+                      size={responsiveFontSize(2.4)}
+                      color={AppColors.RED}
+                    />
+                    <AppText
+                      title={saloonData?.phoneNumber}
+                      textSize={1.6}
+                      textColor={AppColors.DARKGRAY}
+                    />
+                  </View>
+                  <View
+                    style={{
+                      gap: responsiveHeight(1),
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                    }}>
+                    <Ionicons
+                      name={'location-outline'}
+                      size={responsiveFontSize(2.4)}
+                      color={AppColors.RED}
+                    />
+                    <AppText
+                      title={saloonData?.bussinessAddress}
+                      textSize={1.6}
+                      textColor={AppColors.DARKGRAY}
+                    />
+                  </View>
+                  {firstDay && (
+                    <View>
+                      <TouchableOpacity
+                        onPress={() => setExpanded(!expanded)}
                         style={{
                           flexDirection: 'row',
                           alignItems: 'center',
-                          gap: 12,
+                          gap: responsiveHeight(1.5),
+                          marginBottom: responsiveHeight(1),
                         }}>
-                        <AntDesign
-                          name={'clockcircleo'}
-                          size={responsiveFontSize(2)}
-                          color={AppColors.DARKGRAY}
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 12,
+                            left: responsiveHeight(0.2),
+                          }}>
+                          <AntDesign
+                            name="clockcircleo"
+                            size={responsiveFontSize(2)}
+                            color={AppColors.RED}
+                          />
+                          <AppText
+                            title={`${formatTimeTo12Hour(
+                              firstDay?.startTime,
+                            )} - ${formatTimeTo12Hour(
+                              firstDay?.endTime,
+                            )}, ${getShortDay(firstDay?.day)}`}
+                            textSize={1.6}
+                            textColor={AppColors.DARKGRAY}
+                          />
+                        </View>
+
+                        <Ionicons
+                          name={expanded ? 'chevron-up' : 'chevron-down'}
+                          size={22}
+                          color={AppColors.RED}
                         />
-                        <AppText
-                          // title={`${item?.startTime}-${item?.endTime}, ${item?.day}`}
-                          title={`${formatTimeTo12Hour(
-                            item?.startTime,
-                          )}-${formatTimeTo12Hour(
-                            item?.endTime,
-                          )}, ${getShortDay(item?.day)}`}
-                          textSize={1.6}
-                          textColor={AppColors.DARKGRAY}
+                      </TouchableOpacity>
+                      {expanded && (
+                        <FlatList
+                          data={activeDays.slice(1)} // skip first item
+                          contentContainerStyle={{gap: responsiveHeight(1)}}
+                          renderItem={({item}) => (
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 12,
+                                left: responsiveHeight(0.2),
+                              }}>
+                              <AntDesign
+                                name="clockcircleo"
+                                size={responsiveFontSize(2)}
+                                color={AppColors.RED}
+                              />
+                              <AppText
+                                title={`${formatTimeTo12Hour(
+                                  item?.startTime,
+                                )} - ${formatTimeTo12Hour(
+                                  item?.endTime,
+                                )}, ${getShortDay(item?.day)}`}
+                                textSize={1.6}
+                                textColor={AppColors.DARKGRAY}
+                              />
+                            </View>
+                          )}
                         />
-                      </View>
-                    ) : null;
-                  }}
-                />
-                {/* <View style={{gap: 12, justifyContent: 'center'}}></View> */}
+                      )}
+                    </View>
+                  )}
+
+                  {/* <View style={{gap: 12, justifyContent: 'center'}}></View> */}
+                </View>
+
+                <LineBreak space={1.5} />
+
+                {/* <AppText
+                  title={saloonData?.description}
+                  textSize={1.9}
+                  textColor={AppColors.DARKGRAY}
+                /> */}
+                <View>
+                  <Text
+                    numberOfLines={expandedText ? undefined : 2}
+                    style={{
+                      fontSize: responsiveFontSize(1.9),
+                      color: AppColors.DARKGRAY,
+                    }}>
+                    {saloonData?.description}
+                  </Text>
+
+                  {saloonData?.description?.length > 50 && (
+                    <Text
+                      onPress={() => setExpandedText(!expandedText)}
+                      style={{
+                        marginTop: 5,
+                        color: AppColors.BTNCOLOURS,
+                        fontSize: responsiveFontSize(1.6),
+                        fontWeight: '600',
+                      }}>
+                      {expandedText ? 'View Less' : 'View More'}
+                    </Text>
+                  )}
+                </View>
               </View>
-
-              <LineBreak space={2} />
-
-              <AppText
-                title={saloonData?.description}
-                textSize={1.9}
-                textColor={AppColors.DARKGRAY}
-              />
-
               <LineBreak space={3} />
 
               <FlatList
@@ -319,7 +451,7 @@ const HomeDetails = ({route}) => {
                             ? AppColors.BLUE
                             : AppColors.WHITE
                         }
-                        textSize={1.8}
+                        textSize={2.1}
                         textFontWeight
                         textColor={
                           currentCategory === item._id
@@ -369,7 +501,7 @@ const HomeDetails = ({route}) => {
                           <View>
                             <AppText
                               title={item?.serviceName}
-                              textSize={2.2}
+                              textSize={2}
                               textFontWeight
                               textColor={AppColors.BLACK}
                             />
@@ -447,7 +579,7 @@ const HomeDetails = ({route}) => {
                     textColor="#0B0C16"
                     textFontWeight
                     title="Reviews"
-                    textSize={2.5}
+                    textSize={2.2}
                   />
                   <View
                     style={{
@@ -455,7 +587,7 @@ const HomeDetails = ({route}) => {
                       alignItems: 'center',
                       gap: responsiveHeight(1),
                     }}>
-                    <AntDesign name="star" color="#F2A905" size={20} />
+                    <AntDesign name="star" color={AppColors.RED} size={18} />
                     <AppText
                       textSize={1.9}
                       textColor="#0B0C16"

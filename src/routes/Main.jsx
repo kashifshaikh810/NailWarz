@@ -42,6 +42,7 @@ import InstructionsScreen from '../screens/main/InstructionsScreen';
 import Accessebility from '../screens/main/Accessebility';
 import Notification from '../screens/main/Notification';
 import Wallet from '../screens/main/Wallet';
+import BattleForm from '../screens/main/BattleForm';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -67,6 +68,7 @@ const Main = () => {
       <Stack.Screen name="BookingDetails" component={BookingDetails} />
       <Stack.Screen name="SearchLocation" component={SearchLocation} />
       <Stack.Screen name="Community" component={Community} />
+      <Stack.Screen name="BattleForm" component={BattleForm} />
       <Stack.Screen name="BattlePoll" component={BattlePoll} />
       <Stack.Screen name="LiveVotingScores" component={LiveVotingScores} />
       <Stack.Screen name="FinalScoreBoard" component={FinalScoreBoard} />

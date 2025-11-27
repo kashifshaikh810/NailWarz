@@ -38,7 +38,7 @@ const DownloadReceipt = ({route}) => {
   );
   const {bookingId} = route?.params;
 
-  console.log('bookingId', bookingId);
+  console.log('bookingDetails', bookingDetails);
   console.log('bookingDetails', bookingDetails);
   const displayId = `${bookingId.slice(0, 6)}...${bookingId.slice(-4)}`;
   const sectionDataOne = [
@@ -61,7 +61,9 @@ const DownloadReceipt = ({route}) => {
       title: bookingDetails?.serviceId?.serviceName,
       subTitle: `$${bookingDetails?.serviceId?.price}`,
     },
-    {id: 2, title: 'Total', subTitle: `$${bookingDetails?.serviceId?.price}`},
+    {id: 2, title: 'Platform Charges', subTitle: '$5'},
+    {id: 3, title: 'Discount', subTitle: '$6'},
+    {id: 2, title: 'Total', subTitle: `$${bookingDetails?.totalAmount}`},
     // {id: 3, title: 'Discount', subTitle: '$3.00'},
   ];
   const getBookingByIdHandler = async () => {
@@ -219,7 +221,7 @@ const DownloadReceipt = ({route}) => {
                         textColor={AppColors.DARKGRAY}
                       />
                     </View>
-                    {index !== 1 ? (
+                    {index !== 3 ? (
                       <View
                         style={{
                           backgroundColor: '#b4b4b4',

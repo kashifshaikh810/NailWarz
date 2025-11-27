@@ -303,6 +303,13 @@ const jcb = `<?xml version="1.0" encoding="UTF-8"?>
 </path>
 	</g>
 </svg>`;
+
+const addImage = `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 10H34V24H38V10C38 7.794 36.206 6 34 6H8C5.794 6 4 7.794 4 10V34C4 36.206 5.794 38 8 38H24V34H8V10Z" fill="#C11111" fill-opacity="0.5"/>
+<path d="M16 22L10 30H32L24 18L18 26L16 22Z" fill="#C11111" fill-opacity="0.5"/>
+<path d="M38 28H34V34H28V38H34V44H38V38H44V34H38V28Z" fill="#C11111" fill-opacity="0.5"/>
+</svg>
+`;
 export const AppIcons = {
   Google_Pay: Google_Pay,
   visa: visa,
@@ -314,4 +321,5 @@ export const AppIcons = {
   jcb: jcb,
   app_logo: app_logo,
   king: king,
+  addImage,
 };

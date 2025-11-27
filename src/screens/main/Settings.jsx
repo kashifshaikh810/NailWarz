@@ -4,16 +4,29 @@ import React, {useState} from 'react';
 import AppColors from '../../utils/AppColors';
 import AppHeader from '../../components/AppHeader';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {responsiveHeight} from '../../utils/Responsive_Dimensions';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {
+  responsiveHeight,
+  responsiveWidth,
+} from '../../utils/Responsive_Dimensions';
 import AppText from '../../components/AppTextComps/AppText';
-import {editProfile} from '../../GlobalFunctions/auth';
+import {deleteUser, editProfile, ShowToast} from '../../GlobalFunctions/auth';
 import {useDispatch, useSelector} from 'react-redux';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { globalStyles } from '../../GlobalFunctions/styles';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../GlobalFunctions/styles';
+import {clearToken} from '../../Redux/Slices';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import Modal from 'react-native-modal';
+
 const Settings = ({navigation}) => {
-  const {userData} = useSelector(state => state?.user);
+  const {userData, isGoogleSignIn} = useSelector(state => state?.user);
   const [isEnabled, setIsEnabled] = useState(userData?.notify);
   const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [actionType, setActionType] = useState(''); // 'logout' or 'delete'
   console.log('isEnabled', isEnabled);
   const data = [
     // {
@@ -26,16 +39,23 @@ const Settings = ({navigation}) => {
     {
       id: 1,
       title: 'Notifications',
+      Icon: Ionicons,
       iconName: 'notifications-outline',
       toggle: true,
     },
     {
       id: 2,
-      title: 'Help and Services',
-      iconName: 'chatbubble-ellipses-outline',
+      title: 'Delete Account',
+      Icon: MaterialIcons,
+      iconName: 'logout',
       toggle: false,
-      navTo: 'InstructionsScreen',
     },
+    // {
+    //   id: 3,
+    //   title: 'Logout',
+    //   Icon: MaterialIcons,
+    //   iconName: 'logout',
+    // },
   ];
   const editProfileHandler = async () => {
     await editProfile(
@@ -61,22 +81,111 @@ const Settings = ({navigation}) => {
     editProfileHandler();
     // }, 2000);
   };
+  const googleSignOut = async () => {
+    try {
+      await GoogleSignin.signOut();
+      dispatch(clearToken());
+      console.log('User signed out successfully');
+    } catch (error) {
+      console.error('Google Sign-Out Error:', error);
+    }
+  };
+  const LogoutHandler = () => {
+    if (isGoogleSignIn) {
+      googleSignOut();
+    } else {
+      dispatch(clearToken());
+    }
+  };
+  const deleteAccountHandler = async () => {
+    setIsLoading(true);
+    try {
+      const response = await deleteUser(userData?._id);
+      if (response.success) {
+        setDeleteModalVisible(false);
+        if (isGoogleSignIn) {
+          googleSignOut();
+        } else {
+          dispatch(clearToken());
+        }
+        ShowToast('success', 'Account Deleted Successfully');
+      } else {
+        ShowToast('error', response.message);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      ShowToast('error', error?.response?.data?.message);
+      setIsLoading(false);
+    }
+  };
+
+  const renderConfirmModal = () => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={confirmVisible}
+      onRequestClose={() => setConfirmVisible(false)}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <View
+          style={{
+            width: responsiveWidth(85),
+            backgroundColor: '#fff',
+            borderRadius: 12,
+            padding: 20,
+            shadowColor: '#000',
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            elevation: 5,
+          }}>
+          <AppText
+            title={'Are you sure you want to delete your account?'}
+            textSize={2}
+            textColor={AppColors.BLACK}
+          />
+
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              marginTop: 20,
+            }}>
+            <TouchableOpacity
+              onPress={() => setConfirmVisible(false)}
+              style={{marginRight: 20}}>
+              <AppText title="Cancel" textColor={AppColors.GRAY} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                setConfirmVisible(false);
+                deleteAccountHandler();
+              }}>
+              <AppText title="Yes" textColor={AppColors.BLUE} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
   // chevron-forward-outline
   return (
     <SafeAreaView style={globalStyles.container}>
-      <AppHeader onPress={() => navigation.goBack()} title="Settings" />
+      <AppHeader onPress={() => navigation.goBack()} title="Account Settings" />
+      {renderConfirmModal()}
       <View style={{marginTop: responsiveHeight(2)}}>
         <FlatList
           data={data}
           renderItem={({item, index}) => {
+            const Icon = item.Icon;
             return (
               <TouchableOpacity
                 onPress={() =>
-                  item.toggle
-                    ? toggleSwitch()
-                    : navigation.navigate(item?.navTo, {
-                        type: item.title,
-                      })
+                  item.toggle ? toggleSwitch() : setConfirmVisible(true)
                 }>
                 <View
                   style={{
@@ -91,7 +200,7 @@ const Settings = ({navigation}) => {
                       alignItems: 'center',
                       gap: responsiveHeight(1),
                     }}>
-                    <Ionicons
+                    <Icon
                       name={item.iconName}
                       size={25}
                       color={AppColors.iconColor}

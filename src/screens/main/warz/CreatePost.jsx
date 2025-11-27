@@ -26,13 +26,12 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {globalStyles} from '../../../GlobalFunctions/styles';
 
 const CreatePost = ({navigation}) => {
-  const [value, setValue] = useState();
   const {_id} = useSelector(state => state?.user?.userData);
   const [caption, setCaption] = useState();
   const [imageUri, setImageUri] = useState();
   const [isLoading, setIsLoading] = useState(false);
   console.log('_id', _id);
-
+  const [value, setValue] = useState();
   const [postType, setPostType] = useState([
     {label: 'Post', value: 'Post'},
     {label: 'Vote', value: 'Poll'},

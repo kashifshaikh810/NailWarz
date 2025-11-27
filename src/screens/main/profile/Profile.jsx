@@ -7,6 +7,9 @@ import {
   Image,
   FlatList,
   TouchableOpacity,
+  Switch,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import AppColors from '../../../utils/AppColors';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
@@ -23,18 +26,25 @@ import LineBreak from '../../../components/LineBreak';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useDispatch, useSelector} from 'react-redux';
 import {clearToken} from '../../../Redux/Slices';
 import {BaseUrl, ImageBaseUrl} from '../../../BaseUrl';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import {deleteUser, ShowToast} from '../../../GlobalFunctions/auth';
+import {
+  deleteUser,
+  editProfile,
+  ShowToast,
+} from '../../../GlobalFunctions/auth';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import {getWalletByUserId} from '../../../GlobalFunctions';
-
+import Geolocation from '@react-native-community/geolocation';
+import Modal from 'react-native-modal';
 const Profile = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -44,7 +54,15 @@ const Profile = () => {
   const {token} = useSelector(state => state.user);
   const [walletDetails, setWalletDetails] = useState();
   const focus = useIsFocused();
- 
+  const [isEnabled, setIsEnabled] = useState(userData?.notify);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [address, setAddress] = useState('');
+  const [latLng, setLatLng] = useState({
+    latitude: 37.4219983,
+    longitude: -122.084,
+  });
+  console.log('address', address);
+
   const profileMenus = [
     {
       id: 1,
@@ -191,6 +209,78 @@ const Profile = () => {
       navTo: 'Auth',
     },
   ];
+
+  const data = [
+    {
+      id: 1,
+      title: 'Name',
+      value: userData?.username,
+      Icon: FontAwesome,
+      iconName: 'user-o',
+    },
+    {
+      id: 2,
+      title: 'Email',
+      value: userData?.email,
+      Icon: Ionicons,
+      iconName: 'mail-outline',
+    },
+    {
+      id: 3,
+      title: 'Phone',
+      value: userData?.phone ? userData?.phone : '-',
+      Icon: Ionicons,
+      iconName: 'call-outline',
+    },
+    {
+      id: 4,
+      title: 'Address',
+      value: address ? address : '-',
+      Icon: Ionicons,
+      iconName: 'location-outline',
+    },
+    {
+      id: 5,
+      title: 'Wallet',
+      value: `$ ${walletDetails?.balance || '0'}.00`,
+      Icon: FontAwesome6,
+      iconName: 'money-bill-wave',
+    },
+
+    {
+      id: 6,
+      title: 'Account Settings',
+      Icon: Ionicons,
+      iconName: 'settings-outline',
+      navTo: 'Settings',
+    },
+    {
+      id: 7,
+      title: 'Payment Method',
+      Icon: Ionicons,
+      iconName: 'wallet-outline',
+    },
+    {
+      id: 8,
+      title: 'Privacy and safety',
+      Icon: Ionicons,
+      iconName: 'shield-checkmark-outline',
+      navTo: 'InstructionsScreen',
+    },
+    {
+      id: 9,
+      title: 'About',
+      Icon: Feather,
+      iconName: 'alert-circle',
+      navTo: 'InstructionsScreen',
+    },
+    {
+      id: 10,
+      title: 'Logout',
+      Icon: MaterialIcons,
+      iconName: 'logout',
+    },
+  ];
   // GoogleSignin.configure({});
   useEffect(() => {
     GoogleSignin.configure({
@@ -208,7 +298,19 @@ const Profile = () => {
       console.error('Google Sign-Out Error:', error);
     }
   };
-
+  const editProfileHandler = async () => {
+    const res = await editProfile(
+      userData._id,
+      null,
+      null,
+      null,
+      dispatch,
+      null,
+      false,
+      !isEnabled,
+    );
+    console.log('res', res);
+  };
   const deleteAccountHandler = async () => {
     setIsLoading(true);
     try {
@@ -230,7 +332,78 @@ const Profile = () => {
       setIsLoading(false);
     }
   };
+  const fetchAddressFromCoords = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+        {
+          headers: {
+            'User-Agent': 'ReactNativeApp',
+          },
+        },
+      );
 
+      const json = await response.json();
+      const a = json.address;
+
+      // Street-first priority
+      const street =
+        a.road || a.street || a.residential || a.pedestrian || a.house_number;
+
+      const area =
+        a.neighbourhood || a.suburb || a.village || a.town || a.city_district;
+
+      const city = a.city || a.town || a.village || a.state_district;
+      const state = a.state;
+      const country = a.country;
+
+      // Build final short address
+      const parts = [street, area, city, state, country].filter(Boolean);
+
+      const finalAddress = parts.slice(0, 3).join(', ');
+      // takes only most relevant 3 parts
+
+      console.log('Short Address:', finalAddress);
+      setAddress(finalAddress);
+    } catch (error) {
+      console.log('Reverse geocoding error:', error);
+    }
+  };
+  const getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      position => {
+        const {latitude, longitude} = position.coords;
+        console.log(position);
+        setLatLng({latitude, longitude});
+        fetchAddressFromCoords(latitude, longitude); // ✅ call here with params
+      },
+      error => {
+        // See error code charts below.
+        console.log(error.code, error.message);
+      },
+      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+    );
+  };
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    return true;
+  };
+  useEffect(() => {
+    const initLocation = async () => {
+      const granted = await requestLocationPermission();
+      if (granted) {
+        console.log('granted', granted);
+        getCurrentLocation();
+      }
+    };
+
+    initLocation();
+  }, []);
   const getWalletHandler = async () => {
     setIsLoading(true);
     try {
@@ -242,157 +415,257 @@ const Profile = () => {
     }
   };
 
+  const LogoutHandler = () => {
+    if (isGoogleSignIn) {
+      googleSignOut();
+    } else {
+      dispatch(clearToken());
+    }
+  };
   useEffect(() => {
     getWalletHandler();
   }, [focus]);
 
-  console.log('userdata===', userData);
-  return (
-    <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
-      <AppHeader onPress={() => navigation.goBack()} title="Profile" />
+  const renderConfirmModal = () => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={confirmVisible}
+      onRequestClose={() => setConfirmVisible(false)}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <View
+          style={{
+            width: responsiveWidth(85),
+            backgroundColor: '#fff',
+            borderRadius: 12,
+            padding: 20,
+            shadowColor: '#000',
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            elevation: 8,
+          }}>
+          <AppText
+            title={'Are you sure you want to logout your account?'}
+            textSize={2}
+            textColor={AppColors.BLACK}
+          />
 
-      <View style={{paddingHorizontal: responsiveWidth(5)}}>
-        <View style={{alignItems: 'center', gap: 20}}>
           <View
             style={{
-              borderWidth: 2,
-              width: 110,
-              height: 110,
-              borderRadius: 100,
-              justifyContent: 'center',
-              alignItems: 'center',
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              marginTop: 20,
             }}>
-            <Image
-              source={
-                userData?.image
-                  ? {uri: `${ImageBaseUrl}${userData?.image}`}
-                  : APPImages.dummyImg
-              }
-              style={{width: 100, height: 100, borderRadius: 100}}
-            />
-          </View>
-          <AppText
-            title={userData?.username}
-            textColor={AppColors.BLACK}
-            textSize={2.5}
-            textFontWeight
-          />
-          <View style={{width: responsiveWidth(30)}}>
-            <AppButton
-              title={`Edit Profile`}
-              handlePress={() => navigation.navigate('EditProfile')}
-            />
+            <TouchableOpacity
+              onPress={() => setConfirmVisible(false)}
+              style={{marginRight: 20}}>
+              <AppText title="Cancel" textColor={AppColors.GRAY} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setConfirmVisible(false);
+                LogoutHandler();
+              }}>
+              <AppText title="Yes" textColor={AppColors.BLUE} />
+            </TouchableOpacity>
           </View>
         </View>
+      </View>
+    </Modal>
+  );
+  const toggleSwitch = () => {
+    setIsEnabled(!isEnabled);
+    // console.log('enabled',isEnabled
+    // if (timeoutId) {
+    //   clearTimeout(timeoutId); // cancel previous timeout
+    // }
 
-        <LineBreak space={3} />
+    // timeoutId = setTimeout(() => {
+    editProfileHandler();
+    // }, 2000);
+  };
+  console.log('userdata===', userData);
+  return (
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{
+        flexGrow: 1,
+        backgroundColor: AppColors.WHITE,
+        padding: responsiveHeight(2),
+      }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+        <Text style={{color: AppColors.WHITE}}>a</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: responsiveHeight(1.5),
+          }}>
+          <Image
+            source={APPImages.logoSmall}
+            style={{height: responsiveHeight(10), width: responsiveWidth(15)}}
+          />
+          <AppText
+            title="Nailee Profile"
+            textSize={2.1}
+            textFontWeight
+            textColor={AppColors.BTNCOLOURS}
+          />
+        </View>
+        <View>
+          <Image
+            source={
+              userData?.image
+                ? {uri: `${ImageBaseUrl}${userData?.image}`}
+                : APPImages.dummyImg
+            }
+            style={{
+              height: responsiveHeight(5.7),
+              width: responsiveWidth(11.8),
+              borderRadius: responsiveHeight(5),
+            }}
+          />
+        </View>
+      </View>
+      <View
+        style={{
+          backgroundColor: AppColors.WHITE,
+          elevation: 5,
+          marginTop: responsiveHeight(3),
+          padding: responsiveHeight(2),
+          borderRadius: responsiveHeight(2),
+        }}>
+        <View style={{alignSelf: 'center'}}>
+          <Image
+            source={
+              userData?.image
+                ? {uri: `${ImageBaseUrl}${userData?.image}`}
+                : APPImages.dummyImg
+            }
+            style={{
+              height: responsiveHeight(9.7),
+              width: responsiveWidth(20.3),
+              borderRadius: responsiveHeight(5),
+            }}
+          />
+          <TouchableOpacity
+            onPress={() => navigation.navigate('EditProfile')}
+            style={{
+              backgroundColor: AppColors.WHITE,
+              elevation: 5,
+              position: 'absolute',
+              right: responsiveHeight(-0.9),
+              bottom: responsiveHeight(-0.5),
+              padding: responsiveHeight(0.5),
+              borderRadius: responsiveHeight(2),
+            }}>
+            <Ionicons
+              name="camera-outline"
+              color={AppColors.BTNCOLOURS}
+              size={25}
+            />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('EditProfile')}
+          style={{
+            backgroundColor: '#FDF1F1',
+            elevation: 5,
+            position: 'absolute',
+            top: responsiveHeight(2),
+            right: responsiveHeight(1),
+            padding: responsiveHeight(0.7),
+            borderRadius: responsiveHeight(2),
+          }}>
+          <MaterialIcons name="edit" color={AppColors.BTNCOLOURS} size={25} />
+        </TouchableOpacity>
+        <LineBreak space={5} />
+        {renderConfirmModal()}
+        <View>
+          <FlatList
+            data={data}
+            contentContainerStyle={{gap: responsiveHeight(2)}}
+            renderItem={({item, index}) => {
+              const Icon = item.Icon;
+              const Item = item.value ? View : TouchableOpacity;
 
-        <FlatList
-          data={profileMenus}
-          renderItem={({item}) => {
-            return (
-              <TouchableOpacity
-                activeOpacity={0.6}
-                style={{
-                  backgroundColor: '#eaeaea',
-
-                  marginTop: responsiveHeight(item.mrgnTop),
-                  paddingHorizontal: responsiveWidth(4),
-                  borderTopLeftRadius: item.borderTopRadius
-                    ? item.borderTopRadius
-                    : 0,
-                  borderBottomLeftRadius: item.borderBottomRadius
-                    ? item.borderBottomRadius
-                    : 0,
-                  borderTopRightRadius: item.borderTopRadius
-                    ? item.borderTopRadius
-                    : 0,
-                  borderBottomRightRadius: item.borderBottomRadius
-                    ? item.borderBottomRadius
-                    : 0,
-                }}
-                onPress={() => {
-                  if (item.title === 'Logout') {
-                    if (isGoogleSignIn) {
-                      googleSignOut();
-                    } else {
-                      dispatch(clearToken());
-                    }
-                    return;
-                  } else if (item.title === 'Delete Account') {
-                    setDeleteModalVisible(true);
-                  } else if (item.title === 'Payment Method') {
-                    navigation.navigate('SelectPaymentMethod', {
-                      bookingId: null,
-                      price: null,
-                      pay: false,
-                    });
-                  }
-                  if (item.navTo) {
-                    navigation.navigate(item.navTo, {type: item?.title});
-                  }
-                }}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}>
+              return (
+                <Item
+                  {...(!item.value && {
+                    onPress: () => {
+                      if (item?.id === 10) {
+                        setConfirmVisible(true);
+                      } else if (item.title === 'Payment Method') {
+                        navigation.navigate('SelectPaymentMethod', {
+                          bookingId: null,
+                          price: null,
+                          pay: false,
+                        });
+                      } else if (item.navTo) {
+                        navigation.navigate(item.navTo, {type: item?.title});
+                      }
+                    },
+                  })}>
                   <View
                     style={{
-                      //
-                      paddingVertical: responsiveHeight(2),
                       flexDirection: 'row',
-                      gap: 10,
                       alignItems: 'center',
+                      justifyContent: 'space-between',
                     }}>
-                    {item.iconName}
-                    <AppText
-                      title={item?.title}
-                      textColor={AppColors.BLACK}
-                      textSize={2}
-                    />
-                  </View>
-                  {item.rightTxt ? (
-                    <AppText textSize={2.2} title={item.rightTxt} />
-                  ) : null}
-                </View>
-                <View
-                  style={{
-                    borderBottomWidth:
-                      item.bottomWidth === 1 ? item.bottomWidth : 0,
-                    borderBottomColor: AppColors.DARKGRAY,
-                  }}
-                />
-              </TouchableOpacity>
-            );
-          }}
-        />
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: responsiveHeight(2),
+                      }}>
+                      <Icon
+                        name={item?.iconName}
+                        color={AppColors.BTNCOLOURS}
+                        size={20}
+                      />
+                      <AppText
+                        title={item.title}
+                        textColor={AppColors.BTNCOLOURS}
+                        textSize={1.9}
+                      />
+                    </View>
 
-        <LineBreak space={3} />
-        <ConfirmationModal
-          flexDirection="row"
-          isLoading={isLoading}
-          justifyContent="space-between"
-          btn1Width={39}
-          btn2Width={39}
-          iconName={'delete'}
-          title={'Delete Account'}
-          subTitle={'Are you sure you want to delete this account'}
-          buttonTwoTitle={'Cancel'}
-          buttonOneTitle={'Confirm'}
-          visible={deleteModalVisible}
-          // setVisible={() => {
-          //   navigation.navigate('DownloadReceipt');
-          //   setVisibleConfirmationModal(false);
-          // }}
-          handleBackPress={() => {
-            setDeleteModalVisible(false);
-          }}
-          setVisible={() => {
-            deleteAccountHandler();
-          }}
-        />
+                    {item?.value ? (
+                      <AppText
+                        title={item.value}
+                        numberOfLines={1}
+                        textwidth={50}
+                        textAlignment={'right'}
+                        styles={{fontWeight: '700'}}
+                        textSize={1.9}
+                      />
+                    ) : (
+                      <Ionicons name="chevron-forward-outline" size={25} />
+                    )}
+                  </View>
+
+                  <LineBreak space={1} />
+                  <View
+                    style={{
+                      borderBottomWidth: 2,
+                      borderBlockColor: AppColors.WHITE2,
+                    }}
+                  />
+                </Item>
+              );
+            }}
+          />
+        </View>
       </View>
     </ScrollView>
   );

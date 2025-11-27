@@ -140,7 +140,7 @@ const StylistSelect = ({route}) => {
                   <View>
                     <AppText
                       title={item?.fullName}
-                      textSize={2.2}
+                      textSize={2}
                       textColor={
                         selectedTechnician === item._id
                           ? AppColors.WHITE
@@ -151,7 +151,7 @@ const StylistSelect = ({route}) => {
                     <AppText
                       textwidth={65}
                       title={item.designation}
-                      textSize={1.9}
+                      textSize={1.8}
                       textColor={
                         selectedTechnician === item._id
                           ? AppColors.WHITE

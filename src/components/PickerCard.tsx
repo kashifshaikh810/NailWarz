@@ -1,47 +1,46 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import DropDownPicker from 'react-native-dropdown-picker';
 import { responsiveHeight, responsiveWidth } from '../utils/Responsive_Dimensions';
+import { Dropdown } from 'react-native-element-dropdown';
+import AppColors from '../utils/AppColors';
 
-interface PickerProps {
-  mrgnTop?: number;
-  placeHolder?: string;
-  items?: any;
-  setItems?: any;
-  value?: any;
-  setValue?: any;
-}
-
-const PickerCard: React.FC<PickerProps> = ({ mrgnTop, placeHolder, items, setItems, value, setValue }) => {
-  const [open, setOpen] = useState(false);
-  // const [value, setValue] = useState<string | null>(null);
-  // const [items, setItems] = useState([
-  //   { label: 'Service 1', value: 'service1' },
-  //   { label: 'Service 2', value: 'service2' },
-  //   { label: 'Service 3', value: 'service3' },
-  // ]);
+// PickerCard component replace karo
+const PickerCard: React.FC<PickerProps> = ({
+  mrgnTop, top, padding, bgColor, dropDownBgColor,
+  placeHolder, items, value, setValue, height,
+}) => {
+  const [isFocus, setIsFocus] = useState(false);
 
   return (
-    <View style={[styles.container, { marginTop: mrgnTop }]}>
-      <DropDownPicker
-        open={open}
+    <View style={[styles.container, { marginTop: mrgnTop, padding: padding ? padding : 3 }]}>
+      <Dropdown
+        style={[
+          styles.dropdown,
+          isFocus && { borderColor: 'blue' },
+          { backgroundColor: AppColors.INPUTBG, height: responsiveHeight(height) }
+        ]}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        iconStyle={styles.iconStyle}
+        data={items}
+        maxHeight={300}
+        labelField="label"
+        valueField="value"
+        placeholder={!isFocus ? (placeHolder || 'Select Service') : '...'}
+        searchPlaceholder="Search..."
         value={value}
-        items={items}
-        setOpen={setOpen}
-        setValue={setValue}
-        setItems={setItems}
-        placeholder={placeHolder ? placeHolder : 'Select Service'}
-        placeholderStyle={{ color: '#808CA0' }}
-        style={styles.dropdown}
-        dropDownContainerStyle={[styles.dropdownContainer, { zIndex: open ? 2000 : 1 }]} // Adjusting zIndex based on open state
-        textStyle={styles.textStyle}
-        zIndex={1000}
+        onFocus={() => setIsFocus(true)}
+        onBlur={() => setIsFocus(false)}
+        onChange={item => {
+          setValue(item.value);
+          setIsFocus(false);
+        }}
       />
-      {/* {value && <Text style={styles.selectedText}>Selected: {value}</Text>} */}
     </View>
   );
 };
+// Styles update karo
 
 const styles = StyleSheet.create({
   container: {
@@ -54,7 +53,7 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     borderWidth: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: AppColors.INPUTBG,
     borderColor: '#ccc',
     borderRadius: 8,
     height: responsiveHeight(7.5),

@@ -148,6 +148,36 @@ const BookingDetails = ({navigation, route}) => {
             <View
               style={{flexDirection: 'row', justifyContent: 'space-between'}}>
               <AppText
+                title="Platform Charges"
+                textColor={AppColors.DARKGRAY}
+                textSize={2.2}
+                mrgnTop={1.5}
+              />
+              <AppText
+                title="$5"
+                textColor={AppColors.DARKGRAY}
+                textSize={2.2}
+                mrgnTop={1.5}
+              />
+            </View>
+            <View
+              style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+              <AppText
+                title="Discount"
+                textColor={AppColors.DARKGRAY}
+                textSize={2.2}
+                mrgnTop={1.5}
+              />
+              <AppText
+                title="$6"
+                textColor={AppColors.DARKGRAY}
+                textSize={2.2}
+                mrgnTop={1.5}
+              />
+            </View>
+            <View
+              style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+              <AppText
                 title="Total"
                 textColor={AppColors.BLACK}
                 textSize={2.2}
@@ -155,7 +185,7 @@ const BookingDetails = ({navigation, route}) => {
                 textFontWeight
               />
               <AppText
-                title={`$${data?.serviceId?.price}`}
+                title={`$${data?.totalAmount}`}
                 textColor={AppColors.BLACK}
                 textSize={2.2}
                 mrgnTop={1.5}

@@ -24,7 +24,7 @@ const ReviewsCard: React.FC<ReviewCardProps> = ({ data }) => {
           </View>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: responsiveHeight(1) }}>
-          <AntDesign name="star" color="#F2A905" size={20} />
+          <AntDesign name="star" color={AppColors.RED} size={20} />
           <AppText title={data?.stars} />
         </View>
       </View>
