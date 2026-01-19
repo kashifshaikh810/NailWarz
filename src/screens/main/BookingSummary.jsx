@@ -142,7 +142,7 @@ const BookingSummary = ({route}) => {
   const payWithWalletHandler = async () => {
     setPaymentLoading(true);
     try {
-      const response = await payWithWallet(_id, bookingId, price + 11);
+      const response = await payWithWallet(_id, bookingId, price - 1);
       setPaymentLoading(false);
       if (response.success) {
         // ShowToast('success', response.message);
@@ -176,7 +176,7 @@ const BookingSummary = ({route}) => {
         selectedTechnician,
         selectedBookingDate,
         selectedTime.value,
-        price + 11,
+        price - 1,
       );
       setIsLoading(false);
       console.log('response', response);
@@ -285,7 +285,7 @@ const BookingSummary = ({route}) => {
           <LineBreak space={2} />
 
           <AppText
-            title="Booking details"
+            title="Booking Details"
             textSize={2.2}
             textColor={AppColors.BLACK}
             textFontWeight
@@ -480,7 +480,7 @@ const BookingSummary = ({route}) => {
               textFontWeight={true}
             />
             <AppText
-              title={`$${price + 11}`}
+              title={`$${price - 1}`}
               textSize={2}
               textColor={AppColors.BLACK}
               textFontWeight={true}

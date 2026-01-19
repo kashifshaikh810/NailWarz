@@ -29,11 +29,11 @@ const PointesProfile = ({item, index}) => {
           textFontWeight
         /> */}
         <Image
-          source={{uri: `${ImageBaseUrl}${item?.salonImage}`}}
+          source={{uri: `${ImageBaseUrl}${item?.participant.images[0]}`}}
           style={{width: 40, height: 40, borderRadius: 100}}
         />
         <AppText
-          title={item?.salonName}
+          title={item?.participant.name}
           textColor={AppColors.BLACK}
           textSize={2}
           textFontWeight

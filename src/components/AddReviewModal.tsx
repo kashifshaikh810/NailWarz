@@ -107,6 +107,7 @@ const AddReviewModal = ({ modalVisible, setModalVisible, setRefresh, onBackdropP
             <AppTextInput
               onChangeText={value => setReviewMsg(value)}
               multiline
+              
               height={14}
               fntSize={2.3}
               containerBg={AppColors.INPUTBG}

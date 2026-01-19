@@ -123,12 +123,13 @@ const SelectAnyTech = ({ navigation, route }) => {
   };
   return (
     <SafeAreaView style={globalStyles.container}>
-      <AppHeader onPress={() => navigation.goBack()} title="Date and time" />
+      <AppHeader onPress={() => navigation.goBack()} title="Appointment Date & time" />
       <View
         style={{
           backgroundColor: '#B4B4B4',
           height: 0.5,
           elevation: 5,
+
           width: '100%',
         }}
       />
@@ -152,6 +153,10 @@ const SelectAnyTech = ({ navigation, route }) => {
                 style={{
                   backgroundColor: AppColors.WHITE,
                   elevation: 6,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 6,
                   borderRadius: 10,
                   alignItems: 'center',
                   paddingHorizontal: responsiveWidth(3.4),
@@ -186,6 +191,10 @@ const SelectAnyTech = ({ navigation, route }) => {
               style={{
                 backgroundColor: AppColors.WHITE,
                 elevation: 6,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 6,
                 borderRadius: 10,
                 alignItems: 'center',
                 // paddingHorizontal: responsiveWidth(3.4),
@@ -223,6 +232,10 @@ const SelectAnyTech = ({ navigation, route }) => {
                 style={{
                   backgroundColor: AppColors.WHITE,
                   elevation: 6,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 6,
                   borderRadius: 10,
                   marginTop: responsiveHeight(2),
                   alignItems: 'center',
@@ -252,6 +265,10 @@ const SelectAnyTech = ({ navigation, route }) => {
                     style={{
                       backgroundColor: AppColors.WHITE,
                       elevation: 5,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.15,
+                      shadowRadius: 6,
                       borderRadius: 10,
                       paddingHorizontal: responsiveWidth(3.4),
                       paddingVertical: 10,
@@ -275,11 +292,18 @@ const SelectAnyTech = ({ navigation, route }) => {
               )}
             </View>
           ) : null}
-
-
-
+          {showPicker && (
+            <DateTimePicker
+              value={selectedTime || new Date()}
+              mode="time"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleTimeChange}
+              minimumDate={new Date()} // Optional: disable past dates
+            />
+          )}
         </View>
       )}
+
       <View style={{ justifyContent: 'flex-end', alignItems: 'center', marginBottom: responsiveHeight(2) }}>
         <AppButton width={90} bgColor={technicianDetails._id ? AppColors.BTNCOLOURS : '#CCCCCC'} disabled={technicianDetails._id ? false : true} handlePress={handleNavigation} title={'Next'} />
       </View>
@@ -290,15 +314,7 @@ const SelectAnyTech = ({ navigation, route }) => {
         selected={selectedDateFromCalendar}
         setSelected={handleDateSelection}
       />
-      {showPicker && (
-        <DateTimePicker
-          value={selectedTime || new Date()}
-          mode="time"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleTimeChange}
-          minimumDate={new Date()} // Optional: disable past dates
-        />
-      )}
+
     </SafeAreaView>
   );
 };

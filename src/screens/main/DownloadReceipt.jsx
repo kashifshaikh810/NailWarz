@@ -146,6 +146,9 @@ const DownloadReceipt = ({route}) => {
             style={{
               backgroundColor: AppColors.WHITE,
               elevation: 6,
+               shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
               borderRadius: 10,
               paddingVertical: responsiveHeight(2),
               paddingHorizontal: responsiveWidth(4),
@@ -195,6 +198,9 @@ const DownloadReceipt = ({route}) => {
             style={{
               backgroundColor: AppColors.WHITE,
               elevation: 6,
+              shadowColor: '#000',
+              shadowOffset: {width: 0, height: 4},
+              shadowOpacity: 0.15,
               borderRadius: 10,
               paddingVertical: responsiveHeight(2),
               paddingHorizontal: responsiveWidth(4),

@@ -71,7 +71,6 @@ export const signInWithGoogle = async (userName: string, email: string, fcmToken
     throw error;
   }
 };
-
 export const ShowToast = (type: string, text: string) => {
   return Toast.show({
     type: type,
@@ -170,6 +169,7 @@ export const editProfile = async (
   stripeCustomerId: string,
   showToast?: boolean,
   notify?: boolean,
+  phNumber?: number,
 ) => {
   let data = new FormData();
   data.append('userId', userId);
@@ -188,6 +188,9 @@ export const editProfile = async (
   }
   if (notify !== null) {
     data.append('notify', notify);
+  }
+  if (phNumber) {
+    data.append('phone', phNumber);
   }
   const config = {
     method: 'post',

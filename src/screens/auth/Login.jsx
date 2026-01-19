@@ -79,8 +79,8 @@ const Login = () => {
           authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
         if (enabled) {
-          const fcmToken = await messaging().getToken();
-          setFcmToken(fcmToken);
+          const myfcmToken = await messaging().getToken();
+          setFcmToken(myfcmToken);
           console.log('FCM Token:', fcmToken);
           // Alert.alert('FCM Token', fcmToken);
         } else {

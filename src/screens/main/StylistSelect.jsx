@@ -82,6 +82,9 @@ const StylistSelect = ({route}) => {
               alignItems: 'center',
               backgroundColor: AppColors.WHITE,
               elevation: 6,
+              shadowColor: '#000',
+              shadowOffset: {width: 0, height: 4},
+              shadowOpacity: 0.15,
             }}>
             <Feather
               name={'users'}
@@ -128,6 +131,9 @@ const StylistSelect = ({route}) => {
                         ? AppColors.BTNCOLOURS
                         : AppColors.WHITE,
                     elevation: 5,
+                    shadowColor: '#000',
+                    shadowOffset: {width: 0, height: 4},
+                    shadowOpacity: 0.15,
                   }}>
                   <Image
                     source={{uri: `${ImageBaseUrl}${item?.image}`}}

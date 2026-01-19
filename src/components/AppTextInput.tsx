@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Platform } from 'react-native';
 import React from 'react';
 import { responsiveFontSize, responsiveHeight, responsiveWidth } from '../utils/Responsive_Dimensions';
 import AppColors from '../utils/AppColors';
@@ -57,7 +57,7 @@ const AppTextInput = ({ logo, label, containerWidth, handleEyePress, showEye = f
           scrollEnabled={true}
           style={{
             flex: 1,
-            height: responsiveHeight(height),
+            height: Platform.OS === 'ios' ? responsiveHeight(multiline ? 14 : 5) : responsiveHeight(height),
             color: AppColors.BLACK,
             fontSize: responsiveFontSize(fntSize),
           }}

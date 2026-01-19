@@ -29,9 +29,11 @@ const LiveVotingScores = ({route}) => {
     <SafeAreaView style={globalStyles.container}>
       <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
         <AppHeader
+          paddingHorizontal={0.1}
           onPress={() => navigation.goBack()}
           title={'LIVE VOTING SCORES'}
           isTextAlignCentered={true}
+          // giveGap
         />
         <View style={{paddingHorizontal: responsiveWidth(3)}}>
           <FlatList

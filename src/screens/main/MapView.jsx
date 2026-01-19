@@ -118,7 +118,7 @@ const MapViewScreen = () => {
 
   return (
     <SafeAreaView style={globalStyles.container}>
-      <AppHeader onPress={() => navigation.goBack()} title={'Map View'} />
+      <AppHeader  onPress={() => navigation.goBack()} title={'Map View'} />
 
       <FilterModal visible={showFilterModal} setVisible={setShowFilterModal} />
 

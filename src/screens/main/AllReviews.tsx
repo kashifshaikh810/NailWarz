@@ -36,7 +36,7 @@ const AllReviews = ({ navigation, route }) => {
       });
       setAllReviews(response?.data);
     } else {
-      ShowToast('error', response.message);
+      // ShowToast('error', response.message);
     }
   };
   useEffect(() => {
@@ -77,21 +77,28 @@ const AllReviews = ({ navigation, route }) => {
                   />
                 </View>
               </View>
-              <View>
-                <FlatList
-                  contentContainerStyle={{
-                    gap: responsiveHeight(2),
-                    marginTop: responsiveHeight(2.5),
-                    margin: responsiveHeight(0.7),
-                    paddingBottom: responsiveHeight(3),
-                  }}
-                  showsHorizontalScrollIndicator={false}
-                  data={allReviews}
-                  renderItem={({ item }) => {
-                    return <ReviewsCard data={item} />;
-                  }}
-                />
-              </View>
+              {allReviews?.length ? (
+                <View>
+                  <FlatList
+                    contentContainerStyle={{
+                      gap: responsiveHeight(2),
+                      marginTop: responsiveHeight(2.5),
+                      margin: responsiveHeight(0.7),
+                      paddingBottom: responsiveHeight(3),
+                    }}
+                    showsHorizontalScrollIndicator={false}
+                    data={allReviews}
+                    renderItem={({ item }) => {
+                      return <ReviewsCard data={item} />;
+                    }}
+                  />
+                </View>
+              ) : (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                  <AppText title="No Reviews Found..." textSize={2.5} />
+                </View>
+              )}
+
               <View style={{ flex: 1, justifyContent: 'flex-end' }}>
                 <AppButton handlePress={() => setModalVisible(true)} title="Add Review" />
               </View>

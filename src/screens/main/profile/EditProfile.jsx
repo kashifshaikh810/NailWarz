@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Image,
@@ -32,9 +32,10 @@ import {globalStyles} from '../../../GlobalFunctions/styles';
 const EditProfile = () => {
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
-  const [userName, setUserName] = useState();
-  const [imageUri, setImageUri] = useState();
   const {userData} = useSelector(state => state.user);
+  const [phNumber, setPhNumber] = useState(userData?.phone || null);
+  const [userName, setUserName] = useState(userData?.username || null);
+  const [imageUri, setImageUri] = useState();
   const dispatch = useDispatch();
   // console.log('_id', _id);
   const showImagePickerOptions = () => {
@@ -75,10 +76,16 @@ const EditProfile = () => {
       null,
       true,
       null,
+      phNumber,
     );
     setIsLoading(false);
   };
 
+  useEffect(() => {
+    if (userData?.phone) {
+      setPhNumber(String(userData.phone));
+    }
+  }, [userData]);
   return (
     <SafeAreaView style={globalStyles.container}>
       <AppHeader onPress={() => navigation.goBack()} title="Edit Profile" />
@@ -127,8 +134,9 @@ const EditProfile = () => {
           <View style={{gap: responsiveHeight(1), width: '100%'}}>
             <AppText title="User Name" textSize={1.9} textFontWeight={400} />
             <AppTextInput
+              value={userName}
               onChangeText={value => setUserName(value)}
-              inputPlaceHolder={'Charles James'}
+              inputPlaceHolder="Enter your user name"
               containerBg={AppColors.INPUTBG}
             />
             {/* <LineBreak space={2} />
@@ -144,6 +152,17 @@ const EditProfile = () => {
               inputPlaceHolder={'+123 456 7890'}
               containerBg={AppColors.INPUTBG}
             /> */}
+          </View>
+          <LineBreak space={2} />
+          <View style={{gap: responsiveHeight(1), width: '100%'}}>
+            <AppText title="Phone Number" textSize={1.9} textFontWeight={400} />
+            <AppTextInput
+              keyboardType="numeric"
+              value={phNumber}
+              onChangeText={value => setPhNumber(value)}
+              inputPlaceHolder="Enter your phone number"
+              containerBg={AppColors.INPUTBG}
+            />
           </View>
           <View
             style={{

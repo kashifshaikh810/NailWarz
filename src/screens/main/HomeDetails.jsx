@@ -248,6 +248,10 @@ const HomeDetails = ({route}) => {
                 style={{
                   backgroundColor: AppColors.WHITE,
                   elevation: 5,
+                  shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 5,
                   padding: responsiveHeight(2),
                   borderRadius: responsiveHeight(1),
                 }}>
@@ -489,6 +493,10 @@ const HomeDetails = ({route}) => {
                           borderRadius: 10,
                           backgroundColor: AppColors.WHITE,
                           elevation: 6,
+                          shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 5,
                           paddingHorizontal: responsiveWidth(4),
                           paddingVertical: responsiveHeight(2),
                         }}>
@@ -595,7 +603,7 @@ const HomeDetails = ({route}) => {
                     />
                   </View>
                 </View>
-                {allReviews?.length > 0 ? (
+                {/* {allReviews?.length > 0 ? ( */}
                   <TouchableOpacity
                     onPress={() =>
                       navigation.navigate('AllReviews', {saloonId})
@@ -608,7 +616,7 @@ const HomeDetails = ({route}) => {
                       textColor={AppColors.BTNCOLOURS}
                     />
                   </TouchableOpacity>
-                ) : null}
+                {/* ) : null} */}
               </View>
             </View>
             <FlatList

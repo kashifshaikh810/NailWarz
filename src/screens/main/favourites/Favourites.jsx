@@ -88,7 +88,11 @@ const Favourites = () => {
   return (
     <ScrollView
       contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
-      <AppHeader onPress={() => navigation.goBack()} title="Favorites" />
+      <AppHeader
+        pTop={8.8}
+        onPress={() => navigation.goBack()}
+        title="Favorites"
+      />
       <View
         style={{
           backgroundColor: '#B4B4B4',
@@ -120,7 +124,7 @@ const Favourites = () => {
             contentContainerStyle={{
               gap: 10,
               paddingHorizontal: responsiveWidth(5),
-              alignSelf: 'center',
+              // alignSelf: 'center',
             }}
             // keyExtractor={item => item.id.toString()}
             renderItem={({item}) => (

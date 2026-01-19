@@ -45,6 +45,10 @@ import ConfirmationModal from '../../../components/ConfirmationModal';
 import {getWalletByUserId} from '../../../GlobalFunctions';
 import Geolocation from '@react-native-community/geolocation';
 import Modal from 'react-native-modal';
+import {
+  getCurrentLocation,
+  getCurrentLocationWithAddress,
+} from '../../../GlobalFunctions/LocationService';
 const Profile = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -60,8 +64,9 @@ const Profile = () => {
   const [latLng, setLatLng] = useState({
     latitude: 37.4219983,
     longitude: -122.084,
+    address: 'Fetching location...',
   });
-  console.log('address', address);
+  console.log('latLng', latLng);
 
   const profileMenus = [
     {
@@ -235,7 +240,7 @@ const Profile = () => {
     {
       id: 4,
       title: 'Address',
-      value: address ? address : '-',
+      value: latLng?.address ? latLng?.address : '-',
       Icon: Ionicons,
       iconName: 'location-outline',
     },
@@ -332,77 +337,87 @@ const Profile = () => {
       setIsLoading(false);
     }
   };
-  const fetchAddressFromCoords = async (lat, lng) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-        {
-          headers: {
-            'User-Agent': 'ReactNativeApp',
-          },
-        },
-      );
+  // const fetchAddressFromCoords = async (lat, lng) => {
+  //   try {
+  //     const response = await fetch(
+  //       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+  //       {
+  //         headers: {
+  //           'User-Agent': 'ReactNativeApp',
+  //         },
+  //       },
+  //     );
 
-      const json = await response.json();
-      const a = json.address;
+  //     const json = await response.json();
+  //     const a = json.address;
 
-      // Street-first priority
-      const street =
-        a.road || a.street || a.residential || a.pedestrian || a.house_number;
+  //     // Street-first priority
+  //     const street =
+  //       a.road || a.street || a.residential || a.pedestrian || a.house_number;
 
-      const area =
-        a.neighbourhood || a.suburb || a.village || a.town || a.city_district;
+  //     const area =
+  //       a.neighbourhood || a.suburb || a.village || a.town || a.city_district;
 
-      const city = a.city || a.town || a.village || a.state_district;
-      const state = a.state;
-      const country = a.country;
+  //     const city = a.city || a.town || a.village || a.state_district;
+  //     const state = a.state;
+  //     const country = a.country;
 
-      // Build final short address
-      const parts = [street, area, city, state, country].filter(Boolean);
+  //     // Build final short address
+  //     const parts = [street, area, city, state, country].filter(Boolean);
 
-      const finalAddress = parts.slice(0, 3).join(', ');
-      // takes only most relevant 3 parts
+  //     const finalAddress = parts.slice(0, 3).join(', ');
+  //     // takes only most relevant 3 parts
 
-      console.log('Short Address:', finalAddress);
-      setAddress(finalAddress);
-    } catch (error) {
-      console.log('Reverse geocoding error:', error);
-    }
-  };
-  const getCurrentLocation = () => {
-    Geolocation.getCurrentPosition(
-      position => {
-        const {latitude, longitude} = position.coords;
-        console.log(position);
-        setLatLng({latitude, longitude});
-        fetchAddressFromCoords(latitude, longitude); // ✅ call here with params
-      },
-      error => {
-        // See error code charts below.
-        console.log(error.code, error.message);
-      },
-      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-    );
-  };
-  const requestLocationPermission = async () => {
-    if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    }
-    return true;
-  };
+  //     console.log('Short Address:', finalAddress);
+  //     setAddress(finalAddress);
+  //   } catch (error) {
+  //     console.log('Reverse geocoding error:', error);
+  //   }
+  // };
+  // const getCurrentLocation = () => {
+  //   Geolocation.getCurrentPosition(
+  //     position => {
+  //       const {latitude, longitude} = position.coords;
+  //       console.log(position);
+  //       setLatLng({latitude, longitude});
+  //       fetchAddressFromCoords(latitude, longitude); // ✅ call here with params
+  //     },
+  //     error => {
+  //       // See error code charts below.
+  //       console.log(error.code, error.message);
+  //     },
+  //     {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+  //   );
+  // };
+  // const requestLocationPermission = async () => {
+  //   if (Platform.OS === 'android') {
+  //     const granted = await PermissionsAndroid.request(
+  //       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+  //     );
+  //     return granted === PermissionsAndroid.RESULTS.GRANTED;
+  //   }
+  //   return true;
+  // };
+  // useEffect(() => {
+  //   const initLocation = async () => {
+  //     const granted = await requestLocationPermission();
+  //     if (granted) {
+  //       console.log('granted', granted);
+  //       getCurrentLocation();
+  //     }
+  //   };
+
+  //   initLocation();
+  // }, []);
   useEffect(() => {
-    const initLocation = async () => {
-      const granted = await requestLocationPermission();
-      if (granted) {
-        console.log('granted', granted);
-        getCurrentLocation();
+    const fetchLocation = async () => {
+      const loc = await getCurrentLocationWithAddress();
+      if (loc) {
+        setLatLng(loc);
       }
+      console.log('Current location:', loc);
     };
-
-    initLocation();
+    fetchLocation();
   }, []);
   const getWalletHandler = async () => {
     setIsLoading(true);
@@ -497,6 +512,7 @@ const Profile = () => {
         flexGrow: 1,
         backgroundColor: AppColors.WHITE,
         padding: responsiveHeight(2),
+        paddingTop: Platform.OS === 'ios' ? responsiveHeight(8.8) : null,
       }}>
       <View
         style={{
@@ -541,6 +557,10 @@ const Profile = () => {
         style={{
           backgroundColor: AppColors.WHITE,
           elevation: 5,
+          shadowColor: '#000',
+          shadowOffset: {width: 0, height: 3},
+          shadowOpacity: 0.2,
+          shadowRadius: 4,
           marginTop: responsiveHeight(3),
           padding: responsiveHeight(2),
           borderRadius: responsiveHeight(2),

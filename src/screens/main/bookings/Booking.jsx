@@ -98,6 +98,7 @@ const Booking = () => {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
       <AppHeader
+        pTop={8.8}
         style={{paddingBottom: responsiveHeight(2)}}
         onPress={() => navigation.goBack()}
         title="Bookings"

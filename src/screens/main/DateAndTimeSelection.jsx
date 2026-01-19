@@ -7,6 +7,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import AppColors from '../../utils/AppColors';
 import {useNavigation} from '@react-navigation/native';
@@ -258,7 +259,10 @@ const DateAndTimeSelection = ({route}) => {
   return (
     <SafeAreaView style={globalStyles.container}>
       <ScrollView style={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
-        <AppHeader onPress={() => navigation.goBack()} title="Date & Time" />
+        <AppHeader
+          onPress={() => navigation.goBack()}
+          title="Appointment Date & Time"
+        />
         <View
           style={{
             backgroundColor: '#B4B4B4',
@@ -293,11 +297,15 @@ const DateAndTimeSelection = ({route}) => {
                 style={{
                   backgroundColor: AppColors.WHITE,
                   elevation: 6,
+                  shadowColor: '#000',
+                  shadowOffset: {width: 0, height: 4},
+                  shadowOpacity: 0.15,
+                  shadowRadius: 6,
                   borderRadius: 10,
                   alignItems: 'center',
                   paddingHorizontal: responsiveWidth(3.4),
                   paddingVertical: 10,
-                  width: responsiveWidth(16),
+                  width: responsiveWidth(Platform.OS === 'ios' ? 17 : 16),
                   height: responsiveHeight(9.5),
                   gap: 5,
                 }}
@@ -328,6 +336,10 @@ const DateAndTimeSelection = ({route}) => {
                   style={{
                     backgroundColor: AppColors.WHITE,
                     elevation: 6,
+                    shadowColor: '#000',
+                    shadowOffset: {width: 0, height: 4},
+                    shadowOpacity: 0.15,
+                    shadowRadius: 6,
                     borderRadius: 10,
                     alignItems: 'center',
                     paddingHorizontal: responsiveWidth(3.4),
@@ -404,6 +416,10 @@ const DateAndTimeSelection = ({route}) => {
                     style={{
                       backgroundColor: AppColors.WHITE,
                       elevation: 5,
+                      shadowColor: '#000',
+                      shadowOffset: {width: 0, height: 4},
+                      shadowOpacity: 0.15,
+                      shadowRadius: 6,
                       borderRadius: 10,
                       paddingHorizontal: responsiveWidth(3.4),
                       paddingVertical: 10,

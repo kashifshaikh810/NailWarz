@@ -345,7 +345,7 @@ export const sharePost = async (userId: string, postId: string, message: string)
     throw error;
   }
 };
-export const createBooking = async (userId: string, salonId: string, serviceId: string, technicianId: string, date: string, time: string,amount:number) => {
+export const createBooking = async (userId: string, salonId: string, serviceId: string, technicianId: string, date: string, time: string, amount: number) => {
   let data = JSON.stringify({
     'userId': userId,
     'salonId': salonId,
@@ -458,7 +458,7 @@ export const getBookingById = async (bookingId: string) => {
   let config = {
     method: 'get',
     maxBodyLength: Infinity,
-    url: `https://predemo.site/Nailwarz/api/getBookingById?bookingId=${bookingId}`,
+    url: `${BaseUrl}getBookingById?bookingId=${bookingId}`,
     headers: {},
   };
   try {
@@ -548,7 +548,7 @@ export const getAllBattles = async () => {
   let config = {
     method: 'get',
     maxBodyLength: Infinity,
-    url: `${BaseUrl}getAllBattle`,
+    url: `${BaseUrl}battle?participants=${false}&upcoming=${false}`,
     headers: {},
   };
   try {
@@ -562,7 +562,7 @@ export const getBattleById = async (battleId: string) => {
   let config = {
     method: 'get',
     maxBodyLength: Infinity,
-    url: `${BaseUrl}getBattleById?battleId=${battleId}`,
+    url: `${BaseUrl}battle/${battleId}`,
     headers: {},
   };
   try {
@@ -572,10 +572,10 @@ export const getBattleById = async (battleId: string) => {
     throw error;
   }
 };
-export const addVote = async (battleId: string, salonId: string, userId: string) => {
+export const addVote = async (battleId: string, participantId: string, userId: string) => {
   let data = JSON.stringify({
     'battleId': battleId,
-    'salonId': salonId,
+    'participantId': participantId,
     'userId': userId,
   });
 
@@ -667,7 +667,7 @@ export const createPayment = async (bookingId: string, amount: number, currency:
   let config = {
     method: 'post',
     maxBodyLength: Infinity,
-    url: 'https://predemo.site/Nailwarz/api/createPaymentIntent',
+    url: `${BaseUrl}createPaymentIntent`,
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
@@ -693,6 +693,7 @@ export const getAllNotifications = async (userId: string) => {
   };
   try {
     const response = await axios.request(config);
+    console.log('resssposen', response)
     return response?.data;
   } catch (error) {
     throw error;
@@ -740,3 +741,67 @@ export const payWithWallet = async (userId: string, bookingId: string, bookingAm
     throw error;
   }
 };
+export const battleForm = async (
+  fullName: string,
+  email: string,
+  phone: number,
+  address: string,
+  serviceImage: any,
+  socialPlatform: string,
+  socialHandle: string,
+  description: string,
+  navigation: any,
+) => {
+  const data = new FormData();
+
+  data.append('name', fullName);
+  data.append('description', description);
+  data.append('phone', String(phone));
+  data.append('email', email);
+  data.append('address', address);
+
+  data.append(
+    'social',
+    JSON.stringify({
+      name: socialHandle,
+      platform: socialPlatform,
+    }),
+  );
+
+  data.append('images', {
+    uri: serviceImage,
+    name: 'image.jpg',
+    type: 'image/jpeg',
+  });
+  console.log('serviceImage', serviceImage);
+  const config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}superAdmin/content`,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      // Authorization: `Bearer ${token}`,
+    },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config)
+
+    if (response.data.success) {
+      ShowToast('success', response.data.message);
+      navigation.goBack();
+    } else {
+      ShowToast('error', response.data.message);
+    }
+
+    return response.data;
+  } catch (error) {
+    console.log('error gloabal function', error.response.data.message);
+    ShowToast(
+      'error',
+      error?.response?.data?.message || 'Something went wrong',
+    );
+    throw error;
+  }
+};
+

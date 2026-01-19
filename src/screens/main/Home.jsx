@@ -43,6 +43,7 @@ import {editProfile, ShowToast} from '../../GlobalFunctions/auth';
 import {useDispatch, useSelector} from 'react-redux';
 import {setUserData} from '../../Redux/Slices';
 import moment from 'moment';
+import {getCurrentLocationWithAddress} from '../../GlobalFunctions/LocationService';
 
 const Home = () => {
   const [serviceSelected, setServiceSelect] = useState(0);
@@ -63,6 +64,7 @@ const Home = () => {
   const [latLng, setLatLng] = useState({
     latitude: 37.4219983,
     longitude: -122.084,
+    address: 'Fetching location...',
   });
   const [saloons, setSaloons] = useState([]);
   console.log('isNearby', isNearby);
@@ -76,16 +78,26 @@ const Home = () => {
     saloons[0]?.workingDays[moment(currentDate).day() - 1],
   );
 
-  useEffect(() => {
-    const initLocation = async () => {
-      const granted = await requestLocationPermission();
-      if (granted) {
-        console.log('granted', granted);
-        getCurrentLocation();
-      }
-    };
+  // useEffect(() => {
+  //   const initLocation = async () => {
+  //     const granted = await requestLocationPermission();
+  //     if (granted) {
+  //       console.log('granted', granted);
+  //       getCurrentLocation();
+  //     }
+  //   };
 
-    initLocation();
+  //   initLocation();
+  // }, []);
+  useEffect(() => {
+    const fetchLocation = async () => {
+      const loc = await getCurrentLocationWithAddress();
+      if (loc) {
+        setLatLng(loc);
+      }
+      console.log('Current location:', loc);
+    };
+    fetchLocation();
   }, []);
   useEffect(() => {
     getAllCategoriesHandler();
@@ -120,49 +132,49 @@ const Home = () => {
       ShowToast('error', response?.message);
     }
   };
-  const fetchAddressFromCoords = async (lat, lng) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-        {
-          headers: {
-            'User-Agent': 'ReactNativeApp', // required by Nominatim
-          },
-        },
-      );
-      const json = await response.json();
-      const fetchedAddress = json.display_name;
-      console.log('Address:', fetchedAddress);
-      setAddress(fetchedAddress);
-    } catch (error) {
-      console.log('Reverse geocoding error:', error);
-    }
-  };
-  const requestLocationPermission = async () => {
-    if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    }
-    return true;
-  };
+  // const fetchAddressFromCoords = async (lat, lng) => {
+  //   try {
+  //     const response = await fetch(
+  //       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+  //       {
+  //         headers: {
+  //           'User-Agent': 'ReactNativeApp', // required by Nominatim
+  //         },
+  //       },
+  //     );
+  //     const json = await response.json();
+  //     const fetchedAddress = json.display_name;
+  //     console.log('Address:', fetchedAddress);
+  //     setAddress(fetchedAddress);
+  //   } catch (error) {
+  //     console.log('Reverse geocoding error:', error);
+  //   }
+  // };
+  // const requestLocationPermission = async () => {
+  //   if (Platform.OS === 'android') {
+  //     const granted = await PermissionsAndroid.request(
+  //       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+  //     );
+  //     return granted === PermissionsAndroid.RESULTS.GRANTED;
+  //   }
+  //   return true;
+  // };
 
-  const getCurrentLocation = () => {
-    Geolocation.getCurrentPosition(
-      position => {
-        const {latitude, longitude} = position.coords;
-        console.log(position);
-        setLatLng({latitude, longitude});
-        fetchAddressFromCoords(latitude, longitude); // ✅ call here with params
-      },
-      error => {
-        // See error code charts below.
-        console.log(error.code, error.message);
-      },
-      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-    );
-  };
+  // const getCurrentLocation = () => {
+  //   Geolocation.getCurrentPosition(
+  //     position => {
+  //       const {latitude, longitude} = position.coords;
+  //       console.log(position);
+  //       setLatLng({latitude, longitude});
+  //       fetchAddressFromCoords(latitude, longitude); // ✅ call here with params
+  //     },
+  //     error => {
+  //       // See error code charts below.
+  //       console.log(error.code, error.message);
+  //     },
+  //     {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+  //   );
+  // };
   const getSaloonsHandler = async () => {
     console.log('catid', currentCategory?.categoryId);
     console.log('lat', latLng?.latitude);
@@ -278,7 +290,7 @@ const Home = () => {
               <AppText textColor={'#D1D1D1'} title="Location" textSize={1.9} />
               <AppText
                 textColor={'#D1D1D1'}
-                title={address}
+                title={latLng?.address}
                 textwidth={60}
                 numberOfLines={2}
                 textSize={1.8}
@@ -327,7 +339,7 @@ const Home = () => {
             source={APPImages.DISCOUNT}
             style={{
               width: responsiveWidth(90),
-              height: responsiveHeight(20),
+              height: responsiveHeight(Platform.OS === 'ios' ? 18 : 20),
               borderRadius: 15,
               margin: 20,
               overflow: 'hidden',
@@ -342,28 +354,22 @@ const Home = () => {
               }}>
               <View style={{gap: responsiveHeight(0.1)}}>
                 <AppText
-                  title="Compete For Nail Champion"
-                  textSize={2}
-                  styles={{fontWeight: '800'}}
+                  title="COMPETE FOR NAIL CHAMPION"
+                  textSize={1.8}
+                  styles={{fontWeight: '700'}}
                   textColor={AppColors.WHITE}
                 />
                 <AppText
-                  title="Get 20% Off"
-                  textSize={2.5}
+                  title="Win Fun Prizes and Promotion"
+                  textSize={2.1}
                   textColor={AppColors.WHITE}
-                  styles={{fontWeight: '900'}}
+                  styles={{fontWeight: '800'}}
                 />
-                <AppText textSize={1.7} textColor={AppColors.WHITE}>
-                  Get your next manicure for{' '}
-                  <Text
-                    style={{
-                      fontWeight: 'bold',
-                      fontSize: responsiveFontSize(1.7),
-                    }}>
-                    FREE
-                  </Text>{' '}
-                  on us!
-                </AppText>
+                <AppText
+                  title="May the Best Set Win!"
+                  textSize={1.8}
+                  textColor={AppColors.WHITE}
+                />
               </View>
               <TouchableOpacity
                 onPress={() => navigation.navigate('BattleForm')}
@@ -427,6 +433,10 @@ const Home = () => {
                           borderRadius: 10,
                           gap: 5,
                           elevation: 5,
+                          shadowColor: '#000',
+                          shadowOffset: {width: 0, height: 2},
+                          shadowOpacity: 0.15,
+                          shadowRadius: 5,
                         }}>
                         {/* <Image
                     source={item.icon}

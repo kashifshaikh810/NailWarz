@@ -110,6 +110,10 @@ const BookingCard = ({
           alignSelf: 'center',
           backgroundColor: AppColors.WHITE,
           elevation: 7,
+          shadowColor: '#000',
+          shadowOffset: {width: 0, height: 2},
+          shadowOpacity: 0.15,
+          shadowRadius: 5,
         }}>
         <View
           style={

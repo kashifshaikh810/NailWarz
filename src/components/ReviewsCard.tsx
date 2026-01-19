@@ -14,7 +14,12 @@ interface ReviewCardProps {
 }
 const ReviewsCard: React.FC<ReviewCardProps> = ({ data }) => {
   return (
-    <View style={{ padding: responsiveHeight(2), backgroundColor: AppColors.WHITE, elevation: 6, borderRadius: responsiveHeight(1.5) }}>
+    <View style={{
+      padding: responsiveHeight(2), backgroundColor: AppColors.WHITE, elevation: 6, shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 5, borderRadius: responsiveHeight(1.5)
+    }}>
       <View style={{ flexDirection: 'row', gap: responsiveHeight(3.3), justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', gap: responsiveHeight(2), alignItems: 'center' }}>
           <Image source={data?.userId?.image ? { uri: `${ImageBaseUrl}${data?.userId?.image}` } : APPImages.dummyImg} style={{ height: responsiveHeight(7), width: responsiveWidth(14), borderRadius: responsiveHeight(4) }} />

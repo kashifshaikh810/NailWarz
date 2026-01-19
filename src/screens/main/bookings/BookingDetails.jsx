@@ -22,6 +22,9 @@ const BookingDetails = ({navigation, route}) => {
   const refRBSheet = useRef();
   const refRescheduleRBSheet = useRef();
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const momentDay = moment().day();
+  const index = momentDay === 0 ? 6 : momentDay - 1;
+  console.log('data=====', data);
   const handleCancelBooking = async () => {
     setCancelLoading(true);
     try {
@@ -61,6 +64,7 @@ const BookingDetails = ({navigation, route}) => {
               TotalNoOfRating={data?.salonId?.totalReviews}
               img={data?.salonId?.image[0]}
               location={data?.salonId?.locationName}
+              workingDays={data?.salonId?.workingDays[index]}
               itemId={data?._id}
               // isShowDeleteIcon={isShowDeleteIcon}
               // setIsShowDeleteIcon={setIsShowDeleteIcon}

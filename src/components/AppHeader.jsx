@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Platform,
 } from 'react-native';
 import AppText from './AppTextComps/AppText';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -32,6 +33,7 @@ const AppHeader = ({
   showHeartIcon,
   giveGap = false,
   isLogo = false,
+  pTop = 2,
 }) => {
   console.log('sifvrt', isFvrt);
   return (
@@ -41,7 +43,7 @@ const AppHeader = ({
           flexDirection: 'row',
           backgroundColor: AppColors.WHITE,
           gap: title ? 10 : 0,
-          paddingTop: title ? responsiveHeight(3) : 10,
+          paddingTop: Platform.OS === 'ios' && title ? responsiveHeight(pTop) :  title ? responsiveHeight(3) : 10,
           paddingBottom: title ? responsiveHeight(3) : 10,
           justifyContent:
             title && !isTextAlignCentered ? 'flex-start' : 'space-between',
@@ -59,7 +61,7 @@ const AppHeader = ({
         />
       </TouchableOpacity>
       <AppText
-        mrgnLeft={giveGap ? 3.5 : 1}
+        mrgnLeft={giveGap ? 3.5 : 0.1}
         textColor={'red'}
         title={title}
         textSize={2.3}

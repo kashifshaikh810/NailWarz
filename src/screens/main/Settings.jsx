@@ -67,6 +67,7 @@ const Settings = ({navigation}) => {
       null,
       false,
       !isEnabled,
+      null,
     );
   };
   let timeoutId;
