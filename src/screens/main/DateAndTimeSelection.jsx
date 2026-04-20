@@ -25,12 +25,13 @@ import CalendarModal from '../../components/CalendarModal';
 import {getTechnicianById} from '../../GlobalFunctions';
 import {ShowToast} from '../../GlobalFunctions/auth';
 import moment from 'moment';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
 
 const DateAndTimeSelection = ({route}) => {
   const navigation = useNavigation();
   const {data} = route?.params;
+  const insets = useSafeAreaInsets();
   const [isSelectedDate, setIsSelectedDate] = useState({id: 0});
   const [selectedDay, setSelectedDay] = useState();
   const [isSelectedTime, setIsSelectedTime] = useState({id: 0});
@@ -258,7 +259,7 @@ const DateAndTimeSelection = ({route}) => {
 
   return (
     <SafeAreaView style={globalStyles.container}>
-      <ScrollView style={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+      <ScrollView style={{flexGrow: 1, backgroundColor: AppColors.WHITE,paddingBottom:responsiveHeight(10)}}>
         <AppHeader
           onPress={() => navigation.goBack()}
           title="Appointment Date & Time"
@@ -484,7 +485,7 @@ const DateAndTimeSelection = ({route}) => {
           style={{
             marginHorizontal: responsiveHeight(2),
             position: 'absolute',
-            bottom: responsiveHeight(2),
+            bottom: 60 + insets.bottom + responsiveHeight(1),
             width: responsiveWidth(90),
             alignSelf: 'center',
           }}
@@ -502,8 +503,6 @@ const DateAndTimeSelection = ({route}) => {
               },
             })
           }
-          // bgColor={AppColors.DARKGRAY}
-          // textColor={AppColors.WHITE}
         />
       ) : null}
     </SafeAreaView>

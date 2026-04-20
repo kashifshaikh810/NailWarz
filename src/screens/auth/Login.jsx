@@ -8,6 +8,7 @@ import {
   ScrollView,
   ImageBackground,
   Alert,
+  Platform,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import AppText from '../../components/AppTextComps/AppText';
@@ -42,9 +43,16 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import {setIsGoogleSignIn, setToken, setUserData} from '../../Redux/Slices';
-import messaging from '@react-native-firebase/messaging';
+import messaging, {
+  AuthorizationStatus,
+  getMessaging,
+  getToken,
+  requestPermission,
+} from '@react-native-firebase/messaging';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
+import {getApp} from '@react-native-firebase/app';
+import {getFcmToken} from '../../GlobalFunctions/Firebase';
 
 const Login = () => {
   const navigation = useNavigation();
@@ -60,39 +68,67 @@ const Login = () => {
   const [fcmToken, setFcmToken] = useState();
 
   console.log('fcmToken', fcmToken);
-  // GoogleSignin.configure({
-  //   webClientId:
-  //     '985993038096-pg0pmp2tdn6hpv9pij38arci06kpuc4p.apps.googleusercontent.com', // 👈 your Web clientId
-  //   offlineAccess: true,
-  // });
-  GoogleSignin.configure({
-    webClientId:
-      '985993038096-pg0pmp2tdn6hpv9pij38arci06kpuc4p.apps.googleusercontent.com',
-    offlineAccess: true,
-  });
   useEffect(() => {
-    const getToken = async () => {
-      try {
-        const authStatus = await messaging().requestPermission();
-        const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    // Configure Google Signin once on mount
+    GoogleSignin.configure({
+      // webClientId:
+      //   '985993038096-pg0pmp2tdn6hpv9pij38arci06kpuc4p.apps.googleusercontent.com',
+      webClientId:
+        '665014068027-4apep21pvbol701l1hjekqogokkf2et5.apps.googleusercontent.com',
+      offlineAccess: true,
+      iosClientId:
+        '665014068027-amaeijp61nakn5tlgfo6gorpvhg8bcbd.apps.googleusercontent.com', // add your iOS client ID here
+      // iosClientId: '<YOUR_IOS_CLIENT_ID.apps.googleusercontent.com>', // optional: add if using iOS OAuth client
+    });
+  }, []);
 
-        if (enabled) {
-          const myfcmToken = await messaging().getToken();
-          setFcmToken(myfcmToken);
-          console.log('FCM Token:', fcmToken);
-          // Alert.alert('FCM Token', fcmToken);
-        } else {
-          console.log('FCM permission not granted');
-        }
-      } catch (error) {
-        console.error('Error getting FCM token:', error);
+  useEffect(() => {
+    const fetchFcmToken = async () => {
+      try {
+        const newFcmToken = await getFcmToken();
+        console.log('FCM Token:', newFcmToken);
+        setFcmToken(newFcmToken);
+      } catch (err) {
+        console.error('Error fetching FCM token:', err);
       }
     };
-
-    getToken();
+    fetchFcmToken();
   }, []);
+
+  //   useEffect(() => {
+  //   const getFCMToken = async () => {
+  //     try {
+  //       const authStatus = await messaging().requestPermission();
+  //       const enabled =
+  //         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+  //         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+  //       if (!enabled) {
+  //         console.log('FCM permission not granted');
+  //         return;
+  //       }
+
+  //       await messaging().registerDeviceForRemoteMessages();
+
+  //       // Get initial token
+  //       const token = await messaging().getToken();
+  //       console.log('Initial FCM Token:', token);
+  //       setFcmToken(token);
+
+  //       // Listen for token refresh
+  //       const unsubscribe = messaging().onTokenRefresh(t => {
+  //         console.log('FCM Token refreshed:', t);
+  //         setFcmToken(t);
+  //       });
+
+  //       return unsubscribe;
+  //     } catch (err) {
+  //       console.error('Error getting FCM token:', err);
+  //     }
+  //   };
+
+  //   getFCMToken();
+  // }, []);
   const loginHandler = async () => {
     await userLogin(email, password, phone, fcmToken, dispatch, navigation);
   };
@@ -102,17 +138,24 @@ const Login = () => {
     setIsSigningIn(true);
 
     try {
-      await GoogleSignin.hasPlayServices();
-      await GoogleSignin.signOut();
+      // Android-only check is fine but harmless on iOS
+      await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+      // Sign out any previous session first (optional)
+      try {
+        await GoogleSignin.signOut();
+      } catch (e) {
+        // ignore signOut errors
+      }
+
       const userInfo = await GoogleSignin.signIn();
-      if (userInfo?.type === 'success') {
-        const {name} = userInfo.data.user;
+      console.log('userinfo', userInfo);
+      // `userInfo` shape from @react-native-google-signin/google-signin is:
+      // { user: { name, email, photo, id }, idToken, accessToken }
+      if (userInfo && userInfo.data && userInfo.data.user) {
+        const name = userInfo.data.user.name || '';
+        const useremail = userInfo.data.user.email || '';
         setGoogleLoading(true);
-        const response = await signInWithGoogle(
-          name,
-          userInfo.data.user.email,
-          fcmToken,
-        );
+        const response = await signInWithGoogle(name, useremail, fcmToken);
         setGoogleLoading(false);
 
         if (response.success) {
@@ -122,10 +165,22 @@ const Login = () => {
         } else {
           ShowToast('error', response.message);
         }
+      } else {
+        // user cancelled or unexpected response
+        ShowToast('error', 'Google sign-in was cancelled or failed');
       }
     } catch (error) {
       setGoogleLoading(false);
-      ShowToast('error', error?.response?.data?.message);
+      // Provide clearer messages for common errors
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        ShowToast('error', 'Sign in cancelled');
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        ShowToast('error', 'Sign in already in progress');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        ShowToast('error', 'Play services not available or outdated');
+      } else {
+        ShowToast('error', error?.message || 'Google sign-in error');
+      }
 
       console.error('Google Sign-In Error:', error);
     } finally {
@@ -235,7 +290,10 @@ const Login = () => {
             <AppButton
               title={
                 isLoading ? (
-                  <ActivityIndicator size={'large'} color={AppColors.WHITE} />
+                  <ActivityIndicator
+                    size={responsiveHeight(2.7)}
+                    color={AppColors.WHITE}
+                  />
                 ) : (
                   'Continue'
                 )

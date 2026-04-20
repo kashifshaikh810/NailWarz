@@ -49,6 +49,8 @@ const BattleForm = ({navigation}) => {
     address: '',
     description: '',
     socialMediaHandle: '',
+    nailTechnicianName: '',
+    salonName: '',
   });
   console.log('form', form);
   console.log('platformValue', platformValue);
@@ -82,7 +84,7 @@ const BattleForm = ({navigation}) => {
 
   const SubmitFormHandler = async () => {
     console.log('fggd');
-    const {fullName, email, phone, address, socialMediaHandle, description} =
+    const {fullName, email, phone, address, socialMediaHandle, description, nailTechnicianName, salonName} =
       form;
     if (!fullName) {
       return ShowToast('error', 'Full name is required');
@@ -95,6 +97,12 @@ const BattleForm = ({navigation}) => {
     }
     if (!address) {
       return ShowToast('error', 'Address is required');
+    }
+    if (value === 'Nailee' && !nailTechnicianName) {
+      return ShowToast('error', 'Name of Nail Technician is required');
+    }
+    if (value === 'Nailee' && !salonName) {
+      return ShowToast('error', 'Name of Salon is required');
     }
     if (!imageUri) {
       return ShowToast('error', 'Profile image is required');
@@ -123,6 +131,8 @@ const BattleForm = ({navigation}) => {
         platformValue,
         socialMediaHandle,
         description,
+        nailTechnicianName,
+        salonName,
         navigation,
       );
       console.log('reess', response);
@@ -143,7 +153,7 @@ const BattleForm = ({navigation}) => {
         contentContainerStyle={{
           flexGrow: 1,
           backgroundColor: AppColors.WHITE,
-          paddingBottom: responsiveHeight(4.5),
+          paddingBottom: responsiveHeight(10),
         }}>
         <AppHeader
           title="Entry Battle Form"
@@ -216,6 +226,38 @@ const BattleForm = ({navigation}) => {
                 dropDownZIndex={3001}
               />
             </View>
+            {value === 'Nailee' && (
+              <>
+                <AppTextInput
+                  inputPlaceHolder={'John Doe'}
+                  label="Name of Nail Technician"
+                  value={form.nailTechnicianName}
+                  onChangeText={val => handleInputChange('nailTechnicianName', val)}
+                  containerBg={AppColors.INPUTBG}
+                  logo={
+                    <FontAwesome
+                      name={'user-o'}
+                      color={AppColors.BTNCOLOURS}
+                      size={responsiveFontSize(2.5)}
+                    />
+                  }
+                />
+                <AppTextInput
+                  inputPlaceHolder={'Nail Warz Salon'}
+                  label="Name of Salon"
+                  value={form.salonName}
+                  onChangeText={val => handleInputChange('salonName', val)}
+                  containerBg={AppColors.INPUTBG}
+                  logo={
+                    <Ionicons
+                      name={'storefront-outline'}
+                      color={AppColors.BTNCOLOURS}
+                      size={responsiveFontSize(2.5)}
+                    />
+                  }
+                />
+              </>
+            )}
             <AppTextInput
               // onChangeText={value => setEmail(value)}
               onChangeText={value => handleInputChange('phone', value)}
@@ -234,7 +276,6 @@ const BattleForm = ({navigation}) => {
               }
             />
             <AppTextInput
-              // onChangeText={value => setEmail(value)}
               inputPlaceHolder={'123 Royal Street'}
               label="Address"
               value={form.address}
@@ -452,10 +493,14 @@ const BattleForm = ({navigation}) => {
                     color: '#A0A0A0',
                     fontWeight: '500',
                   }}>
-                  By Checking this box , I confirm that I have read and agree to
+                  By Checking this box, I confirm that I have read and agree to
                   the{' '}
                   <Text style={{textDecorationLine: 'underline'}}>
-                    Nail Warz Terms & Conditions.
+                    Nail Warz Terms & Conditions
+                  </Text>
+                  {' '}and{' '}
+                  <Text style={{textDecorationLine: 'underline'}}>
+                    Warzone Rules
                   </Text>
                 </Text>
               </View>

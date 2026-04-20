@@ -16,8 +16,19 @@ type BgProps = {
 
 const BackgroundScreen = ({ children, bgColor, stylesPorp, padding, paddingTop }: BgProps) => {
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={globalStyles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[stylesPorp, { flexGrow: 1, backgroundColor: bgColor ? bgColor : AppColors.WHITE, padding: responsiveHeight(padding) ? padding : 20, paddingTop: paddingTop ? responsiveHeight(paddingTop) : null }]}>
+    <SafeAreaView style={globalStyles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          stylesPorp,
+          {
+            flexGrow: 1,
+            backgroundColor: bgColor ? bgColor : AppColors.WHITE,
+            padding: typeof padding === 'number' ? responsiveHeight(padding) : 20,
+            paddingTop: paddingTop ? responsiveHeight(paddingTop) : undefined,
+            paddingBottom: responsiveHeight(10),
+          },
+        ]}>
         {children}
       </ScrollView>
     </SafeAreaView>

@@ -51,6 +51,7 @@ const AddReviewModal = ({ modalVisible, setModalVisible, setRefresh, onBackdropP
         backdropOpacity={0.1}
         onBackdropPress={onBackdropPress}
         isVisible={modalVisible}
+        avoidKeyboard
         style={{ margin: 0 }}>
         <View
           style={{

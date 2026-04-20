@@ -62,7 +62,7 @@ const CreatePost = ({navigation}) => {
     <SafeAreaView style={globalStyles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+        contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE, paddingBottom: responsiveHeight(10)}}>
         {isLoading ? (
           <View style={{flex: 1, justifyContent: 'center'}}>
             <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />

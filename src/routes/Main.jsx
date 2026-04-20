@@ -37,6 +37,8 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import BookingDetails from '../screens/main/bookings/BookingDetails';
+import AddDispute from '../screens/main/bookings/AddDispute';
+import ViewDispute from '../screens/main/bookings/ViewDispute';
 import Settings from '../screens/main/Settings';
 import InstructionsScreen from '../screens/main/InstructionsScreen';
 import Accessebility from '../screens/main/Accessebility';
@@ -45,45 +47,101 @@ import Wallet from '../screens/main/Wallet';
 import BattleForm from '../screens/main/BattleForm';
 
 const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
 
-const Main = () => {
+const HomeStack = createStackNavigator();
+const BookingStack = createStackNavigator();
+const WarzStack = createStackNavigator();
+const FavoritesStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
+
+function HomeStackScreen() {
   return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="Home" component={MyTabs} />
-      <Stack.Screen name="CreatePost" component={CreatePost} />
-      <Stack.Screen name="HomeDetails" component={HomeDetails} />
-      <Stack.Screen name="StylistSelect" component={StylistSelect} />
-      <Stack.Screen
+    <HomeStack.Navigator screenOptions={{headerShown: false}}>
+      <HomeStack.Screen name="Home" component={Home} />
+      <HomeStack.Screen name="HomeDetails" component={HomeDetails} />
+      <HomeStack.Screen name="StylistSelect" component={StylistSelect} />
+      <HomeStack.Screen
         name="DateAndTimeSelection"
         component={DateAndTimeSelection}
       />
-      <Stack.Screen name="BookingSummary" component={BookingSummary} />
-      <Stack.Screen name="AllReviews" component={AllReviews} />
-      <Stack.Screen
+      <HomeStack.Screen name="BookingSummary" component={BookingSummary} />
+      <HomeStack.Screen
         name="SelectPaymentMethod"
         component={SelectPaymentMethod}
       />
-      <Stack.Screen name="DownloadReceipt" component={DownloadReceipt} />
-      <Stack.Screen name="BookingDetails" component={BookingDetails} />
-      <Stack.Screen name="SearchLocation" component={SearchLocation} />
-      <Stack.Screen name="Community" component={Community} />
-      <Stack.Screen name="BattleForm" component={BattleForm} />
-      <Stack.Screen name="BattlePoll" component={BattlePoll} />
-      <Stack.Screen name="LiveVotingScores" component={LiveVotingScores} />
-      <Stack.Screen name="FinalScoreBoard" component={FinalScoreBoard} />
-      <Stack.Screen name="EditProfile" component={EditProfile} />
-      <Stack.Screen name="MapViewScreen" component={MapView} />
-      <Stack.Screen name="Wallet" component={Wallet} />
-      {/* <Stack.Screen name="Profile" component={MyTabs} /> */}
-      <Stack.Screen name="SelectAnyTech" component={SelectAnyTech} />
-      <Stack.Screen name="Settings" component={Settings} />
-      <Stack.Screen name="InstructionsScreen" component={InstructionsScreen} />
-      <Stack.Screen name="Accessebility" component={Accessebility} />
-      <Stack.Screen name="Notification" component={Notification} />
-    </Stack.Navigator>
+      <HomeStack.Screen name="DownloadReceipt" component={DownloadReceipt} />
+      <HomeStack.Screen name="SearchLocation" component={SearchLocation} />
+      <HomeStack.Screen name="MapViewScreen" component={MapView} />
+      <HomeStack.Screen name="AllReviews" component={AllReviews} />
+      <HomeStack.Screen name="SelectAnyTech" component={SelectAnyTech} />
+      <HomeStack.Screen name="Notification" component={Notification} />
+      <WarzStack.Screen name="BattleForm" component={BattleForm} />
+    </HomeStack.Navigator>
   );
-};
+}
+
+function BookingStackScreen() {
+  return (
+    <BookingStack.Navigator screenOptions={{headerShown: false}}>
+      <BookingStack.Screen name="Booking" component={Booking} />
+      <BookingStack.Screen name="BookingDetails" component={BookingDetails} />
+      <BookingStack.Screen name="AddDispute" component={AddDispute} />
+      <BookingStack.Screen name="ViewDispute" component={ViewDispute} />
+      <BookingStack.Screen name="StylistSelect" component={StylistSelect} />
+      <BookingStack.Screen
+        name="DateAndTimeSelection"
+        component={DateAndTimeSelection}
+      />
+      <BookingStack.Screen name="BookingSummary" component={BookingSummary} />
+      <BookingStack.Screen
+        name="SelectPaymentMethod"
+        component={SelectPaymentMethod}
+      />
+      <BookingStack.Screen name="DownloadReceipt" component={DownloadReceipt} />
+      <BookingStack.Screen name="SelectAnyTech" component={SelectAnyTech} />
+    </BookingStack.Navigator>
+  );
+}
+
+function WarzStackScreen() {
+  return (
+    <WarzStack.Navigator screenOptions={{headerShown: false}}>
+      <WarzStack.Screen name="Warz" component={Warz} />
+      <WarzStack.Screen name="Community" component={Community} />
+      <WarzStack.Screen name="BattleForm" component={BattleForm} />
+      <WarzStack.Screen name="BattlePoll" component={BattlePoll} />
+      <WarzStack.Screen name="LiveVotingScores" component={LiveVotingScores} />
+      <WarzStack.Screen name="FinalScoreBoard" component={FinalScoreBoard} />
+      <WarzStack.Screen name="CreatePost" component={CreatePost} />
+    </WarzStack.Navigator>
+  );
+}
+
+function FavoritesStackScreen() {
+  return (
+    <FavoritesStack.Navigator screenOptions={{headerShown: false}}>
+      <FavoritesStack.Screen name="Favorites" component={Favourites} />
+      <FavoritesStack.Screen name="HomeDetails" component={HomeDetails} />
+    </FavoritesStack.Navigator>
+  );
+}
+
+function ProfileStackScreen() {
+  return (
+    <ProfileStack.Navigator screenOptions={{headerShown: false}}>
+      <ProfileStack.Screen name="Profile" component={Profile} />
+      <ProfileStack.Screen name="EditProfile" component={EditProfile} />
+      <ProfileStack.Screen name="Wallet" component={Wallet} />
+      <ProfileStack.Screen name="Settings" component={Settings} />
+      <ProfileStack.Screen
+        name="InstructionsScreen"
+        component={InstructionsScreen}
+      />
+      <ProfileStack.Screen name="Accessebility" component={Accessebility} />
+      <ProfileStack.Screen name="Notification" component={Notification} />
+    </ProfileStack.Navigator>
+  );
+}
 
 function MyTabs() {
   const insets = useSafeAreaInsets();
@@ -103,8 +161,9 @@ function MyTabs() {
         //       : 0,
         // },
         tabBarStyle: {
-          // paddingBottom: insets.bottom || 10,
-          height: 60 + insets.bottom, // fixed safe height
+          position: 'absolute',
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom,
         },
         tabBarIcon: ({focused, color, size}) => {
           let iconName;
@@ -133,14 +192,27 @@ function MyTabs() {
             return <Ionicons name={iconName} size={size} color={color} />;
           }
         },
-      })}>
-      <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="Booking" component={Booking} />
-      <Tab.Screen name="Warz" component={Warz} />
-      <Tab.Screen name="Favorites" component={Favourites} />
-      <Tab.Screen name="Profile" component={Profile} />
+      })}
+      sceneContainerStyle={{
+        // 60 = base tab bar height. SafeAreaView in each screen naturally adds insets.bottom,
+        // so together they equal the full tab bar height (60 + insets.bottom).
+        // This prevents content hiding behind the absolute-positioned tab bar with zero extra whitespace.
+        paddingBottom: 60,
+        backgroundColor: '#fff',
+      }}>
+      <Tab.Screen name="Home" component={HomeStackScreen} />
+      <Tab.Screen name="Booking" component={BookingStackScreen} />
+      <Tab.Screen name="Warz" component={WarzStackScreen} />
+      <Tab.Screen name="Favorites" component={FavoritesStackScreen} />
+      <Tab.Screen name="Profile" component={ProfileStackScreen} />
     </Tab.Navigator>
   );
 }
 
-export default Main;
+export default function Main() {
+  return (
+    <SafeAreaProvider>
+      <MyTabs />
+    </SafeAreaProvider>
+  );
+}

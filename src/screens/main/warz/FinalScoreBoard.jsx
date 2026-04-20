@@ -120,7 +120,7 @@
 // export default FinalScoreBoard;
 /* eslint-disable react-native/no-inline-styles */
 import React, {useMemo} from 'react';
-import {View, ScrollView, FlatList} from 'react-native';
+import {View, ScrollView, FlatList, Image} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
@@ -129,13 +129,15 @@ import AppHeader from '../../../components/AppHeader';
 import LeaderboardPodium from '../../../components/LeaderboardPodium';
 import PointesProfile from '../../../components/PointesProfile';
 import LineBreak from '../../../components/LineBreak';
-import {responsiveWidth} from '../../../utils/Responsive_Dimensions';
+import AppText from '../../../components/AppTextComps/AppText';
+import {responsiveHeight, responsiveWidth} from '../../../utils/Responsive_Dimensions';
 import {globalStyles} from '../../../GlobalFunctions/styles';
+import {ImageBaseUrl} from '../../../BaseUrl';
 
 const FinalScoreBoard = ({route}) => {
   const navigation = useNavigation();
   const {battleId} = route?.params || {};
-  console.log('battleid',battleId)
+  console.log('battleid', battleId);
 
   // 🧠 Safely get participants
   const participants = battleId?.participants || [];
@@ -169,7 +171,7 @@ const FinalScoreBoard = ({route}) => {
   return (
     <SafeAreaView style={globalStyles.container}>
       <ScrollView
-        contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+        contentContainerStyle={{flexGrow: 1,paddingBottom: responsiveHeight(10), backgroundColor: AppColors.WHITE}}>
         <AppHeader
           title="FINAL SCOREBOARD"
           onPress={() => navigation.goBack()}
@@ -185,8 +187,37 @@ const FinalScoreBoard = ({route}) => {
           </View>
         )}
 
-        {/* 📋 REST PARTICIPANTS */}
-        <View
+        {/* 🏆 WINNER ENTRY IMAGE */}
+        {topThree?.[0]?.participant?.images?.[0] ? (
+          <View
+            style={{
+              alignItems: 'center',
+              marginTop: responsiveHeight(2),
+              marginHorizontal: responsiveWidth(6),
+            }}>
+            <Image
+              source={{uri: `${ImageBaseUrl}${topThree[0].participant.images[0]}`}}
+              style={{
+                width: responsiveWidth(88),
+                height: responsiveHeight(30),
+                borderRadius: 16,
+                borderWidth: 3,
+                borderColor: AppColors.BTNCOLOURS,
+              }}
+              resizeMode="cover"
+            />
+            <AppText
+              title={`🏆 ${topThree[0].participant.name}`}
+              textSize={1.8}
+              textColor={AppColors.BTNCOLOURS}
+              textFontWeight
+              mrgnTop={1}
+            />
+          </View>
+        ) : null}
+
+        {/* 📋 REST PARTICIPANTS - commented out, replaced by winner image */}
+        {/* <View
           style={{
             flex: 1,
             paddingHorizontal: responsiveWidth(3),
@@ -206,7 +237,7 @@ const FinalScoreBoard = ({route}) => {
               <PointesProfile item={item} index={index + topThree.length + 1} />
             )}
           />
-        </View>
+        </View> */}
 
         <LineBreak space={2} />
       </ScrollView>

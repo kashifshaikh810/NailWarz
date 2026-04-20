@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import AppHeader from '../../components/AppHeader';
 import {ScrollView} from 'react-native-gesture-handler';
@@ -37,7 +38,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {ShowToast} from '../../GlobalFunctions/auth';
 import {setUserData} from '../../Redux/Slices';
 import ReviewsCard from '../../components/ReviewsCard';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
 import StarRating from 'react-native-star-rating-widget';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -54,10 +55,12 @@ const cardData = [
 
 const HomeDetails = ({route}) => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const {saloonId} = route?.params;
   const [saloonData, setSaloonData] = useState();
   const [menuData, setMenuData] = useState([]);
   const [currentCategory, setCurrentCategory] = useState();
+  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [services, setServices] = useState();
   const [selectedService, setSelectedService] = useState();
   const [fvrtLoading, setFvrtLoading] = useState(false);
@@ -115,24 +118,50 @@ const HomeDetails = ({route}) => {
     }
   }, [saloonData]);
   useEffect(() => {
-    if (saloonData?.salonCategoryId?.length > 0) {
-      setMenuData(saloonData.salonCategoryId);
-      // setMenu({_id: saloonData.categoryId[0]._id}); // 👈 make first one active
+    const platformCategories = (saloonData?.categoryId || []).map(c => ({
+      ...c,
+      _source: 'platform',
+    }));
+    const salonCategories = (saloonData?.salonCategoryId || []).map(c => ({
+      ...c,
+      _source: 'salon',
+    }));
+    const merged = [...platformCategories, ...salonCategories];
+    setMenuData(merged);
+    if (!merged.length) {
+      // No categories for this salon — ensure we don't stay stuck loading
+      setCurrentCategory(null);
+      setServices([]);
+      setIsLoading2(false);
     }
   }, [saloonData]);
+
   useEffect(() => {
     if (menuData?.length > 0 && !currentCategory) {
       setCurrentCategory(menuData[0]._id); // ✅ Set first category
     }
   }, [menuData]);
+
   const getServicesHandler = async () => {
+    if (!currentCategory) {
+      setServices([]);
+      setIsLoading2(false);
+      return;
+    }
     setIsLoading2(true);
-    const response = await getServiceBySalonAndCategoryId(
-      currentCategory,
-      saloonId,
-    );
-    setIsLoading2(false);
-    setServices(response.data);
+    try {
+      const response = await getServiceBySalonAndCategoryId(
+        currentCategory,
+        saloonId,
+        selectedSubCategory || undefined,
+      );
+      setServices(response.data);
+    } catch (err) {
+      console.log('getServicesHandler error', err);
+      setServices([]);
+    } finally {
+      setIsLoading2(false);
+    }
   };
   const addToFavouriteHandler = async () => {
     setFvrtLoading(true);
@@ -166,8 +195,14 @@ const HomeDetails = ({route}) => {
     }
   };
   useEffect(() => {
-    getServicesHandler();
-  }, [currentCategory]);
+    if (currentCategory) {
+      getServicesHandler();
+    } else {
+      setServices([]);
+      setIsLoading2(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentCategory, selectedSubCategory]);
   useEffect(() => {
     getAllReviewsHandler();
   }, []);
@@ -191,6 +226,10 @@ const HomeDetails = ({route}) => {
     };
     return map[day] || day;
   };
+
+  const activeCatObj = menuData.find(c => c._id === currentCategory);
+  const currentSubCategories = activeCatObj?.subCategories ?? [];
+
   return (
     <SafeAreaView style={globalStyles.container}>
       <ScrollView
@@ -198,7 +237,7 @@ const HomeDetails = ({route}) => {
         contentContainerStyle={{
           flexGrow: 1,
           backgroundColor: AppColors.WHITE,
-          paddingBottom: responsiveHeight(4.5),
+          paddingBottom: responsiveHeight(10),
         }}>
         <AppHeader
           isFvrt={isFvrt}
@@ -249,9 +288,9 @@ const HomeDetails = ({route}) => {
                   backgroundColor: AppColors.WHITE,
                   elevation: 5,
                   shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.15,
-              shadowRadius: 5,
+                  shadowOffset: {width: 0, height: 2},
+                  shadowOpacity: 0.15,
+                  shadowRadius: 5,
                   padding: responsiveHeight(2),
                   borderRadius: responsiveHeight(1),
                 }}>
@@ -438,13 +477,14 @@ const HomeDetails = ({route}) => {
               <FlatList
                 data={menuData}
                 horizontal
+                showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{gap: 15}}
                 renderItem={({item}) => {
                   return (
                     <TouchableOpacity
                       onPress={() => {
                         setCurrentCategory(item?._id);
-                        // setMenu({_id: item._id});
+                        setSelectedSubCategory(null);
                       }}>
                       <AppText
                         title={item?.categoryName}
@@ -468,7 +508,91 @@ const HomeDetails = ({route}) => {
                 }}
               />
 
-              <LineBreak space={2} />
+              {/* SubCategories chips */}
+              {currentSubCategories.length > 0 && (
+                <View
+                  style={{
+                    marginTop: responsiveHeight(1.5),
+                  }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                      marginBottom: responsiveHeight(1),
+                    }}>
+                    <View
+                      style={{
+                        width: 4,
+                        height: responsiveHeight(2),
+                        backgroundColor: AppColors.BTNCOLOURS,
+                        borderRadius: 4,
+                      }}
+                    />
+                    <AppText
+                      title="Sub Categories"
+                      textSize={1.7}
+                      textColor={AppColors.DARKGRAY}
+                      styles={{fontWeight: '500', letterSpacing: 0.3}}
+                    />
+                  </View>
+                  <FlatList
+                    data={currentSubCategories}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    keyExtractor={(sub, i) => `${sub}-${i}`}
+                    contentContainerStyle={{gap: 8, paddingBottom: 4}}
+                    renderItem={({item: sub}) => {
+                      const isSelected = selectedSubCategory === sub;
+                      return (
+                        <TouchableOpacity
+                          activeOpacity={0.75}
+                          onPress={() =>
+                            setSelectedSubCategory(isSelected ? null : sub)
+                          }
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 5,
+                            paddingVertical: responsiveHeight(0.75),
+                            paddingHorizontal: responsiveWidth(4),
+                            borderRadius: responsiveHeight(3),
+                            borderWidth: isSelected ? 0 : 1.2,
+                            borderColor: '#E0E0E0',
+                            backgroundColor: isSelected
+                              ? AppColors.BTNCOLOURS
+                              : AppColors.WHITE,
+                            elevation: isSelected ? 4 : 1,
+                            shadowColor: AppColors.BTNCOLOURS,
+                            shadowOffset: {
+                              width: 0,
+                              height: isSelected ? 2 : 1,
+                            },
+                            shadowOpacity: isSelected ? 0.25 : 0.08,
+                            shadowRadius: isSelected ? 4 : 2,
+                          }}>
+                          {isSelected && (
+                            <AntDesign
+                              name="checkcircle"
+                              size={responsiveFontSize(1.6)}
+                              color={AppColors.WHITE}
+                            />
+                          )}
+                          <AppText
+                            title={sub}
+                            textSize={1.75}
+                            textColor={
+                              isSelected ? AppColors.WHITE : AppColors.DARKGRAY
+                            }
+                            styles={{fontWeight: isSelected ? '700' : '400'}}
+                          />
+                        </TouchableOpacity>
+                      );
+                    }}
+                  />
+                </View>
+              )}
+
               {isLoading2 ? (
                 <View style={{marginVertical: responsiveHeight(1)}}>
                   <ActivityIndicator
@@ -494,9 +618,9 @@ const HomeDetails = ({route}) => {
                           backgroundColor: AppColors.WHITE,
                           elevation: 6,
                           shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.15,
-              shadowRadius: 5,
+                          shadowOffset: {width: 0, height: 2},
+                          shadowOpacity: 0.15,
+                          shadowRadius: 5,
                           paddingHorizontal: responsiveWidth(4),
                           paddingVertical: responsiveHeight(2),
                         }}>
@@ -566,6 +690,7 @@ const HomeDetails = ({route}) => {
                   textAlignment="center"
                   textFontWeight
                   textSize={2.5}
+                  styles={{marginTop: responsiveHeight(2.5)}}
                 />
               )}
 
@@ -599,23 +724,23 @@ const HomeDetails = ({route}) => {
                     <AppText
                       textSize={1.9}
                       textColor="#0B0C16"
-                      title={`${saloonData?.avgRating} (${saloonData?.totalReviews})`}
+                      title={`${roundedRating?.toFixed(1)} (${
+                        saloonData?.totalReviews
+                      })`}
                     />
                   </View>
                 </View>
                 {/* {allReviews?.length > 0 ? ( */}
-                  <TouchableOpacity
-                    onPress={() =>
-                      navigation.navigate('AllReviews', {saloonId})
-                    }>
-                    <AppText
-                      title="See All"
-                      txtDecoration="underline"
-                      textSize={1.9}
-                      style={styles.textStyle}
-                      textColor={AppColors.BTNCOLOURS}
-                    />
-                  </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('AllReviews', {saloonId})}>
+                  <AppText
+                    title="See All"
+                    txtDecoration="underline"
+                    textSize={1.9}
+                    style={styles.textStyle}
+                    textColor={AppColors.BTNCOLOURS}
+                  />
+                </TouchableOpacity>
                 {/* ) : null} */}
               </View>
             </View>
@@ -638,10 +763,11 @@ const HomeDetails = ({route}) => {
       </ScrollView>
       {selectedService ? (
         <AppButton
-          // title={`Continue (${selectedItems?.length})`}
           style={{
             position: 'absolute',
-            bottom: responsiveHeight(1.5),
+            bottom:
+              // place button above the bottom tab (tab height ~60) plus safe-area inset
+              60 + insets.bottom + responsiveHeight(1),
             width: responsiveWidth(90),
             alignSelf: 'center',
           }}

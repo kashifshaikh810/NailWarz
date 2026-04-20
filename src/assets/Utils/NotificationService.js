@@ -17,6 +17,15 @@ async function createDefaultChannel() {
 async function requestUserPermission() {
   await notifee.requestPermission(); // 🔥 REQUIRED FOR iOS
 
+  // Ensure device is registered for remote messages on iOS
+  if (Platform.OS === 'ios') {
+    try {
+      await messaging().registerDeviceForRemoteMessages();
+    } catch (e) {
+      console.warn('registerDeviceForRemoteMessages failed', e?.message || e);
+    }
+  }
+
   const authStatus = await messaging().requestPermission();
   const enabled =
     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||

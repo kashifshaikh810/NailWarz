@@ -48,7 +48,7 @@ const Notification = ({navigation}) => {
   return (
     <SafeAreaView style={globalStyles.container}>
       <ScrollView
-        contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+        contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE, paddingBottom: responsiveHeight(10)}}>
         <AppHeader  onPress={() => navigation.goBack()} title="Notification" />
         {isLoading ? (
           <View
@@ -64,6 +64,7 @@ const Notification = ({navigation}) => {
                 renderItem={({item, index}) => {
                   return (
                     <TouchableOpacity
+                    disabled={item?.type !== 'Reschedule'}
                       onPress={() => {
                         item?.type === 'Reschedule'
                           ? navigation.navigate('StylistSelect', {

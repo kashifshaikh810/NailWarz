@@ -43,16 +43,11 @@ import {
 } from '../../../GlobalFunctions/auth';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import {getWalletByUserId} from '../../../GlobalFunctions';
-import Geolocation from '@react-native-community/geolocation';
 import Modal from 'react-native-modal';
-import {
-  getCurrentLocation,
-  getCurrentLocationWithAddress,
-} from '../../../GlobalFunctions/LocationService';
 const Profile = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {userData, isGoogleSignIn} = useSelector(state => state.user);
+  const {userData, isGoogleSignIn, location: latLng} = useSelector(state => state.user);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const {token} = useSelector(state => state.user);
@@ -60,13 +55,6 @@ const Profile = () => {
   const focus = useIsFocused();
   const [isEnabled, setIsEnabled] = useState(userData?.notify);
   const [confirmVisible, setConfirmVisible] = useState(false);
-  const [address, setAddress] = useState('');
-  const [latLng, setLatLng] = useState({
-    latitude: 37.4219983,
-    longitude: -122.084,
-    address: 'Fetching location...',
-  });
-  console.log('latLng', latLng);
 
   const profileMenus = [
     {
@@ -219,7 +207,7 @@ const Profile = () => {
     {
       id: 1,
       title: 'Name',
-      value: userData?.username,
+      value: `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || userData?.username,
       Icon: FontAwesome,
       iconName: 'user-o',
     },
@@ -267,20 +255,34 @@ const Profile = () => {
     },
     {
       id: 8,
-      title: 'Privacy and safety',
+      title: 'Privacy Policy',
       Icon: Ionicons,
       iconName: 'shield-checkmark-outline',
       navTo: 'InstructionsScreen',
     },
     {
       id: 9,
-      title: 'About',
+      title: 'Cookie Policy',
       Icon: Feather,
       iconName: 'alert-circle',
       navTo: 'InstructionsScreen',
     },
     {
       id: 10,
+      title: 'Terms & Conditions',
+      Icon: Ionicons,
+      iconName: 'shield-checkmark-outline',
+      navTo: 'InstructionsScreen',
+    },
+    {
+      id: 12,
+      title: 'Warzone Rules',
+      Icon: MaterialCommunityIcons,
+      iconName: 'sword-cross',
+      navTo: 'InstructionsScreen',
+    },
+    {
+      id: 11,
       title: 'Logout',
       Icon: MaterialIcons,
       iconName: 'logout',
@@ -409,16 +411,6 @@ const Profile = () => {
 
   //   initLocation();
   // }, []);
-  useEffect(() => {
-    const fetchLocation = async () => {
-      const loc = await getCurrentLocationWithAddress();
-      if (loc) {
-        setLatLng(loc);
-      }
-      console.log('Current location:', loc);
-    };
-    fetchLocation();
-  }, []);
   const getWalletHandler = async () => {
     setIsLoading(true);
     try {
@@ -513,6 +505,7 @@ const Profile = () => {
         backgroundColor: AppColors.WHITE,
         padding: responsiveHeight(2),
         paddingTop: Platform.OS === 'ios' ? responsiveHeight(8.8) : null,
+        paddingBottom: responsiveHeight(10),
       }}>
       <View
         style={{
@@ -547,8 +540,8 @@ const Profile = () => {
             }
             style={{
               height: responsiveHeight(5.7),
-              width: responsiveWidth(11.8),
-              borderRadius: responsiveHeight(5),
+              width: responsiveHeight(5.7),
+              borderRadius: 9999,
             }}
           />
         </View>
@@ -574,8 +567,8 @@ const Profile = () => {
             }
             style={{
               height: responsiveHeight(9.7),
-              width: responsiveWidth(20.3),
-              borderRadius: responsiveHeight(5),
+              width: responsiveHeight(9.7),
+              borderRadius: 9999,
             }}
           />
           <TouchableOpacity
@@ -587,7 +580,7 @@ const Profile = () => {
               right: responsiveHeight(-0.9),
               bottom: responsiveHeight(-0.5),
               padding: responsiveHeight(0.5),
-              borderRadius: responsiveHeight(2),
+              borderRadius: 9999,
             }}>
             <Ionicons
               name="camera-outline"
@@ -605,7 +598,7 @@ const Profile = () => {
             top: responsiveHeight(2),
             right: responsiveHeight(1),
             padding: responsiveHeight(0.7),
-            borderRadius: responsiveHeight(2),
+            borderRadius: 9999,
           }}>
           <MaterialIcons name="edit" color={AppColors.BTNCOLOURS} size={25} />
         </TouchableOpacity>
@@ -623,7 +616,7 @@ const Profile = () => {
                 <Item
                   {...(!item.value && {
                     onPress: () => {
-                      if (item?.id === 10) {
+                      if (item?.id === 11) {
                         setConfirmVisible(true);
                       } else if (item.title === 'Payment Method') {
                         navigation.navigate('SelectPaymentMethod', {

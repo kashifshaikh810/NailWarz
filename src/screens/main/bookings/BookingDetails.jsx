@@ -47,7 +47,11 @@ const BookingDetails = ({navigation, route}) => {
     <SafeAreaView style={globalStyles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: responsiveHeight(10),
+          backgroundColor: AppColors.WHITE,
+        }}>
         <View>
           <AppHeader
             isLogo
@@ -167,13 +171,13 @@ const BookingDetails = ({navigation, route}) => {
             <View
               style={{flexDirection: 'row', justifyContent: 'space-between'}}>
               <AppText
-                title="Discount"
+                title="Nail Warz Discount"
                 textColor={AppColors.DARKGRAY}
                 textSize={2.2}
                 mrgnTop={1.5}
               />
               <AppText
-                title="$6"
+                title="-$6"
                 textColor={AppColors.DARKGRAY}
                 textSize={2.2}
                 mrgnTop={1.5}
@@ -262,7 +266,8 @@ const BookingDetails = ({navigation, route}) => {
             }}
             enablePanDownToClose={true}>
             <BookingDetailsModal
-              handleBtn1Press={() =>
+              handleBtn1Press={() => {
+                refRescheduleRBSheet.current.close();
                 navigation.navigate('StylistSelect', {
                   data: {
                     saloonId: data?.salonId?._id,
@@ -272,9 +277,11 @@ const BookingDetails = ({navigation, route}) => {
                     technicians: data?.serviceId?.technicianId,
                     reschedule: true,
                     myBookingId: data?._id,
+                    originalDate: `${moment(data?.date, 'DD-MM-YYYY').format('ddd, MMM D')} at ${data?.time}`,
                   },
-                })
-              }
+                });
+              }}
+              isCancelModal={false}
               handleBtn2Press={() => refRescheduleRBSheet.current.close()}
               heading="Reschedule"
               btn1Title="Yes, Reschedule"

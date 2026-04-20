@@ -38,7 +38,7 @@ const StylistSelect = ({route}) => {
   console.log('data======<><><><><><><><><><>', data);
   return (
     <SafeAreaView style={globalStyles.container}>
-      <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
+      <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}} contentContainerStyle={{paddingBottom: responsiveHeight(10)}}>
         <AppHeader
           onPress={() => navigation.goBack()}
           title="Choose Your Nail Technician"

@@ -189,7 +189,9 @@ const MapViewScreen = () => {
               }
             }}
             predefinedPlaces={[]}
-            textInputProps={{}}
+            textInputProps={{
+              placeholderTextColor: '#999', // placeholder color
+            }}
             timeout={20000}
             renderRightButton={() => (
               <TouchableOpacity
@@ -222,6 +224,7 @@ const MapViewScreen = () => {
       <View style={{flex: 1}}>
         <MapView
           mapType="terrain"
+          userInterfaceStyle="light"
           style={{flex: 1}}
           region={{
             latitude: latLng?.latitude,
@@ -255,18 +258,19 @@ const MapViewScreen = () => {
             <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
           </View>
         ) : (
-          <View style={{position: 'absolute', bottom: 10}}>
+          <View style={{position: 'absolute', bottom: responsiveHeight(8)}}>
             <FlatList
               data={saloons}
               horizontal
               showsVerticalScrollIndicator={false}
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{gap: 20, paddingHorizontal: 10}}
+              contentContainerStyle={{gap: 20, paddingHorizontal: 10, paddingBottom: responsiveHeight(1)}}
               renderItem={({item}) => {
                 return (
                   <View
                     style={{
                       justifyContent: 'flex-end',
+                      paddingBottom: responsiveHeight(0.5),
                     }}>
                     <TouchableOpacity
                       activeOpacity={0.7}
@@ -352,7 +356,13 @@ const MapViewScreen = () => {
                             size={responsiveFontSize(2.5)}
                             color={'#FFD33C'}
                           />
-                          <AppText title={item?.avgRating} textSize={2} />
+                          <AppText
+                            title={
+                              ((Math.round((item?.avgRating ?? 0) * 2) / 2)
+                                .toFixed(1))
+                            }
+                            textSize={2}
+                          />
                           <AppText
                             title={`(${item?.totalReviews})`}
                             textSize={1.5}

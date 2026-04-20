@@ -180,6 +180,7 @@ import {AppIcons} from '../assets/Icons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AppColors from '../utils/AppColors';
 import AppText from './AppTextComps/AppText';
+import {ImageBaseUrl} from '../BaseUrl';
 
 const LeaderboardPodium = ({players = []}) => {
   // players = already top 3 sorted by votes (DESC)
@@ -246,15 +247,19 @@ const LeaderboardPodium = ({players = []}) => {
                       styles.avatar,
                       position === 1 && styles.avatarLarge,
                     ]}
-                    source={APPImages.default_user}
+                    source={
+                      player?.participant?.images?.[0]
+                        ? {uri: `${ImageBaseUrl}${player.participant.images[0]}`}
+                        : APPImages.default_user
+                    }
                   />
 
                   {/* ✅ CORRECT NAME */}
                   <Text
                     style={
-                      position === 2
-                        ? styles.username
-                        : {fontSize: responsiveFontSize(1.4), fontWeight: '900',color:AppColors.RED}
+                      position === 1
+                        ? {fontSize: responsiveFontSize(1.4), fontWeight: '900', color: AppColors.RED}
+                        : {...styles.username, color: AppColors.BLACK}
                     }>
                     {player?.participant?.name}
                   </Text>
@@ -262,9 +267,9 @@ const LeaderboardPodium = ({players = []}) => {
                   {/* ✅ CORRECT SCORE */}
                   <Text
                     style={
-                      position === 2
-                        ? styles.score
-                        : {fontSize: responsiveFontSize(2), fontWeight: '900',color:AppColors.RED}
+                      position === 1
+                        ? {fontSize: responsiveFontSize(2), fontWeight: '900', color: AppColors.RED}
+                        : {...styles.score, color: AppColors.BLACK}
                     }>
                     {player?.vote?.length || 0}
                   </Text>

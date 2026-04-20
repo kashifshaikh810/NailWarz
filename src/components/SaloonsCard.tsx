@@ -33,6 +33,7 @@ type props = {
   textWidth?: number;
   workingDays?: any;
   setShowRemoveModal?: any;
+  disabled?: boolean;
 };
 
 const SaloonsCard = ({
@@ -51,6 +52,7 @@ const SaloonsCard = ({
   showDeleteCard = true,
   workingDays,
   setShowRemoveModal,
+  disabled = false,
 }: props) => {
   const navigation = useNavigation();
   const translateX = useRef(new Animated.Value(0)).current;
@@ -78,6 +80,7 @@ const SaloonsCard = ({
   return (
     <Animated.View style={component ? { transform: [{ translateX }] } : {}}>
       <TouchableOpacity
+      disabled={disabled}
         activeOpacity={0.9}
         style={{ alignSelf: showDeleteCard ? null : 'center' }}
         onPress={() => {

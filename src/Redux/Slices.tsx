@@ -10,6 +10,7 @@ interface UserState {
   message?: string;
   isGoogleSignIn?: boolean;
   error: string | null;
+  location: {latitude: number | null; longitude: number | null; address: string};
 }
 
 const initialState: UserState = {
@@ -19,6 +20,7 @@ const initialState: UserState = {
   isGoogleSignIn: false,
   isLoading: false,
   error: null,
+  location: {latitude: null, longitude: null, address: 'Fetching location...'},
 };
 
 // Define return type of API response
@@ -74,7 +76,7 @@ export const UserLogin = createAsyncThunk<LoginResponse, AxiosRequestConfig>(
       }
     } catch (error: any) {
       console.log('Login Error:', error.response?.data?.message || error.message);
-      ShowToast('error', error.response?.data?.message || 'Something went wrong');
+      ShowToast('error', error.response?.data?.message || error.message || 'Something went wrong');
       return rejectWithValue('Something went wrong');
     }
   }
@@ -97,6 +99,9 @@ const authSlice = createSlice({
     },
     setUserData: (state, action: PayloadAction<Record<string, any>>) => {
       state.userData = action.payload;
+    },
+    setLocation: (state, action: PayloadAction<{latitude: number | null; longitude: number | null; address: string}>) => {
+      state.location = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -126,5 +131,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearToken, setUserData, setToken, setIsGoogleSignIn } = authSlice.actions;
+export const { clearToken, setUserData, setToken, setIsGoogleSignIn, setLocation } = authSlice.actions;
 export default authSlice.reducer;

@@ -41,7 +41,7 @@ import {
 } from '../../GlobalFunctions';
 import {editProfile, ShowToast} from '../../GlobalFunctions/auth';
 import {useDispatch, useSelector} from 'react-redux';
-import {setUserData} from '../../Redux/Slices';
+import {setUserData, setLocation} from '../../Redux/Slices';
 import moment from 'moment';
 import {getCurrentLocationWithAddress} from '../../GlobalFunctions/LocationService';
 
@@ -54,18 +54,12 @@ const Home = () => {
   });
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {token, userData} = useSelector(state => state?.user);
+  const {token, userData, location: latLng} = useSelector(state => state?.user);
   console.log('userData', userData);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoading2, setIsLoading2] = useState(false);
   const [searchedSalon, setSearchedSalon] = useState();
   const [isNearby, setIsNearby] = useState(true);
-  const [address, setAddress] = useState('');
-  const [latLng, setLatLng] = useState({
-    latitude: 37.4219983,
-    longitude: -122.084,
-    address: 'Fetching location...',
-  });
   const [saloons, setSaloons] = useState([]);
   console.log('isNearby', isNearby);
   const currentDate = new Date();
@@ -93,9 +87,8 @@ const Home = () => {
     const fetchLocation = async () => {
       const loc = await getCurrentLocationWithAddress();
       if (loc) {
-        setLatLng(loc);
+        dispatch(setLocation(loc));
       }
-      console.log('Current location:', loc);
     };
     fetchLocation();
   }, []);
@@ -502,6 +495,7 @@ const Home = () => {
                   paddingHorizontal: responsiveHeight(2),
                   alignItems: 'center',
                   marginTop: responsiveHeight(2),
+                  paddingBottom: responsiveHeight(2),
                 }}
                 renderItem={({item}) => {
                   return (

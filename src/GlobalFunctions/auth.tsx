@@ -3,12 +3,14 @@ import { BaseUrl } from '../BaseUrl';
 import Toast from 'react-native-toast-message';
 import { setToken, setUserData, UserLogin } from '../Redux/Slices';
 import { useNavigation } from '@react-navigation/native';
+import { Platform } from 'react-native';
 
-export const registerUser = async (userName: string, email: string, password: string, phone: number, fcmToken: string, navigation: any) => {
+export const registerUser = async (firstName: string, lastName: string, email: string, password: string, phone: number, fcmToken: string, navigation: any, deviceType?: string) => {
   let payload: any = {
-    username: userName,
+    firstName: firstName,
+    lastName: lastName,
     FCMToken: fcmToken,
-
+    deviceType: deviceType || Platform.OS,
   };
 
   if (email) {
@@ -48,11 +50,13 @@ export const registerUser = async (userName: string, email: string, password: st
     throw error;
   }
 };
-export const signInWithGoogle = async (userName: string, email: string, fcmToken: string) => {
+export const signInWithGoogle = async (firstName: string, lastName: string, email: string, fcmToken: string, deviceType?: string) => {
   let data = JSON.stringify({
-    'username': userName,
+    'firstName': firstName,
+    'lastName': lastName,
     'email': email,
     'FCMToken': fcmToken,
+    'deviceType': deviceType || Platform.OS,
   });
 
   let config = {
@@ -77,9 +81,10 @@ export const ShowToast = (type: string, text: string) => {
     text1: text,
   });
 };
-export const userLogin = async (email: string, password: string, phone: number, fcmtoken: string, dispatch: any, navigation: any) => {
+export const userLogin = async (email: string, password: string, phone: number, fcmtoken: string, dispatch: any, navigation: any, deviceType?: string) => {
   let payload: any = {
     FCMToken: fcmtoken,
+    deviceType: deviceType || Platform.OS,
   };
 
   if (email) {
@@ -162,7 +167,6 @@ export const verifyOtp = async (token: string, otp: number, phone: number, email
 };
 export const editProfile = async (
   userId: string,
-  username: string,
   image: any,
   navigation: any,
   dispatch: any,
@@ -170,12 +174,16 @@ export const editProfile = async (
   showToast?: boolean,
   notify?: boolean,
   phNumber?: number,
+  firstName?: string,
+  lastName?: string,
+  email?: string,
+  city?: string,
+  state?: string,
+  zipCode?: string,
+  street?: string,
 ) => {
   let data = new FormData();
   data.append('userId', userId);
-  if (username) {
-    data.append('username', username);
-  }
   if (image) {
     data.append('image', {
       uri: image,
@@ -191,6 +199,27 @@ export const editProfile = async (
   }
   if (phNumber) {
     data.append('phone', phNumber);
+  }
+  if (firstName) {
+    data.append('firstName', firstName);
+  }
+  if (lastName) {
+    data.append('lastName', lastName);
+  }
+  if (email) {
+    data.append('email', email);
+  }
+  if (city) {
+    data.append('city', city);
+  }
+  if (state) {
+    data.append('state', state);
+  }
+  if (zipCode) {
+    data.append('zipCode', zipCode);
+  }
+  if (street) {
+    data.append('street', street);
   }
   const config = {
     method: 'post',

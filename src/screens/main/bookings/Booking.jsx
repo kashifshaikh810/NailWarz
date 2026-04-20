@@ -74,7 +74,12 @@ const Booking = () => {
       const response = await getBookingsByIdAndStatus(_id, selectedTab);
       console.log('response', response);
       if (response?.success) {
-        setUpcomingData(response?.data);
+        // Sort chronologically: earliest date first (DD-MM-YYYY → parse to sortable value)
+        const sorted = [...(response?.data || [])].sort((a, b) => {
+          const parse = d => moment(d, 'DD-MM-YYYY').valueOf();
+          return parse(b?.date) - parse(a?.date);
+        });
+        setUpcomingData(sorted);
       } else {
         setUpcomingData('');
         // alert(response.message);
@@ -93,10 +98,41 @@ const Booking = () => {
     }
   }, [selectedTab, focus]);
 
+  // Helper function to check dispute availability for appointment
+  const getDisputeStatus = (appointmentDate, appointmentTime) => {
+    try {
+      // Parse the appointment date and time
+      const appointmentDateTime = moment(
+        `${appointmentDate} ${appointmentTime}`,
+        'DD-MM-YYYY hh:mm A'
+      );
+      
+      // Get current time
+      const now = moment();
+      
+      // Calculate the difference in hours
+      const hoursDifference = now.diff(appointmentDateTime, 'hours');
+      
+      if (hoursDifference < 0) {
+        // Future appointment - not completed yet
+        return 'future';
+      } else if (hoursDifference >= 0 && hoursDifference <= 24) {
+        // Past appointment within 24 hours - can create dispute
+        return 'canDispute';
+      } else {
+        // Past appointment beyond 24 hours - dispute period expired
+        return 'expired';
+      }
+    } catch (error) {
+      console.log('Error calculating dispute status:', error);
+      return 'expired';
+    }
+  };
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE, paddingBottom: responsiveHeight(10)}}>
       <AppHeader
         pTop={8.8}
         style={{paddingBottom: responsiveHeight(2)}}
@@ -175,7 +211,7 @@ const Booking = () => {
             (upcomingData?.length > 0 ? (
               <FlatList
                 data={upcomingData}
-                contentContainerStyle={{gap: 10, margin: 10, marginTop: 0}}
+                contentContainerStyle={{flexGrow: 1, gap: 10, margin: 10, marginTop: 0, paddingBottom: responsiveHeight(2)}}
                 renderItem={({item}) => {
                   console.log('iterj', item);
                   return (
@@ -219,8 +255,11 @@ const Booking = () => {
             (upcomingData?.length > 0 ? (
               <FlatList
                 data={upcomingData}
-                contentContainerStyle={{gap: 10, marginTop: 0}}
+                contentContainerStyle={{gap: 10, marginTop: 0, paddingHorizontal: responsiveWidth(5), paddingBottom: responsiveHeight(2)}}
                 renderItem={({item}) => {
+                  // Get dispute status for this appointment
+                  const disputeStatus = getDisputeStatus(item?.date, item?.time);
+                  
                   return (
                     <BookingCard
                       disabled
@@ -234,6 +273,33 @@ const Booking = () => {
                       saloonId={item?.salonId?._id}
                       service={item?.serviceId?.serviceName}
                       bookingType="completed"
+                      hasDispute={!!item?.dispute}
+                      dispute={item?.dispute}
+                      disputeStatus={disputeStatus}
+                      onDisputePress={() => {
+                        if (item?.dispute) {
+                          // Always allow viewing existing disputes
+                          navigation.navigate('ViewDispute', {
+                            bookingData: item,
+                            dispute: item?.dispute
+                          });
+                        } else if (disputeStatus === 'canDispute') {
+                          // Only allow creating dispute if within 24 hours
+                          navigation.navigate('AddDispute', {
+                            bookingData: item
+                          });
+                        } else if (disputeStatus === 'expired') {
+                          ShowToast(
+                            'error',
+                            'Disputes can only be created within 24 hours of your appointment'
+                          );
+                        } else {
+                          ShowToast(
+                            'info',
+                            'Disputes can only be filed after your appointment is completed'
+                          );
+                        }
+                      }}
                     />
                   );
                 }}
@@ -257,7 +323,7 @@ const Booking = () => {
             (upcomingData.length > 0 ? (
               <FlatList
                 data={upcomingData}
-                contentContainerStyle={{gap: 10, marginTop: 0}}
+                contentContainerStyle={{gap: 10, marginTop: 0, paddingHorizontal: responsiveWidth(5), paddingBottom: responsiveHeight(2)}}
                 renderItem={({item}) => {
                   console.log('itemjhg', item);
                   return (

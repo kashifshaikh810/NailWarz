@@ -41,6 +41,10 @@ type props = {
   cancelBookingOnPress?: () => void,
   onCardPress?: () => void,
   disabled?: boolean,
+  hasDispute?: boolean,
+  dispute?: any,
+  onDisputePress?: () => void,
+  disputeStatus?: string, // 'future' | 'canDispute' | 'expired'
 };
 
 const ratingsStar = [
@@ -63,6 +67,10 @@ const BookingCard = ({
   cancelBookingOnPress,
   onCardPress,
   disabled = false,
+  hasDispute = false,
+  dispute,
+  onDisputePress,
+  disputeStatus = 'canDispute',
 }: props) => {
   const navigation = useNavigation();
   const {userData} = useSelector(state => state.user);
@@ -216,55 +224,47 @@ const BookingCard = ({
 
         {bookingType === 'completed' && (
           <View>
-            {/* <FlatList
-              data={ratingsStar}
-              contentContainerStyle={{
-                paddingHorizontal: responsiveWidth(5),
-                flex: 1,
-                justifyContent: 'space-between',
-              }}
-              horizontal
-              renderItem={({item}) => {
-                return (
-                  <TouchableOpacity>
-                    <AntDesign
-                      name={item.iconName}
-                      size={responsiveFontSize(4)}
-                      color={AppColors.BLACK}
-                    />
-                  </TouchableOpacity>
-                );
-              }}
-            /> */}
-            {/* <Rating
-            
-              count={5}
-              reviews={[]} // hide default text labels
-              defaultRating={3}
-              size={30}
-            starContainerStyle={{
-  flexDirection: 'row',
-  justifyContent: 'center',
-  // fallback to margin-based spacing
-  columnGap: 10, // or use marginHorizontal in custom star
-}}
-            /> */}
             <AppText
               styles={styles.reviewPrompt}
               title="Leave a review"
               onPress={() => setModalVisible(true)}
-              // onPress={() => navigation.navigate('AddReview', {bookingId})}
             />
             <LineBreak space={2} />
 
-            <AppButton
-              title="View Receipt"
-              handlePress={() =>
-                navigation.navigate('DownloadReceipt', {bookingId})
-              }
-              // bgColor={AppColors.DARKGRAY}
-              // textColor={AppColors.WHITE}
-            />
+            <View style={{gap: 10}}>
+              {/* Dispute Button */}
+              <AppButton
+                title={
+                  hasDispute 
+                    ? "View Dispute" 
+                    : disputeStatus === 'canDispute' 
+                      ? "Create Dispute"
+                      : disputeStatus === 'expired'
+                        ? "Dispute Period Expired"
+                        : "Service Pending"
+                }
+                handlePress={onDisputePress}
+                bgColor={
+                  hasDispute 
+                    ? AppColors.BTNCOLOURS 
+                    : disputeStatus === 'canDispute' 
+                      ? AppColors.BTNCOLOURS 
+                      : AppColors.DARKGRAY
+                }
+                textColor={AppColors.WHITE}
+                disabled={!hasDispute && disputeStatus !== 'canDispute'}
+              />
+
+              {/* View Receipt Button */}
+              <AppButton
+                title="View Receipt"
+                handlePress={() =>
+                  navigation.navigate('DownloadReceipt', {bookingId})
+                }
+                bgColor={AppColors.BTNCOLOURS}
+                textColor={AppColors.WHITE}
+              />
+            </View>
           </View>
         )}
       </TouchableOpacity>

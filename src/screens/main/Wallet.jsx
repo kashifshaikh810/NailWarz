@@ -53,7 +53,7 @@ const Wallet = ({navigation, route}) => {
   return (
     <SafeAreaView style={globalStyles.container}>
       <ScrollView
-        contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+        contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE, paddingBottom: responsiveHeight(10)}}>
         <AppHeader onPress={() => navigation.goBack()} title="Wallet" />
         {isLoading ? (
           <View style={{flex: 0.9, justifyContent: 'center'}}>

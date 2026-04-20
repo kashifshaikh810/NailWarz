@@ -136,7 +136,7 @@ const SelectPaymentMethod = ({route}) => {
   }, []);
   return (
     <SafeAreaView style={globalStyles.container}>
-      <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}}>
+      <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}} contentContainerStyle={{flexGrow: 1, paddingBottom: responsiveHeight(10)}}>
         <AppHeader
           onPress={() => navigation.goBack()}
           title="Select Payment Method"

@@ -39,7 +39,8 @@ import messaging from '@react-native-firebase/messaging';
 
 const Signup = ({navigation}) => {
   const [form, setForm] = useState({
-    userName: '',
+    firstName: '',
+    lastName: '',
     email: null,
     phone: null,
     password: null,
@@ -81,11 +82,11 @@ const Signup = ({navigation}) => {
     getToken();
   }, []);
   const handleRegisteration = async () => {
-    const {userName, email, password, phone} = form;
+    const {firstName, lastName, email, password, phone} = form;
     // if (!withEmail) {
     //   return ShowToast('error', 'This Feature Is Under Development');
     // }
-    // if (!userName && !email && !password) {
+    // if (!firstName && !lastName && !email && !password) {
     //   return ShowToast('error', 'Plz Provide Complete Details To Proceed!');
     // }
     if (!isChecked) {
@@ -94,7 +95,8 @@ const Signup = ({navigation}) => {
     setIsLoading(true);
     try {
       await registerUser(
-        userName,
+        firstName,
+        lastName,
         email,
         password,
         phone,
@@ -117,9 +119,15 @@ const Signup = ({navigation}) => {
       const userInfo = await GoogleSignin.signIn();
       if (userInfo?.type === 'success') {
         const {name} = userInfo.data.user;
+        // Split the full name into firstName and lastName
+        const nameParts = name.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
         setGoogleLoading(true);
         const response = await signInWithGoogle(
-          name,
+          firstName,
+          lastName,
           userInfo.data.user.email,
           fcmToken,
         );
@@ -218,8 +226,20 @@ const Signup = ({navigation}) => {
 
         <View style={{gap: 20, marginTop: responsiveHeight(2), flex: 1}}>
           <AppTextInput
-            onChangeText={value => handleInputChange('userName', value)}
-            inputPlaceHolder={'Username'}
+            onChangeText={value => handleInputChange('firstName', value)}
+            inputPlaceHolder={'First Name'}
+            containerBg={AppColors.INPUTBG}
+            logo={
+              <Ionicons
+                name={'person-outline'}
+                color={AppColors.BTNCOLOURS}
+                size={responsiveFontSize(2.5)}
+              />
+            }
+          />
+          <AppTextInput
+            onChangeText={value => handleInputChange('lastName', value)}
+            inputPlaceHolder={'Last Name'}
             containerBg={AppColors.INPUTBG}
             logo={
               <Ionicons

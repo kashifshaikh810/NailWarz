@@ -87,7 +87,7 @@ const Favourites = () => {
   }, [isFocus]);
   return (
     <ScrollView
-      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
+      contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE, paddingBottom: responsiveHeight(10)}}>
       <AppHeader
         pTop={8.8}
         onPress={() => navigation.goBack()}
@@ -182,6 +182,7 @@ const Favourites = () => {
                   isShowDeleteIcon={isShowDeleteIcon}
                   setIsShowDeleteIcon={setIsShowDeleteIcon}
                   setShowRemoveModal={setShowRemoveModal}
+                  disabled={true}
                 />
               </SwipeableItem>
             )}

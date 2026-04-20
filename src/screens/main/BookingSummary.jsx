@@ -69,6 +69,7 @@ const BookingSummary = ({route}) => {
     selectedDay,
     reschedule,
     myBookingId,
+    originalDate,
   } = route?.params?.data;
   const time12hr = selectedTime?.value;
   const time24hr = moment(time12hr, ['h:mm A']).format('HH:mm');
@@ -221,7 +222,8 @@ const BookingSummary = ({route}) => {
   }, []);
   return (
     <SafeAreaView style={globalStyles.container}>
-      <ScrollView style={{flex: 1, backgroundColor: AppColors.WHITE}}>
+      <ScrollView
+        contentContainerStyle={{flexGrow: 1,paddingBottom:responsiveHeight(10), backgroundColor: AppColors.WHITE}}>
         <AppHeader
           onPress={() => navigation.goBack()}
           title="Booking Summary"
@@ -304,11 +306,57 @@ const BookingSummary = ({route}) => {
                     textSize={2}
                     textColor={AppColors.BLACK}
                   />
-                  <AppText
-                    title={item.date}
-                    textSize={1.7}
-                    textColor={AppColors.DARKGRAY}
-                  />
+                  {reschedule && item.id === 1 ? (
+                    <View style={{gap: 8, marginTop: 6}}>
+                      <View
+                        style={{
+                          backgroundColor: '#FFF4F4',
+                          borderRadius: 8,
+                          padding: responsiveHeight(1.2),
+                          borderLeftWidth: 3,
+                          borderLeftColor: '#AAAAAA',
+                        }}>
+                        <AppText
+                          title="Original"
+                          textSize={1.5}
+                          textColor={'#AAAAAA'}
+                          textFontWeight
+                        />
+                        <AppText
+                          title={originalDate}
+                          textSize={1.8}
+                          textColor={'#AAAAAA'}
+                        />
+                      </View>
+                      <View
+                        style={{
+                          backgroundColor: '#FFF4F4',
+                          borderRadius: 8,
+                          padding: responsiveHeight(1.2),
+                          borderLeftWidth: 3,
+                          borderLeftColor: AppColors.BTNCOLOURS,
+                          marginBottom: responsiveHeight(1.5),
+                        }}>
+                        <AppText
+                          title="New Appointment"
+                          textSize={1.5}
+                          textColor={AppColors.BTNCOLOURS}
+                          textFontWeight
+                        />
+                        <AppText
+                          title={item.date}
+                          textSize={1.8}
+                          textColor={AppColors.BLACK}
+                        />
+                      </View>
+                    </View>
+                  ) : (
+                    <AppText
+                      title={item.date}
+                      textSize={1.7}
+                      textColor={AppColors.DARKGRAY}
+                    />
+                  )}
                 </View>
               );
             }}
@@ -454,13 +502,13 @@ const BookingSummary = ({route}) => {
               marginTop: 10,
             }}>
             <AppText
-              title="Discount"
+              title="Nail Warz Discount"
               textSize={1.9}
               textColor={AppColors.DARKGRAY}
               textFontWeight={true}
             />
             <AppText
-              title="$6"
+              title="-$6"
               textSize={1.9}
               textColor={AppColors.DARKGRAY}
               textFontWeight={true}
@@ -487,7 +535,18 @@ const BookingSummary = ({route}) => {
             />
           </TouchableOpacity>
 
-          <LineBreak space={4} />
+          <AppText
+            title={
+              'Tips not included. Tips are paid directly to your technician.'
+            }
+            textSize={1.6}
+            mrgnTop={2}
+            textColor={AppColors.DARKGRAY}
+            textAlignment="left"
+            // style={{marginTop: responsiveHeight(1)}}
+          />
+
+          <LineBreak space={2} />
 
           <ConfirmationModal
             iconName={'check'}
@@ -532,7 +591,7 @@ const BookingSummary = ({route}) => {
             // textColor={AppColors.WHITE}
           />
 
-          <LineBreak space={2} />
+          {/* <LineBreak space={2} /> */}
         </View>
         <ConfirmationModal
           iconName={'check'}

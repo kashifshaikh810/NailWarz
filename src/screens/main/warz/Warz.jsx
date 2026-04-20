@@ -183,6 +183,7 @@ const Warz = () => {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         flexGrow: 1,
+        paddingBottom: responsiveHeight(10),
         backgroundColor: AppColors.WHITE,
         padding: responsiveHeight(1),
         paddingTop: Platform.OS === 'ios' ? responsiveHeight(8.8) : null,

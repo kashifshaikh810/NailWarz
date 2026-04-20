@@ -1,26 +1,41 @@
 /* eslint-disable react-native/no-inline-styles */
-import { View, Text, TouchableOpacity, Platform, Image, ActivityIndicator } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import AppColors from '../../utils/AppColors';
 import AppHeader from '../../components/AppHeader';
 import AppText from '../../components/AppTextComps/AppText';
-import { responsiveFontSize, responsiveHeight, responsiveWidth } from '../../utils/Responsive_Dimensions';
+import {
+  responsiveFontSize,
+  responsiveHeight,
+  responsiveWidth,
+} from '../../utils/Responsive_Dimensions';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import CalendarModal from '../../components/CalendarModal';
 import moment from 'moment';
 import LineBreak from '../../components/LineBreak';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import AppButton from '../../components/AppButton';
-import { getAvailableTechnician } from '../../GlobalFunctions';
-import { ShowToast } from '../../GlobalFunctions/auth';
-import { ImageBaseUrl } from '../../BaseUrl';
-import { useSelector } from 'react-redux';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { globalStyles } from '../../GlobalFunctions/styles';
-const SelectAnyTech = ({ navigation, route }) => {
-  const { data } = route?.params;
+import {getAvailableTechnician} from '../../GlobalFunctions';
+import {ShowToast} from '../../GlobalFunctions/auth';
+import {ImageBaseUrl} from '../../BaseUrl';
+import {useSelector} from 'react-redux';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {globalStyles} from '../../GlobalFunctions/styles';
+const SelectAnyTech = ({navigation, route}) => {
+  const {data} = route?.params;
   const [selectedDateFromCalendar, setSelectedDateFromCalendar] = useState('');
-  const [selectedDate, setSelectedDate] = useState({ day: '', fullDay: '', date: '' });
+  const [selectedDate, setSelectedDate] = useState({
+    day: '',
+    fullDay: '',
+    date: '',
+  });
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [selectedTime, setSelectedTime] = useState(null);
@@ -32,17 +47,19 @@ const SelectAnyTech = ({ navigation, route }) => {
     designation: '',
     image: '',
   });
-  const { _id } = useSelector(state => state?.user?.userData);
+  const {_id} = useSelector(state => state?.user?.userData);
   console.log('data', data);
   console.log('technicianDetails', technicianDetails);
 
-  const handleDateSelection = (dateStr) => {
+  const handleDateSelection = dateStr => {
     setSelectedDateFromCalendar(dateStr); // stores raw "YYYY-MM-DD"
     const formatted = formatSelectedDate(dateStr); // moment formatting
     setSelectedDate(formatted); // stores { day: "Tue", date: "Jul 15" }
   };
-  const formatSelectedDate = (dateStr) => {
-    if (!dateStr) { return { day: '', date: '' }; }
+  const formatSelectedDate = dateStr => {
+    if (!dateStr) {
+      return {day: '', date: ''};
+    }
     console.log('date====>><><><>>...,,,', dateStr);
     return {
       day: moment(dateStr).format('ddd'),
@@ -50,20 +67,24 @@ const SelectAnyTech = ({ navigation, route }) => {
       date: moment(dateStr).format('MMM D'),
     };
   };
-  const handleTimeChange = (event, time) => {
-    if (time) {
-      setSelectedTime(time);
-    }
-    setShowPicker(false); // Close the picker
+  const handleTimeChange = date => {
+    if (date) setSelectedTime(date);
+    setShowPicker(false);
   };
 
   const getTechnicianHandler = async () => {
     setIsLoading(true);
     try {
       const formattedTime = moment(selectedTime).format('hh:mm A');
-      const formattedDate = moment(selectedDateFromCalendar).format('DD-MM-YYYY');
+      const formattedDate = moment(selectedDateFromCalendar).format(
+        'DD-MM-YYYY',
+      );
       const serviceId = data?.serviceId;
-      const response = await getAvailableTechnician(serviceId, formattedDate, formattedTime);
+      const response = await getAvailableTechnician(
+        serviceId,
+        formattedDate,
+        formattedTime,
+      );
       setIsLoading(false);
 
       console.log('response', response);
@@ -78,7 +99,6 @@ const SelectAnyTech = ({ navigation, route }) => {
           designation: '',
           image: '',
         });
-
       }
     } catch (error) {
       setIsLoading(false);
@@ -113,32 +133,35 @@ const SelectAnyTech = ({ navigation, route }) => {
         ...data,
         selectedTechnician: technicianDetails?._id,
         technicianName: technicianDetails?.name,
-        selectedTime: { value: moment(selectedTime).format('hh:mm A') },
+        selectedTime: {value: moment(selectedTime).format('hh:mm A')},
         selectedDate: selectedDate.date,
         selectedDay: selectedDate.fullDay,
-        selectedBookingDate: moment(selectedDateFromCalendar).format('DD-MM-YYYY'),
+        selectedBookingDate: moment(selectedDateFromCalendar).format(
+          'DD-MM-YYYY',
+        ),
       },
-    }
-    );
+    });
   };
   return (
     <SafeAreaView style={globalStyles.container}>
-      <AppHeader onPress={() => navigation.goBack()} title="Appointment Date & time" />
+      <AppHeader
+        onPress={() => navigation.goBack()}
+        title="Appointment Date & time"
+      />
       <View
         style={{
           backgroundColor: '#B4B4B4',
           height: 0.5,
           elevation: 5,
-
           width: '100%',
         }}
       />
       {isLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
           <ActivityIndicator size={50} color={AppColors.BTNCOLOURS} />
         </View>
       ) : (
-        <View style={{ padding: responsiveHeight(2), flex: 1 }}>
+        <View style={{padding: responsiveHeight(2), flex: 0.8}}>
           <AppText
             // mrgnLeft={2}
             // mrgnTop={2}
@@ -147,14 +170,20 @@ const SelectAnyTech = ({ navigation, route }) => {
             textColor={AppColors.BLACK}
             textFontWeight
           />
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: responsiveHeight(2), gap: responsiveHeight(2) }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: responsiveHeight(2),
+              gap: responsiveHeight(2),
+            }}>
             {selectedDate.date ? (
               <TouchableOpacity
                 style={{
                   backgroundColor: AppColors.WHITE,
                   elevation: 6,
                   shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 4 },
+                  shadowOffset: {width: 0, height: 4},
                   shadowOpacity: 0.15,
                   shadowRadius: 6,
                   borderRadius: 10,
@@ -174,16 +203,14 @@ const SelectAnyTech = ({ navigation, route }) => {
                 <AppText
                   title={selectedDate.date}
                   textSize={1.5}
-                  textColor={AppColors.BLUE
-                  }
+                  textColor={AppColors.BLUE}
                   textFontWeight
                 />
                 <LineBreak space={0.3} />
                 <AppText
                   title="30 mins"
                   textSize={1.3}
-                  textColor={AppColors.BLUE
-                  }
+                  textColor={AppColors.BLUE}
                 />
               </TouchableOpacity>
             ) : null}
@@ -192,7 +219,7 @@ const SelectAnyTech = ({ navigation, route }) => {
                 backgroundColor: AppColors.WHITE,
                 elevation: 6,
                 shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
+                shadowOffset: {width: 0, height: 4},
                 shadowOpacity: 0.15,
                 shadowRadius: 6,
                 borderRadius: 10,
@@ -233,7 +260,7 @@ const SelectAnyTech = ({ navigation, route }) => {
                   backgroundColor: AppColors.WHITE,
                   elevation: 6,
                   shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 4 },
+                  shadowOffset: {width: 0, height: 4},
                   shadowOpacity: 0.15,
                   shadowRadius: 6,
                   borderRadius: 10,
@@ -244,8 +271,7 @@ const SelectAnyTech = ({ navigation, route }) => {
                   width: responsiveWidth(16),
                   height: responsiveHeight(9.5),
                   gap: 5,
-                }}
-              >
+                }}>
                 <EvilIcons
                   name={'calendar'}
                   size={responsiveFontSize(3)}
@@ -266,7 +292,7 @@ const SelectAnyTech = ({ navigation, route }) => {
                       backgroundColor: AppColors.WHITE,
                       elevation: 5,
                       shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 4 },
+                      shadowOffset: {width: 0, height: 4},
                       shadowOpacity: 0.15,
                       shadowRadius: 6,
                       borderRadius: 10,
@@ -278,8 +304,7 @@ const SelectAnyTech = ({ navigation, route }) => {
                       justifyContent: 'space-between',
                       borderWidth: 2,
                       borderColor: AppColors.BLUE,
-                    }}
-                  >
+                    }}>
                     <AppText
                       title={moment(selectedTime).format('hh:mm A')}
                       textSize={2}
@@ -287,25 +312,35 @@ const SelectAnyTech = ({ navigation, route }) => {
                       textFontWeight
                     />
                   </TouchableOpacity>
-
                 </View>
               )}
             </View>
           ) : null}
           {showPicker && (
-            <DateTimePicker
-              value={selectedTime || new Date()}
+            <DateTimePickerModal
+              isVisible={showPicker}
               mode="time"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleTimeChange}
-              minimumDate={new Date()} // Optional: disable past dates
+              onConfirm={handleTimeChange}
+              onCancel={() => setShowPicker(false)}
+              is24Hour={false}
             />
           )}
         </View>
       )}
 
-      <View style={{ justifyContent: 'flex-end', alignItems: 'center', marginBottom: responsiveHeight(2) }}>
-        <AppButton width={90} bgColor={technicianDetails._id ? AppColors.BTNCOLOURS : '#CCCCCC'} disabled={technicianDetails._id ? false : true} handlePress={handleNavigation} title={'Next'} />
+      <View
+        style={{
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          marginBottom: responsiveHeight(2),
+        }}>
+        <AppButton
+          width={90}
+          bgColor={technicianDetails._id ? AppColors.BTNCOLOURS : '#CCCCCC'}
+          disabled={technicianDetails._id ? false : true}
+          handlePress={handleNavigation}
+          title={'Next'}
+        />
       </View>
 
       <CalendarModal
@@ -314,7 +349,6 @@ const SelectAnyTech = ({ navigation, route }) => {
         selected={selectedDateFromCalendar}
         setSelected={handleDateSelection}
       />
-
     </SafeAreaView>
   );
 };

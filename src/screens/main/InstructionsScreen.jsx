@@ -1,48 +1,48 @@
 /* eslint-disable react-native/no-inline-styles */
-import {View, Text, ScrollView} from 'react-native';
-import React from 'react';
+import {View, ScrollView, ActivityIndicator} from 'react-native';
+import React, {useState} from 'react';
 import AppHeader from '../../components/AppHeader';
 import AppColors from '../../utils/AppColors';
-import AppText from '../../components/AppTextComps/AppText';
 import {responsiveHeight} from '../../utils/Responsive_Dimensions';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
+import {WebView} from 'react-native-webview';
 
 const InstructionsScreen = ({navigation, route}) => {
   const {type} = route?.params;
+  const apiEndpoint =
+    type === 'Privacy Policy'
+      ? 'https://nail-warz-demo.vercel.app/privacy_policy'
+      : type === 'Terms & Conditions'
+      ? 'https://nail-warz-demo.vercel.app/terms_and_conditions'
+      : type === 'Warzone Rules'
+      ? 'https://nail-warz-demo.vercel.app/warzone_rules'
+      : 'https://nail-warz-demo.vercel.app/cookie_policy';
+  const [loading, setLoading] = useState(true);
+
   return (
-    <SafeAreaView style={globalStyles.container}>
-      <ScrollView
-        contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE}}>
-        <AppHeader onPress={() => navigation.goBack()} title={type} />
-        <View
-          style={{
-            padding: responsiveHeight(2),
-            paddingTop: responsiveHeight(0.1),
-            gap: responsiveHeight(2),
-          }}>
-          <AppText
-            textSize={2}
-            textColor={AppColors.txtColor}
-            title="Duis aute irure dolor in reprehenderit in voluptate vel esse cillum dolore eu fugiat nulla pariatuDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatu"
+    <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
+      <AppHeader onPress={() => navigation.goBack()} title={type} />
+
+      <View style={{flex: 1}}>
+        {/* {loading ? (
+          <View
+            style={{
+              flex: 0.9,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <ActivityIndicator size="large" color="#000" />
+          </View>
+        ) : ( */}
+          <WebView
+            source={{uri: apiEndpoint}}
+            style={{flex: 1}}
+            onLoadEnd={() => setLoading(false)}
+            onError={() => setLoading(false)}
           />
-          <AppText
-            textSize={2}
-            textColor={AppColors.txtColor}
-            title="Duis aute irure dolor in reprehenderit in volupta esse cillum dolore eu fugiat nulla pariatuDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatu Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatuDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatu"
-          />
-          <AppText
-            textSize={2}
-            textColor={AppColors.txtColor}
-            title="Duis aute irure dolor in reprehenderit in volupt esse cillum dolore eu fugiat nulla pariatuDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat."
-          />
-          <AppText
-            textSize={2}
-            textColor={AppColors.txtColor}
-            title="Duis aute irure dolor in reprehenderit in volupta esse cillum dolore eu fugiat nulla pariatuDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatu Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatuDuis aute irure dolor in."
-          />
-        </View>
-      </ScrollView>
+        {/* // )} */}
+      </View>
     </SafeAreaView>
   );
 };
