@@ -35,7 +35,6 @@ import {ShowToast} from '../../GlobalFunctions/auth';
 
 const BattleForm = ({navigation}) => {
   const {userData} = useSelector(state => state?.user);
-  const [value, setValue] = useState();
   const [platformValue, setPlatformValue] = useState(null);
   const [isChecked, setIsChecked] = useState(false);
   const [isChecked2, setIsChecked2] = useState(false);
@@ -47,6 +46,9 @@ const BattleForm = ({navigation}) => {
     email: userData?.email,
     phone: userData?.phone,
     address: '',
+    city: '',
+    state: '',
+    zipCode: '',
     description: '',
     socialMediaHandle: '',
     nailTechnicianName: '',
@@ -54,15 +56,10 @@ const BattleForm = ({navigation}) => {
   });
   console.log('form', form);
   console.log('platformValue', platformValue);
-  console.log('value', value);
   console.log('imageUri====', imageUri);
   const handleInputChange = (field: string, inputValue: string) => {
     setForm(prev => ({...prev, [field]: inputValue}));
   };
-  const [type, setType] = useState([
-    {label: 'Nail Salon', value: 'Salon'},
-    {label: 'Nailee', value: 'Nailee'},
-  ]);
   const [mediaHandle, setMediaHandle] = useState([
     {label: 'Instagram', value: 'instagram'},
     {label: 'Facebook', value: 'facebook'},
@@ -84,8 +81,19 @@ const BattleForm = ({navigation}) => {
 
   const SubmitFormHandler = async () => {
     console.log('fggd');
-    const {fullName, email, phone, address, socialMediaHandle, description, nailTechnicianName, salonName} =
-      form;
+    const {
+      fullName,
+      email,
+      phone,
+      address,
+      city,
+      state,
+      zipCode,
+      socialMediaHandle,
+      description,
+      nailTechnicianName,
+      salonName,
+    } = form;
     if (!fullName) {
       return ShowToast('error', 'Full name is required');
     }
@@ -98,11 +106,11 @@ const BattleForm = ({navigation}) => {
     if (!address) {
       return ShowToast('error', 'Address is required');
     }
-    if (value === 'Nailee' && !nailTechnicianName) {
+    if (!nailTechnicianName) {
       return ShowToast('error', 'Name of Nail Technician is required');
     }
-    if (value === 'Nailee' && !salonName) {
-      return ShowToast('error', 'Name of Salon is required');
+    if (!salonName) {
+      return ShowToast('error', 'Name of salon that completed the service is required');
     }
     if (!imageUri) {
       return ShowToast('error', 'Profile image is required');
@@ -126,7 +134,10 @@ const BattleForm = ({navigation}) => {
         fullName,
         email,
         Number(phone),
-        address,
+        address.trim(),
+        city.trim(),
+        state.trim(),
+        zipCode.trim(),
         imageUri,
         platformValue,
         socialMediaHandle,
@@ -209,55 +220,34 @@ const BattleForm = ({navigation}) => {
               }
             />
 
-            <View style={{zIndex: 3000, elevation: 3000}}>
-              <AppText textFontWeight textSize={1.8} title="Select Your Type" />
-              <LineBreak space={1} />
-              <PickerCard
-                bgColor={AppColors.INPUTBG}
-                height={6}
-                top={6}
-                padding={0.001}
-                dropDownBgColor={AppColors.INPUTBG}
-                value={value}
-                setValue={setValue}
-                items={type}
-                placeHolder="Type"
-                zIndex={3000}
-                dropDownZIndex={3001}
-              />
-            </View>
-            {value === 'Nailee' && (
-              <>
-                <AppTextInput
-                  inputPlaceHolder={'John Doe'}
-                  label="Name of Nail Technician"
-                  value={form.nailTechnicianName}
-                  onChangeText={val => handleInputChange('nailTechnicianName', val)}
-                  containerBg={AppColors.INPUTBG}
-                  logo={
-                    <FontAwesome
-                      name={'user-o'}
-                      color={AppColors.BTNCOLOURS}
-                      size={responsiveFontSize(2.5)}
-                    />
-                  }
+            <AppTextInput
+              inputPlaceHolder={'John Doe'}
+              label="Name of Nail Technician"
+              value={form.nailTechnicianName}
+              onChangeText={val => handleInputChange('nailTechnicianName', val)}
+              containerBg={AppColors.INPUTBG}
+              logo={
+                <FontAwesome
+                  name={'user-o'}
+                  color={AppColors.BTNCOLOURS}
+                  size={responsiveFontSize(2.5)}
                 />
-                <AppTextInput
-                  inputPlaceHolder={'Nail Warz Salon'}
-                  label="Name of Salon"
-                  value={form.salonName}
-                  onChangeText={val => handleInputChange('salonName', val)}
-                  containerBg={AppColors.INPUTBG}
-                  logo={
-                    <Ionicons
-                      name={'storefront-outline'}
-                      color={AppColors.BTNCOLOURS}
-                      size={responsiveFontSize(2.5)}
-                    />
-                  }
+              }
+            />
+            <AppTextInput
+              inputPlaceHolder={'Nail Warz Salon'}
+              label="Name of Salon that Completed The Service"
+              value={form.salonName}
+              onChangeText={val => handleInputChange('salonName', val)}
+              containerBg={AppColors.INPUTBG}
+              logo={
+                <Ionicons
+                  name={'storefront-outline'}
+                  color={AppColors.BTNCOLOURS}
+                  size={responsiveFontSize(2.5)}
                 />
-              </>
-            )}
+              }
+            />
             <AppTextInput
               // onChangeText={value => setEmail(value)}
               onChangeText={value => handleInputChange('phone', value)}
@@ -296,13 +286,14 @@ const BattleForm = ({navigation}) => {
               }}>
               <AppTextInput
                 containerWidth={44.1}
-                // onChangeText={value => setEmail(value)}
                 inputPlaceHolder={'Newyork'}
                 label="City"
+                value={form.city}
+                onChangeText={value => handleInputChange('city', value)}
                 containerBg={AppColors.INPUTBG}
                 logo={
                   <Ionicons
-                    name={'location-outline'}
+                    name={'business-outline'}
                     color={AppColors.BTNCOLOURS}
                     size={responsiveFontSize(2.5)}
                   />
@@ -310,19 +301,35 @@ const BattleForm = ({navigation}) => {
               />
               <AppTextInput
                 containerWidth={44.1}
-                // onChangeText={value => setEmail(value)}
                 inputPlaceHolder={'Newyork'}
                 label="State"
+                value={form.state}
+                onChangeText={value => handleInputChange('state', value)}
                 containerBg={AppColors.INPUTBG}
                 logo={
                   <Ionicons
-                    name={'location-outline'}
+                    name={'map-outline'}
                     color={AppColors.BTNCOLOURS}
                     size={responsiveFontSize(2.5)}
                   />
                 }
               />
             </View>
+            <AppTextInput
+              inputPlaceHolder={'Enter Zip Code'}
+              label="Zip Code"
+              keyboardType="number-pad"
+              value={form.zipCode}
+              onChangeText={value => handleInputChange('zipCode', value)}
+              containerBg={AppColors.INPUTBG}
+              logo={
+                <Ionicons
+                  name={'keypad-outline'}
+                  color={AppColors.BTNCOLOURS}
+                  size={responsiveFontSize(2.5)}
+                />
+              }
+            />
 
             {imageUri ? (
               <View
@@ -455,8 +462,7 @@ const BattleForm = ({navigation}) => {
                 title="By Checking this box , I confirm that i am following Nail Warz on Social Media"
               />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setIsChecked2(!isChecked2)}
+            <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -495,16 +501,28 @@ const BattleForm = ({navigation}) => {
                   }}>
                   By Checking this box, I confirm that I have read and agree to
                   the{' '}
-                  <Text style={{textDecorationLine: 'underline'}}>
+                  <Text
+                    onPress={() =>
+                      navigation.navigate('InstructionsScreen', {
+                        type: 'Terms & Conditions',
+                      })
+                    }
+                    style={{textDecorationLine: 'underline'}}>
                     Nail Warz Terms & Conditions
                   </Text>
                   {' '}and{' '}
-                  <Text style={{textDecorationLine: 'underline'}}>
+                  <Text
+                    onPress={() =>
+                      navigation.navigate('InstructionsScreen', {
+                        type: 'Warzone Rules',
+                      })
+                    }
+                    style={{textDecorationLine: 'underline'}}>
                     Warzone Rules
                   </Text>
                 </Text>
               </View>
-            </TouchableOpacity>
+            </View>
             <LineBreak space={2} />
 
             <AppButton

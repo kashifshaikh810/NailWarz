@@ -165,6 +165,8 @@ class AppDelegate: UIResponder,
     willPresent notification: UNNotification,
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
+    let userInfo = notification.request.content.userInfo
+    Messaging.messaging().appDidReceiveMessage(userInfo)
     completionHandler([.banner, .badge, .sound])
   }
 
@@ -173,7 +175,18 @@ class AppDelegate: UIResponder,
     didReceive response: UNNotificationResponse,
     withCompletionHandler completionHandler: @escaping () -> Void
   ) {
+    let userInfo = response.notification.request.content.userInfo
+    Messaging.messaging().appDidReceiveMessage(userInfo)
     completionHandler()
+  }
+
+  // MARK: - Deep Linking
+  func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+  ) -> Bool {
+    return RCTLinkingManager.application(app, open: url, options: options)
   }
 }
 

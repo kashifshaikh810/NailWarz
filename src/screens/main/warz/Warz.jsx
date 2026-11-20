@@ -1,42 +1,25 @@
-/* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {
   View,
   ScrollView,
-  Image,
   FlatList,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
   Platform,
 } from 'react-native';
 import AppColors from '../../../utils/AppColors';
 import AppText from '../../../components/AppTextComps/AppText';
 import {
-  responsiveFontSize,
   responsiveHeight,
-  responsiveWidth,
 } from '../../../utils/Responsive_Dimensions';
-import APPImages from '../../../assets/APPImages';
-import {useIsFocused, useNavigation} from '@react-navigation/native';
 import {getAllBattles} from '../../../GlobalFunctions';
-import AppIntroSlider from 'react-native-app-intro-slider';
-import {ImageBaseUrl} from '../../../BaseUrl';
-import Swiper from 'react-native-swiper';
-import AppButton from '../../../components/AppButton';
-import LineBreak from '../../../components/LineBreak';
 import {ShowToast} from '../../../GlobalFunctions/auth';
 import BattleCard from '../../../components/BattleCard';
 
 const Warz = () => {
-  const navigation = useNavigation();
-  const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [allBattles, setAllBattles] = useState([]);
   console.log('allbattles===>>>', allBattles);
-  console.log('posts', posts);
 
   // const BattleCard = ({item}) => {
   //   const [activeIndex, setActiveIndex] = useState(0);
@@ -170,8 +153,8 @@ const Warz = () => {
       setAllBattles(response?.data);
     } catch (error) {
       setIsLoading(false);
-      return ShowToast('error', error?.response?.data?.message);
       console.log('error', error);
+      return ShowToast('error', error?.response?.data?.message);
     }
   };
   useEffect(() => {
@@ -217,7 +200,8 @@ const Warz = () => {
           <AppText
             textSize={1.9}
             textColor={AppColors.BLACK}
-            textAlignment="left"
+            textAlignment="center"
+            textwidth={88}
             // textFontWeight={'bold'}
             title="Check out the active online battles! Vote Now and see the current polls for the next NAIL CHAMPION"
           />

@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {ActivityIndicator, ScrollView, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
 import AppColors from '../../utils/AppColors';
@@ -11,15 +11,16 @@ import AppButton from '../../components/AppButton';
 import {getWalletByUserId, payWithWallet} from '../../GlobalFunctions';
 import {useSelector} from 'react-redux';
 import {ShowToast} from '../../GlobalFunctions/auth';
+import {formatBookingCurrency} from '../../utils/bookingPricing';
 
 const Wallet = ({navigation, route}) => {
   const {token} = useSelector(state => state.user);
   const [walletDetails, setWalletDetails] = useState();
-  const {bookingId, price, userId} = route?.params;
+  const {bookingId, price} = route?.params;
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   console.log('walletDetails', walletDetails);
-  const getWalletHandler = async () => {
+  const getWalletHandler = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await getWalletByUserId(token);
@@ -28,28 +29,40 @@ const Wallet = ({navigation, route}) => {
     } catch (error) {
       setIsLoading(false);
     }
-  };
+  }, [token]);
 
   const payWithWalletHandler = async () => {
+    if (paymentLoading) {
+      return;
+    }
+
     setPaymentLoading(true);
     try {
-      const response = await payWithWallet(userId, bookingId, price);
+      console.log('Wallet screen paymentWithWallet request payload:', {
+        bookingAmount: price,
+        bookingId,
+      });
+      const response = await payWithWallet(bookingId, price, token);
+      console.log('Wallet screen paymentWithWallet API response:', response);
       if (response.success) {
         ShowToast('success', response.message);
         getWalletHandler();
       } else {
         ShowToast('error', response.message);
       }
-      console.log('response', response);
       setPaymentLoading(false);
     } catch (error) {
+      console.log(
+        'Wallet screen paymentWithWallet API error:',
+        error?.response?.data || error?.message || error,
+      );
       ShowToast('error', error?.response?.data?.message);
       setPaymentLoading(false);
     }
   };
   useEffect(() => {
     getWalletHandler();
-  }, []);
+  }, [getWalletHandler]);
   return (
     <SafeAreaView style={globalStyles.container}>
       <ScrollView
@@ -75,24 +88,20 @@ const Wallet = ({navigation, route}) => {
               />
               <AppText
                 mrgnTop={0.5}
-                title={`$ ${walletDetails?.balance}.00`}
+                title={formatBookingCurrency(walletDetails?.balance)}
                 textSize={3.5}
                 textFontWeight
               />
             </View>
             <AppButton
+              disabled={paymentLoading}
+              isLoading={paymentLoading}
               handlePress={payWithWalletHandler}
               style={{
                 marginTop: responsiveHeight(5),
                 paddingVertical: responsiveHeight(2),
               }}
-              title={
-                paymentLoading ? (
-                  <ActivityIndicator size={'large'} color={AppColors.WHITE} />
-                ) : (
-                  'Pay Now'
-                )
-              }
+              title="Pay Now"
             />
           </View>
         )}

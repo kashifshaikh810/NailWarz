@@ -1,6 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
-import { View, Text, Image, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import React, { useEffect, useRef } from 'react';
+import FastImage from 'react-native-fast-image';
 import {
   responsiveFontSize,
   responsiveHeight,
@@ -110,15 +111,19 @@ const SaloonsCard = ({
               shadowOpacity: 0.15,
               shadowRadius: 5,
             }}>
-            <Image
-              source={{ uri: `${ImageBaseUrl}${img}` }}
+            <FastImage
+              source={{
+                uri: `${ImageBaseUrl}${img}`,
+                priority: FastImage.priority.normal,
+                cache: FastImage.cacheControl.immutable,
+              }}
               style={{
                 height: responsiveHeight(12),
                 width: responsiveHeight(12),
-                // resizeMode: 'contain',
                 borderRadius: 10,
                 marginRight: responsiveHeight(2),
               }}
+              resizeMode={FastImage.resizeMode.cover}
             />
             <View
               style={{

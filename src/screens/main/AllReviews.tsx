@@ -33,6 +33,11 @@ const AllReviews = ({navigation, route}) => {
     averageRating: '',
     totalReviews: '',
   });
+  const displayAverageRating = Number.isFinite(
+    Number(avgAndTotalRatings?.averageRating),
+  )
+    ? Number(avgAndTotalRatings?.averageRating).toFixed(1)
+    : '0';
   const getAllReviewsHandler = async () => {
     setIsLoading(true);
     const response = await getAllReviews(route?.params?.saloonId);
@@ -100,7 +105,7 @@ const AllReviews = ({navigation, route}) => {
                 style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
                 <FontAwesome name={'star'} size={18} color={AppColors.RED} />
                 <AppText
-                  title={`${avgAndTotalRatings?.averageRating} (${avgAndTotalRatings?.totalReviews})`}
+                  title={`${displayAverageRating} (${avgAndTotalRatings?.totalReviews})`}
                   textSize={2}
                   textColor={AppColors.RED}
                 />

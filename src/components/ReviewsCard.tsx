@@ -1,6 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
-import {View, Image, Platform} from 'react-native';
+import {View, Platform} from 'react-native';
 import React from 'react';
+import FastImage from 'react-native-fast-image';
 import moment from 'moment';
 import {
   responsiveHeight,
@@ -16,6 +17,10 @@ interface ReviewCardProps {
   data?: object;
 }
 const ReviewsCard: React.FC<ReviewCardProps> = ({data}) => {
+  const displayStars = Number.isFinite(Number(data?.stars))
+    ? Number(data?.stars).toFixed(1)
+    : '0';
+
   return (
     <View
       style={{
@@ -40,10 +45,14 @@ const ReviewsCard: React.FC<ReviewCardProps> = ({data}) => {
             gap: responsiveHeight(2),
             alignItems: 'center',
           }}>
-          <Image
+          <FastImage
             source={
               data?.userId?.image
-                ? {uri: `${ImageBaseUrl}${data?.userId?.image}`}
+                ? {
+                    uri: `${ImageBaseUrl}${data?.userId?.image}`,
+                    priority: FastImage.priority.normal,
+                    cache: FastImage.cacheControl.immutable,
+                  }
                 : APPImages.dummyImg
             }
             style={{
@@ -51,6 +60,7 @@ const ReviewsCard: React.FC<ReviewCardProps> = ({data}) => {
               width: responsiveWidth(Platform.OS === 'ios' ? 15.2 : 14),
               borderRadius: responsiveHeight(4),
             }}
+            resizeMode={FastImage.resizeMode.cover}
           />
           <View>
             <AppText
@@ -72,7 +82,7 @@ const ReviewsCard: React.FC<ReviewCardProps> = ({data}) => {
             gap: responsiveHeight(1),
           }}>
           <AntDesign name="star" color={AppColors.RED} size={20} />
-          <AppText title={data?.stars} />
+          <AppText title={displayStars} />
         </View>
       </View>
       <AppText

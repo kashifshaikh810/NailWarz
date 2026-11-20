@@ -1,13 +1,11 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
   View,
-  Text,
   TouchableOpacity,
-  Platform,
-  Image,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import AppColors from '../../utils/AppColors';
 import AppHeader from '../../components/AppHeader';
 import AppText from '../../components/AppTextComps/AppText';
@@ -24,10 +22,13 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import AppButton from '../../components/AppButton';
 import {getAvailableTechnician} from '../../GlobalFunctions';
 import {ShowToast} from '../../GlobalFunctions/auth';
-import {ImageBaseUrl} from '../../BaseUrl';
 import {useSelector} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
+import {
+  getAccountReviewMessage,
+  isAccountUnderReview,
+} from '../../utils/accountReviewRestriction';
 const SelectAnyTech = ({navigation, route}) => {
   const {data} = route?.params;
   const [selectedDateFromCalendar, setSelectedDateFromCalendar] = useState('');
@@ -47,7 +48,7 @@ const SelectAnyTech = ({navigation, route}) => {
     designation: '',
     image: '',
   });
-  const {_id} = useSelector(state => state?.user?.userData);
+  const {userData} = useSelector(state => state?.user);
   console.log('data', data);
   console.log('technicianDetails', technicianDetails);
 
@@ -68,11 +69,13 @@ const SelectAnyTech = ({navigation, route}) => {
     };
   };
   const handleTimeChange = date => {
-    if (date) setSelectedTime(date);
+    if (date) {
+      setSelectedTime(date);
+    }
     setShowPicker(false);
   };
 
-  const getTechnicianHandler = async () => {
+  const getTechnicianHandler = useCallback(async () => {
     setIsLoading(true);
     try {
       const formattedTime = moment(selectedTime).format('hh:mm A');
@@ -105,7 +108,7 @@ const SelectAnyTech = ({navigation, route}) => {
 
       return ShowToast('error', error?.response?.data?.message);
     }
-  };
+  }, [data?.serviceId, selectedDateFromCalendar, selectedTime]);
   useEffect(() => {
     if (technicians?.length > 0) {
       const randomIndex = Math.floor(Math.random() * technicians.length);
@@ -125,9 +128,16 @@ const SelectAnyTech = ({navigation, route}) => {
     if (selectedDateFromCalendar && selectedTime) {
       getTechnicianHandler();
     }
-  }, [selectedDateFromCalendar, selectedTime]);
+  }, [getTechnicianHandler, selectedDateFromCalendar, selectedTime]);
 
   const handleNavigation = () => {
+    if (!data?.reschedule && isAccountUnderReview(userData)) {
+      Alert.alert('Account Under Review', getAccountReviewMessage(userData), [
+        {text: 'OK'},
+      ]);
+      return;
+    }
+
     navigation.navigate('BookingSummary', {
       data: {
         ...data,

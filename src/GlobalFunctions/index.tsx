@@ -74,6 +74,22 @@ export const getSaloonById = async (saloonId: string) => {
     throw error;
   }
 };
+export const getUserDetail = async (token: string) => {
+  let config = {
+    method: 'get',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}getUserDetail`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+  try {
+    const response = await axios.request(config);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 export const getAllCategories = async () => {
   let config = {
     method: 'get',
@@ -98,6 +114,20 @@ export const getTechnicianById = async (technicianId: string, date: string) => {
   try {
     const response = await axios.request(config);
     console.log('responsedasdfs.data', response.data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const getServiceById = async (serviceId: string) => {
+  let config = {
+    method: 'get',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}getServiceById?id=${serviceId}`,
+    headers: {},
+  };
+  try {
+    const response = await axios.request(config);
     return response.data;
   } catch (error) {
     throw error;
@@ -160,11 +190,12 @@ export const getServiceBySalonAndCategoryId = async (
     throw error;
   }
 };
-export const selectImage = async (source = 'gallery') => {
+export const selectImage = async (source = 'gallery', selectionLimit = 1) => {
   try {
     const options = {
       mediaType: 'photo',
       quality: 1,
+      selectionLimit,
     };
 
     let result;
@@ -181,7 +212,10 @@ export const selectImage = async (source = 'gallery') => {
       console.log('ImagePicker Error: ', result.errorMessage);
       return null;
     } else {
-      return result.assets?.[0]?.uri || null;
+      const selectedUris =
+        result.assets?.map(asset => asset?.uri).filter(Boolean) || [];
+
+      return selectionLimit > 1 ? selectedUris : selectedUris?.[0] || null;
     }
   } catch (error) {
     console.log('Error selecting image:', error);
@@ -364,24 +398,8 @@ export const sharePost = async (
     throw error;
   }
 };
-export const createBooking = async (
-  userId: string,
-  salonId: string,
-  serviceId: string,
-  technicianId: string,
-  date: string,
-  time: string,
-  amount: number,
-) => {
-  let data = JSON.stringify({
-    userId: userId,
-    salonId: salonId,
-    serviceId: serviceId,
-    technicianId: technicianId,
-    date: date,
-    time: time,
-    totalAmount: amount,
-  });
+export const createBooking = async (bookingPayload: any, token?: string) => {
+  let data = JSON.stringify(bookingPayload);
 
   let config = {
     method: 'post',
@@ -389,6 +407,7 @@ export const createBooking = async (
     url: `${BaseUrl}createBooking`,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? {Authorization: `Bearer ${token}`} : {}),
     },
     data: data,
   };
@@ -400,18 +419,8 @@ export const createBooking = async (
     throw error;
   }
 };
-export const updateBooking = async (
-  bookingId: string,
-  technicianId: string,
-  time: string,
-  date: string,
-) => {
-  let data = JSON.stringify({
-    bookingId: bookingId,
-    technicianId: technicianId,
-    time: time,
-    date: date,
-  });
+export const updateBooking = async (bookingPayload: any, token?: string) => {
+  let data = JSON.stringify(bookingPayload);
 
   let config = {
     method: 'post',
@@ -419,6 +428,7 @@ export const updateBooking = async (
     url: `${BaseUrl}updateBooking`,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? {Authorization: `Bearer ${token}`} : {}),
     },
     data: data,
   };
@@ -426,6 +436,40 @@ export const updateBooking = async (
     const response = await axios.request(config);
     return response.data;
   } catch (error) {
+    throw error;
+  }
+};
+export const rescheduleEntireBooking = async (
+  payload: any,
+  token?: string,
+) => {
+  let data = JSON.stringify(payload);
+
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}rescheduleEntireBooking`,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? {Authorization: `Bearer ${token}`} : {}),
+    },
+    data: data,
+  };
+  console.log('RESCHEDULE_ENTIRE_BOOKING_API_REQUEST:', {
+    url: config.url,
+    payload,
+    hasToken: Boolean(token),
+  });
+  try {
+    const response = await axios.request(config);
+    console.log('RESCHEDULE_ENTIRE_BOOKING_API_RESPONSE:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.log('RESCHEDULE_ENTIRE_BOOKING_API_ERROR:', {
+      message: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+    });
     throw error;
   }
 };
@@ -468,10 +512,62 @@ export const cancelBooking = async (bookingId: string) => {
     throw error;
   }
 };
+export const validateBookingDiscount = async (
+  discountPayload: any,
+  token?: string,
+) => {
+  let data = JSON.stringify(discountPayload);
+
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}booking-discount/validate`,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? {Authorization: `Bearer ${token}`} : {}),
+    },
+    data: data,
+  };
+
+  try {
+    const response = await axios.request(config);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 export const cancelBookingStatus = async (bookingId: string) => {
   let data = JSON.stringify({
     bookingId: bookingId,
     status: 'Canceled',
+  });
+
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `${BaseUrl}updateBookingStatusByUser`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: data,
+  };
+  try {
+    const response = await axios.request(config);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const updateBookingStatusByUser = async ({
+  bookingId,
+  servicesDetail,
+}: {
+  bookingId: string;
+  servicesDetail: any;
+}) => {
+  let data = JSON.stringify({
+    bookingId,
+    servicesDetail,
   });
 
   let config = {
@@ -702,7 +798,6 @@ export const getSavedCards = async (token: string) => {
 };
 export const createPayment = async (
   bookingId: string,
-  amount: number,
   currency: string,
   saveCard: boolean,
   paymentMethodId: string,
@@ -710,7 +805,6 @@ export const createPayment = async (
 ) => {
   let data = JSON.stringify({
     bookingId: bookingId,
-    amount: amount,
     currency: currency,
     saveCard: saveCard,
     paymentMethodId: paymentMethodId,
@@ -770,15 +864,9 @@ export const getWalletByUserId = async (token: string) => {
     throw error;
   }
 };
-export const payWithWallet = async (
-  userId: string,
-  bookingId: string,
-  bookingAmount: number,
-) => {
+export const payWithWallet = async (bookingId: string, token: string) => {
   let data = JSON.stringify({
-    userId: userId,
     bookingId: bookingId,
-    bookingAmount: bookingAmount,
   });
 
   let config = {
@@ -787,6 +875,7 @@ export const payWithWallet = async (
     url: `${BaseUrl}paymentWithWallet`,
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
     },
     data: data,
   };
@@ -802,6 +891,9 @@ export const battleForm = async (
   email: string,
   phone: number,
   address: string,
+  city: string,
+  state: string,
+  zipCode: string,
   serviceImage: any,
   socialPlatform: string,
   socialHandle: string,
@@ -817,6 +909,9 @@ export const battleForm = async (
   data.append('phone', String(phone));
   data.append('email', email);
   data.append('address', address);
+  data.append('city', city);
+  data.append('state', state);
+  data.append('zipCode', zipCode);
   data.append('nailTechnicianName', nailTechnicianName);
   data.append('salonName', salonName);
 
@@ -880,22 +975,34 @@ export const getHTMLContent = async (endPoint: string) => {
 };
 
 // Dispute API Functions
-export const createDispute = async (
-  appointmentId: string,
-  reason: string,
-  description: string,
-  images: any[] = [],
-  token: string
-) => {
+export const createDispute = async (disputePayload: any, token: string) => {
   try {
     let data = new FormData();
-    data.append('appointmentId', appointmentId);
-    data.append('raisedBy', 'User');
-    data.append('reason', reason);
-    data.append('description', description);
-    
+    data.append('appointmentId', disputePayload.appointmentId);
+    data.append('raisedBy', disputePayload.raisedBy);
+    data.append('category', disputePayload.category);
+    data.append('description', disputePayload.description);
+
+    if (disputePayload.otherCategoryExplanation) {
+      data.append(
+        'otherCategoryExplanation',
+        disputePayload.otherCategoryExplanation,
+      );
+    }
+
+    if (disputePayload.requestedOutcome) {
+      data.append('requestedOutcome', disputePayload.requestedOutcome);
+    }
+
+    if (disputePayload.requestedOutcomeOtherExplanation) {
+      data.append(
+        'requestedOutcomeOtherExplanation',
+        disputePayload.requestedOutcomeOtherExplanation,
+      );
+    }
+
     // Append multiple images
-    images.forEach((image, index) => {
+    (disputePayload.images || []).forEach((image, index) => {
       if (image) {
         data.append('images', {
           uri: image,

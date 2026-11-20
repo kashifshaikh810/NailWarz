@@ -3,21 +3,23 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>665014068027-amaeijp61nakn5tlgfo6gorpvhg8bcbd.apps.googleusercontent.com</string>
+	<string>994635612004-ju3bn1glckl1a6fhhrbdfmlet07r2tt4.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.665014068027-amaeijp61nakn5tlgfo6gorpvhg8bcbd</string>
+	<string>com.googleusercontent.apps.994635612004-ju3bn1glckl1a6fhhrbdfmlet07r2tt4</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>994635612004-krhl52og16247sv420ik5phtr3klcnbc.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyB-kJL_Xu20jMG0jjJQIqpfxdQuhlvcLWs</string>
+	<string>AIzaSyB9QLYoRwCi1nM_a8hC8vg9FjhQMkyXwZc</string>
 	<key>GCM_SENDER_ID</key>
-	<string>665014068027</string>
+	<string>994635612004</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.nailwarz.app</string>
 	<key>PROJECT_ID</key>
-	<string>nailwarz-aeb75</string>
+	<string>nail-war-app-2025</string>
 	<key>STORAGE_BUCKET</key>
-	<string>nailwarz-aeb75.firebasestorage.app</string>
+	<string>nail-war-app-2025.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:665014068027:ios:cf006165717075bf1c4d1e</string>
+	<string>1:994635612004:ios:ca50eb647f98abc10a8471</string>
 </dict>
 </plist>

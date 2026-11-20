@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   ScrollView,
@@ -26,10 +26,16 @@ import {AppIcons} from './../../assets/Icons/index';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import {CardField, createPaymentMethod} from '@stripe/stripe-react-native';
 import {ShowToast} from '../../GlobalFunctions/auth';
-import {attachCard, createPayment, getSavedCards} from '../../GlobalFunctions';
+import {
+  attachCard,
+  createPayment,
+  getBookingById,
+  getSavedCards,
+} from '../../GlobalFunctions';
 import {useSelector} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
+import {formatPaymentMessageDateTimes} from '../../utils/paymentMessages';
 
 const timesData = [
   {id: 1, time: 'Credit/ Debit Card'},
@@ -47,38 +53,76 @@ const SelectPaymentMethod = ({route}) => {
   const {token} = useSelector(state => state?.user);
   const [isLoading, setIsLoading] = useState(false);
   const [cardsLoading, setCardsLoading] = useState(false);
-  const {bookingId, price, pay} = route?.params;
+  const {
+    bookingId,
+    pay = false,
+    serviceDetail,
+    servicesDetail,
+    salonId,
+    saloonId,
+  } = route?.params || {};
+  const isCheckoutFlow = pay === true;
   console.log('allCards', allCards);
   const [visibleConfirmationModal, setVisibleConfirmationModal] = useState({
     id: 0,
   });
   const [showPaymentFailedModal, setShowPaymentFailedModal] = useState(false);
-  const getSavedCardsHandler = async () => {
+  const [paymentErrorModal, setPaymentErrorModal] = useState({
+    visible: false,
+    message: '',
+  });
+  const [slotConflictModal, setSlotConflictModal] = useState({
+    visible: false,
+    message: '',
+    routePayload: null,
+  });
+  const getSavedCardsHandler = useCallback(async () => {
     setCardsLoading(true);
     try {
       const response = await getSavedCards(token);
+      console.log('getSavedCards response in SelectPaymentMethod:', response);
       setCardsLoading(false);
       if (response.success) {
         setAllCards(response?.data);
       } else {
+        console.log('getSavedCards unsuccessful response:', response);
         ShowToast('error', response?.message);
       }
     } catch (error) {
+      console.log(
+        'getSavedCards error in SelectPaymentMethod:',
+        error?.response?.data || error?.message || error,
+      );
       setCardsLoading(false);
       ShowToast('error', error?.response?.data?.message);
     }
-  };
+  }, [token]);
   const attachCardToUser = async paymentMethodId => {
-    const response = await attachCard(paymentMethodId, token);
-    setIsLoading(false);
-    if (response?.success) {
-      getSavedCardsHandler();
-      return ShowToast('success', 'Card Added Successfully');
-    } else {
-      return ShowToast('error', response?.message);
+    try {
+      const response = await attachCard(paymentMethodId, token);
+      console.log('attachCard response in SelectPaymentMethod:', response);
+      setIsLoading(false);
+      if (response?.success) {
+        getSavedCardsHandler();
+        return ShowToast('success', 'Card Added Successfully');
+      } else {
+        console.log('attachCard unsuccessful response:', response);
+        return ShowToast('error', response?.message);
+      }
+    } catch (error) {
+      console.log(
+        'attachCard error in SelectPaymentMethod:',
+        error?.response?.data || error?.message || error,
+      );
+      setIsLoading(false);
+      return ShowToast('error', error?.response?.data?.message);
     }
   };
   const handleAddCard = async () => {
+    if (isLoading) {
+      return;
+    }
+
     if (!cardDetails?.complete) {
       ShowToast('error', 'Please enter complete or valid card details');
       return;
@@ -88,6 +132,10 @@ const SelectPaymentMethod = ({route}) => {
       setIsLoading(true);
       const {paymentMethod, error} = await createPaymentMethod({
         paymentMethodType: 'Card',
+      });
+      console.log('createPaymentMethod response in SelectPaymentMethod:', {
+        paymentMethod,
+        error,
       });
       if (error) {
         setIsLoading(false);
@@ -102,44 +150,318 @@ const SelectPaymentMethod = ({route}) => {
     }
   };
 
+  const getPaymentErrorMessage = error => {
+    return (
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      ''
+    );
+  };
+
+  const isSlotAlreadyBookedError = error => {
+    const message = getPaymentErrorMessage(error).toLowerCase();
+
+    return (
+      message.includes('already been booked') ||
+      (message.includes('time slot') && message.includes('booked'))
+    );
+  };
+
+  const getServiceDetailId = detail => detail?._id || detail?.slotId;
+
+  const getServiceId = detail => {
+    return detail?.service?._id || detail?.service || detail?.serviceId;
+  };
+
+  const getServiceName = detail => {
+    return detail?.serviceName || detail?.service?.serviceName;
+  };
+
+  const getScheduledAt = detail => detail?.scheduledAt || detail?.formattedTime;
+
+  const getTechnician = detail => {
+    return detail?.technician && typeof detail.technician === 'object'
+      ? detail.technician
+      : null;
+  };
+
+  const getConflictServiceText = message => {
+    const match = `${message || ''}`.match(/time slot for (.*?) has already/i);
+    return match?.[1]?.trim();
+  };
+
+  const findConflictedServiceDetails = (bookingData, errorMessage) => {
+    const bookingServices = Array.isArray(bookingData?.servicesDetail)
+      ? bookingData.servicesDetail
+      : [];
+    const serviceText = getConflictServiceText(errorMessage);
+
+    if (!serviceText) {
+      return bookingServices;
+    }
+
+    const normalizedServiceText = serviceText.toLowerCase();
+    const matchedServices = bookingServices.filter(detail => {
+      return `${getServiceName(detail) || ''}`
+        .toLowerCase()
+        .includes(normalizedServiceText);
+    });
+
+    return matchedServices.length ? matchedServices : bookingServices;
+  };
+
+  const getBackendConflictDetails = error => {
+    const responseData = error?.response?.data;
+    if (Array.isArray(responseData?.conflictingSlots)) {
+      return responseData.conflictingSlots;
+    }
+
+    return Array.isArray(responseData?.existingServiceDetail)
+      ? responseData.existingServiceDetail
+      : [];
+  };
+
+  const isSameConflictService = (bookingService, conflictService) => {
+    const bookingSlotId = getServiceDetailId(bookingService);
+    const conflictSlotId = getServiceDetailId(conflictService);
+
+    if (bookingSlotId && conflictSlotId) {
+      return bookingSlotId === conflictSlotId;
+    }
+
+    const bookingName = `${getServiceName(bookingService) || ''}`
+      .trim()
+      .toLowerCase();
+    const conflictName = `${getServiceName(conflictService) || ''}`
+      .trim()
+      .toLowerCase();
+    const bookingScheduledAt = getScheduledAt(bookingService);
+    const conflictScheduledAt = getScheduledAt(conflictService);
+
+    return (
+      Boolean(bookingName) &&
+      bookingName === conflictName &&
+      Boolean(bookingScheduledAt) &&
+      bookingScheduledAt === conflictScheduledAt
+    );
+  };
+
+  const buildConflictScheduleRouteData = (
+    bookingData,
+    errorMessage,
+    backendConflictDetails = [],
+  ) => {
+    const bookingServices = Array.isArray(bookingData?.servicesDetail)
+      ? bookingData.servicesDetail
+      : [];
+    const conflictedDetails = backendConflictDetails.length
+      ? backendConflictDetails
+      : findConflictedServiceDetails(bookingData, errorMessage);
+    const resolvedSalonId =
+      bookingData?.salonId?._id || bookingData?.salonId || salonId || saloonId;
+    const serviceTechnicianSelections = bookingServices
+      .map((detail, index) => {
+        const technician = getTechnician(detail);
+        const technicianId = technician?._id || detail?.technician;
+        const serviceId = getServiceId(detail);
+
+        if (!serviceId || !technicianId) {
+          return null;
+        }
+
+        return {
+          scheduleKey: `${serviceId}-${getServiceDetailId(detail) || index}`,
+          serviceId,
+          slotId: getServiceDetailId(detail),
+          serviceName: getServiceName(detail),
+          salonId: resolvedSalonId,
+          price: detail?.price ?? detail?.service?.price,
+          scheduledAt: detail?.scheduledAt,
+          selectedTechnicianId: technicianId,
+          selectedTechnicianName:
+            technician?.fullName || detail?.technicianName,
+          selectedTechnician: technician || { _id: technicianId },
+          durationMinutes:
+            detail?.durationMinutes ||
+            detail?.duration ||
+            detail?.service?.durationMinutes ||
+            detail?.service?.duration ||
+            30,
+          isConflicted: conflictedDetails.some(conflictDetail =>
+            isSameConflictService(detail, conflictDetail),
+          ),
+        };
+      })
+      .filter(Boolean);
+
+    return {
+      salonId: resolvedSalonId,
+      saloonId: resolvedSalonId,
+      isMultiService: true,
+      source: 'paymentSlotConflict',
+      updatePendingBooking: true,
+      updateBookingId: bookingId,
+      existingServiceDetail: bookingData?.servicesDetail || [],
+      conflictedServiceDetail: conflictedDetails,
+      paymentConflictMessage: errorMessage,
+      serviceTechnicianSelections,
+      totalPrice: serviceTechnicianSelections.reduce(
+        (total, service) => total + (Number(service?.price) || 0),
+        0,
+      ),
+    };
+  };
+
+  const resolveBookingForPaymentConflict = async () => {
+    const routeServiceDetail = Array.isArray(serviceDetail)
+      ? serviceDetail
+      : Array.isArray(servicesDetail)
+      ? servicesDetail
+      : null;
+
+    try {
+      const bookingResponse = await getBookingById(bookingId);
+      const bookingData = bookingResponse?.data || bookingResponse?.booking;
+
+      if (Array.isArray(bookingData?.servicesDetail)) {
+        return bookingData;
+      }
+    } catch (error) {
+      console.log(
+        'getBookingById failed for payment slot conflict:',
+        error?.response?.data || error?.message || error,
+      );
+    }
+
+    return {
+      _id: bookingId,
+      salonId: salonId || saloonId,
+      servicesDetail: routeServiceDetail || [],
+    };
+  };
+
+  const routeToSlotConflictReselection = async error => {
+    if (!isSlotAlreadyBookedError(error) || !bookingId) {
+      return false;
+    }
+
+    try {
+      const errorMessage = getPaymentErrorMessage(error);
+      const bookingData = await resolveBookingForPaymentConflict();
+      const backendConflictDetails = getBackendConflictDetails(error);
+      const routePayload = buildConflictScheduleRouteData(
+        bookingData,
+        errorMessage,
+        backendConflictDetails,
+      );
+
+      console.log('payment slot conflict schedule route payload:', routePayload);
+      console.log('payment slot conflict summary:', {
+        totalServicesAvailableToChange:
+          routePayload.serviceTechnicianSelections.length,
+        conflictedServices:
+          routePayload.serviceTechnicianSelections.filter(
+            service => service?.isConflicted,
+          ).length,
+        backendConflictingSlots: backendConflictDetails.length,
+      });
+
+      if (!routePayload.serviceTechnicianSelections.length) {
+        return false;
+      }
+
+      setSlotConflictModal({
+        visible: true,
+        message:
+          formatPaymentMessageDateTimes(errorMessage) ||
+          'This appointment time is no longer available. Please choose another available time.',
+        routePayload,
+      });
+      return true;
+    } catch (routeError) {
+      console.log(
+        'payment slot conflict route error:',
+        routeError?.response?.data || routeError?.message || routeError,
+      );
+      return false;
+    }
+  };
+
   const createPaymentHandler = async () => {
+    if (isLoading) {
+      return;
+    }
+
+    if (!isCheckoutFlow) {
+      return ShowToast('success', 'Payment method saved.');
+    }
     if (!selectedCard) {
       return ShowToast('error', 'Please Select A Payment Method To Proceed');
     }
+    if (!bookingId) {
+      return ShowToast('error', 'Booking details are missing.');
+    }
     setIsLoading(true);
     try {
+      console.log('createPaymentIntent request payload:', {
+        bookingId,
+        currency: 'usd',
+        saveCard: true,
+        paymentMethodId: selectedCard?.paymentMethodId,
+      });
       const response = await createPayment(
         bookingId,
-        price,
         'usd',
         true,
         selectedCard?.paymentMethodId,
         token,
       );
       setIsLoading(false);
-      console.log('ress', response);
+      console.log('createPaymentIntent API response:', response);
       if (response?.success) {
         setVisibleConfirmationModal(true);
         // ShowToast('success', response?.message);
       } else {
-        setShowPaymentFailedModal(true);
+        setPaymentErrorModal({
+          visible: true,
+          message:
+            formatPaymentMessageDateTimes(response?.message) ||
+            'We could not process your payment. Please try again.',
+        });
         // ShowToast('error', response?.message);
       }
     } catch (error) {
-      console.log('errror', error?.response?.data);
+      console.log(
+        'createPaymentIntent API error:',
+        error?.response?.data || error?.message || error,
+      );
+      const handledSlotConflict = await routeToSlotConflictReselection(error);
       setIsLoading(false);
-      ShowToast('error', error?.response?.data?.message);
+      if (!handledSlotConflict) {
+        setPaymentErrorModal({
+          visible: true,
+          message:
+            formatPaymentMessageDateTimes(getPaymentErrorMessage(error)) ||
+            'We could not process your payment. Please try again.',
+        });
+      }
     }
   };
   useEffect(() => {
     getSavedCardsHandler();
-  }, []);
+  }, [getSavedCardsHandler]);
   return (
     <SafeAreaView style={globalStyles.container}>
-      <ScrollView style={{flex: 1, backgroundColor: AppColors.APPBG}} contentContainerStyle={{flexGrow: 1, paddingBottom: responsiveHeight(10)}}>
+      <ScrollView
+        style={{flex: 1, backgroundColor: AppColors.APPBG}}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: responsiveHeight(10),
+        }}>
         <AppHeader
           onPress={() => navigation.goBack()}
-          title="Select Payment Method"
+          title={isCheckoutFlow ? 'Select Payment Method' : 'Payment Method'}
         />
 
         <View
@@ -438,23 +760,74 @@ const SelectPaymentMethod = ({route}) => {
             visible={showPaymentFailedModal}
           />
 
-          <LineBreak space={4} />
-
-          <AppButton
-            disabled={!pay && !cardDetails?.complete}
-            title={
-              isLoading ? (
-                <ActivityIndicator size={'large'} color={AppColors.WHITE} />
-              ) : isAddNewCard || !pay ? (
-                'Save Card'
-              ) : (
-                'Pay Now'
-              )
-            }
-            handlePress={isAddNewCard ? handleAddCard : createPaymentHandler}
-            bgColor={!pay && !cardDetails?.complete && '#CCCCCC'}
-            //   textColor={AppColors.WHITE}
+          <ConfirmationModal
+            iconName={'close'}
+            title={'Payment Could Not Be Completed'}
+            subTitle={paymentErrorModal.message}
+            buttonOneTitle={'OK'}
+            visible={paymentErrorModal.visible}
+            setVisible={() => {
+              setPaymentErrorModal({
+                visible: false,
+                message: '',
+              });
+            }}
           />
+
+          <ConfirmationModal
+            iconName={'close'}
+            title={'Appointment Time Unavailable'}
+            subTitle={slotConflictModal.message}
+            buttonOneTitle={'Choose New Time'}
+            buttonTwoTitle={'Cancel'}
+            isChangeColor={true}
+            visible={slotConflictModal.visible}
+            setVisible={() => {
+              const routePayload = slotConflictModal.routePayload;
+              setSlotConflictModal({
+                visible: false,
+                message: '',
+                routePayload: null,
+              });
+
+              if (routePayload) {
+                const params = {
+                  data: routePayload,
+                };
+
+                if (navigation.replace) {
+                  navigation.replace('DateAndTimeSelection', params);
+                  return;
+                }
+
+                navigation.navigate('DateAndTimeSelection', params);
+              }
+            }}
+            handleBackPress={() => {
+              setSlotConflictModal({
+                visible: false,
+                message: '',
+                routePayload: null,
+              });
+            }}
+          />
+
+          {isCheckoutFlow || isAddNewCard ? (
+            <>
+              <LineBreak space={4} />
+
+              <AppButton
+                disabled={isLoading || (isAddNewCard && !cardDetails?.complete)}
+                isLoading={isLoading}
+                title={isAddNewCard ? 'Save Card' : 'Pay Now'}
+                handlePress={
+                  isAddNewCard ? handleAddCard : createPaymentHandler
+                }
+                bgColor={isAddNewCard && !cardDetails?.complete && '#CCCCCC'}
+                //   textColor={AppColors.WHITE}
+              />
+            </>
+          ) : null}
 
           <LineBreak space={2} />
         </View>

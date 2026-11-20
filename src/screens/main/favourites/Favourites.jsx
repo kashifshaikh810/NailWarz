@@ -1,30 +1,26 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   ScrollView,
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
-  Text,
 } from 'react-native';
-import Modal from 'react-native-modal';
 import AppHeader from '../../../components/AppHeader';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
 import AppColors from '../../../utils/AppColors';
-import LineBreak from '../../../components/LineBreak';
 import {
   responsiveFontSize,
   responsiveHeight,
   responsiveWidth,
 } from '../../../utils/Responsive_Dimensions';
-import SaloonsArray from '../../../utils/SaloonsArray';
 import SaloonsCard from '../../../components/SaloonsCard';
 import RemoveFavouritesModal from '../../../components/RemoveFavouritesModal';
 import {addToFavourite, getAllFvrtsByUserId} from '../../../GlobalFunctions';
 import {useDispatch, useSelector} from 'react-redux';
 import {ShowToast} from '../../../GlobalFunctions/auth';
-import SwipeableItem, {SwipeableItemProps} from 'react-native-swipeable-item';
+import SwipeableItem from 'react-native-swipeable-item';
 import AppText from '../../../components/AppTextComps/AppText';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {setUserData} from '../../../Redux/Slices';
@@ -47,7 +43,7 @@ const Favourites = () => {
   const [saloonId, setSaloonId] = useState('');
   const dispatch = useDispatch();
   console.log('allSaloons', allSaloons);
-  const getAllFvrts = async () => {
+  const getAllFvrts = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await getAllFvrtsByUserId(userData?._id);
@@ -63,7 +59,7 @@ const Favourites = () => {
       ShowToast('error', err?.response?.data?.message);
       setIsLoading(false);
     }
-  };
+  }, [userData?._id]);
 
   const removeFromFvrtsHandler = async () => {
     setLoading2(true);
@@ -84,7 +80,7 @@ const Favourites = () => {
   };
   useEffect(() => {
     getAllFvrts();
-  }, [isFocus]);
+  }, [getAllFvrts, isFocus]);
   return (
     <ScrollView
       contentContainerStyle={{flexGrow: 1, backgroundColor: AppColors.WHITE, paddingBottom: responsiveHeight(10)}}>
@@ -182,7 +178,6 @@ const Favourites = () => {
                   isShowDeleteIcon={isShowDeleteIcon}
                   setIsShowDeleteIcon={setIsShowDeleteIcon}
                   setShowRemoveModal={setShowRemoveModal}
-                  disabled={true}
                 />
               </SwipeableItem>
             )}

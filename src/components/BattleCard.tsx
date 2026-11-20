@@ -1,13 +1,13 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   Platform,
+  FlatList,
 } from 'react-native';
-import Swiper from 'react-native-swiper';
+import FastImage from 'react-native-fast-image';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -57,8 +57,15 @@ type RootStackParamList = {
 
 const BattleCard: React.FC<BattleCardProps> = ({ item }) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const capitalize = text =>
-    text ? text.charAt(0).toUpperCase() + text.slice(1) : '';
+  const [sliderWidth, setSliderWidth] = useState(0);
+  const sliderRef = useRef<FlatList>(null);
+  const sliderImages =
+    item?.participants
+      ?.map(p => ({
+        id: p?._id,
+        image: p?.participant?.images?.[0],
+      }))
+      .filter(participant => participant?.image) || [];
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -96,27 +103,83 @@ const BattleCard: React.FC<BattleCardProps> = ({ item }) => {
         return '#F3F4F6';
     }
   };
+
+  useEffect(() => {
+    setActiveIndex(0);
+    sliderRef.current?.scrollToOffset({offset: 0, animated: false});
+  }, [item?._id]);
+
+  useEffect(() => {
+    if (sliderImages.length <= 1 || !sliderWidth) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setActiveIndex(previousIndex => {
+        const nextIndex = (previousIndex + 1) % sliderImages.length;
+        sliderRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+        return nextIndex;
+      });
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [sliderImages.length, sliderWidth]);
+
   return (
     <View style={styles.shadowWrapper}>
       <View style={styles.card}>
         {/* Image Slider */}
-        <View style={styles.sliderContainer}>
-          <Swiper
-            autoplay
-            autoplayTimeout={3}
-            loop
-            scrollEnabled={false}
-            showsPagination={false}
-            onIndexChanged={index => setActiveIndex(index)} // ✅ IMPORTANT
-          >
-            {item.participants.map(p => (
-              <Image
-                key={p._id}
-                source={{ uri: `${ImageBaseUrl}${p.participant.images[0]}` }} // replace with API image when ready
-                style={styles.image}
+        <View
+          style={styles.sliderContainer}
+          onLayout={event => setSliderWidth(event.nativeEvent.layout.width)}>
+          {sliderImages.length > 0 ? (
+            <FlatList
+              ref={sliderRef}
+              data={sliderImages}
+              horizontal
+              pagingEnabled
+              scrollEnabled={false}
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(participant, index) =>
+                participant?.id || `${item?._id}-${index}`
+              }
+              getItemLayout={(_, index) => ({
+                length: sliderWidth,
+                offset: sliderWidth * index,
+                index,
+              })}
+              onScrollToIndexFailed={({index}) => {
+                sliderRef.current?.scrollToOffset({
+                  offset: sliderWidth * index,
+                  animated: true,
+                });
+              }}
+              renderItem={({item: participant}) => (
+                <View style={[styles.slide, {width: sliderWidth}]}>
+                  <FastImage
+                    source={{
+                      uri: `${ImageBaseUrl}${participant.image}`,
+                      priority: FastImage.priority.normal,
+                      cache: FastImage.cacheControl.immutable,
+                    }}
+                    style={styles.image}
+                    resizeMode={FastImage.resizeMode.cover}
+                  />
+                </View>
+              )}
+            />
+          ) : (
+            <View style={styles.emptySlide}>
+              <AppText
+                title="No participant images available"
+                textSize={1.7}
+                textColor={AppColors.WHITE}
               />
-            ))}
-          </Swiper>
+            </View>
+          )}
 
           {/* Overlay */}
           <View style={styles.overlay} />
@@ -160,7 +223,7 @@ const BattleCard: React.FC<BattleCardProps> = ({ item }) => {
         <View style={styles.content}>
           {/* ✅ Custom Dots */}
           <View style={styles.dotsContainer}>
-            {item.participants.map((_, index) => (
+            {sliderImages.map((_, index) => (
               <View
                 key={index}
                 style={[
@@ -219,9 +282,19 @@ const styles = StyleSheet.create({
     height: 200,
     position: 'relative',
   },
+  slide: {
+    height: 200,
+  },
   image: {
     width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  emptySlide: {
     height: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: AppColors.DARKGRAY,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

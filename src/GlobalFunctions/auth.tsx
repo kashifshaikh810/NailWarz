@@ -2,7 +2,6 @@ import axios from 'axios';
 import { BaseUrl } from '../BaseUrl';
 import Toast from 'react-native-toast-message';
 import { setToken, setUserData, UserLogin } from '../Redux/Slices';
-import { useNavigation } from '@react-navigation/native';
 import { Platform } from 'react-native';
 
 export const registerUser = async (firstName: string, lastName: string, email: string, password: string, phone: number, fcmToken: string, navigation: any, deviceType?: string) => {
@@ -50,14 +49,16 @@ export const registerUser = async (firstName: string, lastName: string, email: s
     throw error;
   }
 };
-export const signInWithGoogle = async (firstName: string, lastName: string, email: string, fcmToken: string, deviceType?: string) => {
-  let data = JSON.stringify({
-    'firstName': firstName,
-    'lastName': lastName,
-    'email': email,
-    'FCMToken': fcmToken,
-    'deviceType': deviceType || Platform.OS,
-  });
+export const signInWithGoogle = async (username: string, email: string, fcmToken: string, deviceType?: string) => {
+  const payload = {
+    email: email?.toLowerCase(),
+    username,
+    FCMToken: fcmToken || '',
+    deviceType: deviceType || Platform.OS,
+  };
+
+  const data = JSON.stringify(payload);
+  console.log('Google sign-in API payload:', payload);
 
   let config = {
     method: 'post',
@@ -70,8 +71,10 @@ export const signInWithGoogle = async (firstName: string, lastName: string, emai
   };
   try {
     const response = await axios.request(config);
+    console.log('Google sign-in API response:', response.data);
     return response.data;
   } catch (error) {
+    console.log('Google sign-in API error:', error?.response?.data || error?.message);
     throw error;
   }
 };

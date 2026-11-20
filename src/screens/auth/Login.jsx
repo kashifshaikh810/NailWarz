@@ -39,19 +39,11 @@ import {SvgFromXml, SvgUri} from 'react-native-svg';
 import {AppIcons} from '../../assets/Icons';
 import {
   GoogleSignin,
-  GoogleSigninButton,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import {setIsGoogleSignIn, setToken, setUserData} from '../../Redux/Slices';
-import messaging, {
-  AuthorizationStatus,
-  getMessaging,
-  getToken,
-  requestPermission,
-} from '@react-native-firebase/messaging';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
-import {getApp} from '@react-native-firebase/app';
 import {getFcmToken} from '../../GlobalFunctions/Firebase';
 
 const Login = () => {
@@ -74,10 +66,10 @@ const Login = () => {
       // webClientId:
       //   '985993038096-pg0pmp2tdn6hpv9pij38arci06kpuc4p.apps.googleusercontent.com',
       webClientId:
-        '665014068027-4apep21pvbol701l1hjekqogokkf2et5.apps.googleusercontent.com',
+        '994635612004-fc2s7er7utlo2ek8ovctmlnuk6kajitd.apps.googleusercontent.com',
       offlineAccess: true,
       iosClientId:
-        '665014068027-amaeijp61nakn5tlgfo6gorpvhg8bcbd.apps.googleusercontent.com', // add your iOS client ID here
+        '994635612004-ju3bn1glckl1a6fhhrbdfmlet07r2tt4.apps.googleusercontent.com', // add your iOS client ID here
       // iosClientId: '<YOUR_IOS_CLIENT_ID.apps.googleusercontent.com>', // optional: add if using iOS OAuth client
     });
   }, []);
@@ -148,7 +140,7 @@ const Login = () => {
       }
 
       const userInfo = await GoogleSignin.signIn();
-      console.log('userinfo', userInfo);
+      console.log('Google Sign-In SDK response:', userInfo);
       // `userInfo` shape from @react-native-google-signin/google-signin is:
       // { user: { name, email, photo, id }, idToken, accessToken }
       if (userInfo && userInfo.data && userInfo.data.user) {
@@ -156,6 +148,7 @@ const Login = () => {
         const useremail = userInfo.data.user.email || '';
         setGoogleLoading(true);
         const response = await signInWithGoogle(name, useremail, fcmToken);
+        console.log('Google Sign-In backend response:', response);
         setGoogleLoading(false);
 
         if (response.success) {
@@ -313,25 +306,28 @@ const Login = () => {
                 justifyContent: 'flex-end',
                 gap: responsiveHeight(2.5),
               }}>
-              <SocialAuthButton
-                bgColor={AppColors.BLACK}
-                title={'Continue with Apple'}
-                logo={
-                  <AntDesign
-                    name={'apple1'}
-                    size={responsiveFontSize(2.8)}
-                    color={AppColors.WHITE}
-                  />
-                }
-              />
+              {Platform.OS === 'ios' && (
+                <SocialAuthButton
+                  bgColor={AppColors.BLACK}
+                  title={'Continue with Apple'}
+                  logo={
+                    <AntDesign
+                      name={'apple1'}
+                      size={responsiveFontSize(2.8)}
+                      color={AppColors.WHITE}
+                    />
+                  }
+                />
+              )}
               <SocialAuthButton
                 onPress={signInWithGoogleHandler}
+                disabled={googleLoading || isSigningIn}
                 txtColor={AppColors.BLACK}
                 bgColor={AppColors.LIGHTGRAY}
                 title={
                   googleLoading ? (
                     <ActivityIndicator
-                      size={'large'}
+                      size={'small'}
                       color={AppColors.BTNCOLOURS}
                     />
                   ) : (

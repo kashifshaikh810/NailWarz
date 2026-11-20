@@ -20,6 +20,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+  <false/>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
@@ -78,7 +80,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
+	<false/>
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<false/>
 		<key>CFBundleURLTypes</key>
@@ -88,7 +90,9 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.665014068027-amaeijp61nakn5tlgfo6gorpvhg8bcbd</string>
+				<string>com.googleusercontent.apps.994635612004-ju3bn1glckl1a6fhhrbdfmlet07r2tt4</string>
+				<string>nailwarz</string>
+				<string>com.nailwarz</string>
 			</array>
 		</dict>
 	</array>

@@ -11,8 +11,9 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import AppText from '../../components/AppTextComps/AppText';
+import LineBreak from '../../components/LineBreak';
 import AppColors from '../../utils/AppColors';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -30,7 +31,7 @@ import AppButton from '../../components/AppButton';
 import Entypo from 'react-native-vector-icons/Entypo';
 import SaloonsCard from '../../components/SaloonsCard';
 import SaloonsArray from '../../utils/SaloonsArray';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import Geolocation from 'react-native-geolocation-service';
 import messaging from '@react-native-firebase/messaging';
 import {
@@ -38,12 +39,19 @@ import {
   getAllCategories,
   getAllSaloons,
   getSaloons,
+  getUserDetail,
 } from '../../GlobalFunctions';
 import {editProfile, ShowToast} from '../../GlobalFunctions/auth';
 import {useDispatch, useSelector} from 'react-redux';
 import {setUserData, setLocation} from '../../Redux/Slices';
 import moment from 'moment';
 import {getCurrentLocationWithAddress} from '../../GlobalFunctions/LocationService';
+import {apiKey} from '../../BaseUrl';
+import {
+  getAccountReviewMessage,
+  getAccountReviewReasons,
+  isAccountUnderReview,
+} from '../../utils/accountReviewRestriction';
 
 const Home = () => {
   const [serviceSelected, setServiceSelect] = useState(0);
@@ -55,6 +63,7 @@ const Home = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {token, userData, location: latLng} = useSelector(state => state?.user);
+  const userDataRef = useRef(userData);
   console.log('userData', userData);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoading2, setIsLoading2] = useState(false);
@@ -71,6 +80,12 @@ const Home = () => {
     'currentCategory',
     saloons[0]?.workingDays[moment(currentDate).day() - 1],
   );
+  const isUserUnderReview = isAccountUnderReview(userData);
+  const accountReviewReasons = getAccountReviewReasons(userData);
+
+  useEffect(() => {
+    userDataRef.current = userData;
+  }, [userData]);
 
   // useEffect(() => {
   //   const initLocation = async () => {
@@ -85,13 +100,54 @@ const Home = () => {
   // }, []);
   useEffect(() => {
     const fetchLocation = async () => {
+      const userProfileAddress = [
+        userData?.street,
+        userData?.city,
+        userData?.state,
+        userData?.zipCode,
+      ]
+        .filter(part => part && part !== 'N/A' && String(part).trim() !== '')
+        .join(', ');
+
+      if (userProfileAddress) {
+        // If coordinates for the saved profile location already exist, preserve them
+        if (latLng?.latitude && latLng?.longitude) {
+          return;
+        }
+        // If coordinates are missing, geocode the saved profile address
+        try {
+          const res = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+              userProfileAddress,
+            )}&key=${apiKey}`,
+          );
+          const data = await res.json();
+          if (data?.results?.[0]?.geometry?.location) {
+            const {lat, lng} = data.results[0].geometry.location;
+            dispatch(
+              setLocation({
+                latitude: lat,
+                longitude: lng,
+                address: userProfileAddress,
+              }),
+            );
+            return;
+          }
+        } catch (e) {
+          console.log('Error geocoding profile address:', e);
+        }
+        return;
+      }
+
+      // If user has NOT set an address in Edit Profile, use current device GPS location
       const loc = await getCurrentLocationWithAddress();
       if (loc) {
         dispatch(setLocation(loc));
       }
     };
     fetchLocation();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData?.city, userData?.state, userData?.street, userData?.zipCode]);
   useEffect(() => {
     getAllCategoriesHandler();
   }, []);
@@ -237,6 +293,35 @@ const Home = () => {
       return ShowToast('error', error?.response?.data?.message);
     }
   };
+  const getUserDetailHandler = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    try {
+      const response = await getUserDetail(token);
+      console.log('getUserDetail API response:====', response);
+
+      if (response?.success && response?.data) {
+        dispatch(
+          setUserData({
+            ...userDataRef.current,
+            ...response.data,
+          }),
+        );
+      }
+    } catch (error) {
+      console.log(
+        'getUserDetail API error:',
+        error?.response?.data || error?.message || error,
+      );
+    }
+  }, [dispatch, token]);
+  useFocusEffect(
+    useCallback(() => {
+      getUserDetailHandler();
+    }, [getUserDetailHandler]),
+  );
   useEffect(() => {
     if (!userData?.stripeCustomerId) {
       createCustomerHandler();
@@ -247,6 +332,29 @@ const Home = () => {
       getSaloonsHandler();
     }
   }, [currentCategory]);
+
+  const getDisplayLocation = () => {
+    const userProfileAddress = [
+      userData?.street,
+      userData?.city,
+      userData?.state,
+      userData?.zipCode,
+    ]
+      .filter(part => part && part !== 'N/A' && String(part).trim() !== '')
+      .join(', ');
+
+    // 1. If user has an address saved in Edit Profile, prioritize it!
+    if (userProfileAddress) {
+      return userProfileAddress;
+    }
+
+    // 2. Otherwise fall back to current device GPS location (if available)
+    if (latLng?.address && latLng.address !== 'Fetching location...') {
+      return latLng.address;
+    }
+
+    return 'Location';
+  };
 
   return (
     <BackgroundScreen padding={0.1} bgColor={'#fff'}>
@@ -283,7 +391,7 @@ const Home = () => {
               <AppText textColor={'#D1D1D1'} title="Location" textSize={1.9} />
               <AppText
                 textColor={'#D1D1D1'}
-                title={latLng?.address}
+                title={getDisplayLocation()}
                 textwidth={60}
                 numberOfLines={2}
                 textSize={1.8}
@@ -321,6 +429,43 @@ const Home = () => {
             }
           />
         </View>
+        {isUserUnderReview ? (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() =>
+              Alert.alert(
+                'Account Under Review',
+                getAccountReviewMessage(userData),
+                [{text: 'OK'}],
+              )
+            }
+            style={{
+              marginTop: responsiveHeight(1.5),
+              paddingHorizontal: responsiveWidth(3.5),
+              paddingVertical: responsiveHeight(1.3),
+              borderRadius: 12,
+              backgroundColor: '#FFF7E8',
+              borderWidth: 1,
+              borderColor: '#F4D28D',
+            }}>
+            <AppText
+              title="Booking temporarily paused"
+              textSize={1.7}
+              textColor={AppColors.BTNCOLOURS}
+              textFontWeight
+            />
+            <LineBreak space={0.35} />
+            <AppText
+              title={
+                accountReviewReasons?.[0] ||
+                'Nail Warz is reviewing your account before new bookings can be made.'
+              }
+              textSize={1.45}
+              textColor="#7A5A16"
+              numberOfLines={2}
+            />
+          </TouchableOpacity>
+        ) : null}
       </View>
       {isLoading ? (
         <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
@@ -514,7 +659,12 @@ const Home = () => {
                 }}
               />
             ) : (
-              <View style={{flex: 0.6, justifyContent: 'center'}}>
+              <View
+                style={{
+                  alignItems: 'center',
+                  paddingTop: responsiveHeight(isUserUnderReview ? 4 : 3),
+                  paddingBottom: responsiveHeight(4),
+                }}>
                 <AppText
                   title={'No Salons Found'}
                   textAlignment="center"

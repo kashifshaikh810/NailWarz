@@ -1,24 +1,55 @@
 /* eslint-disable react-native/no-inline-styles */
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native'
-import React, { useState } from 'react'
+import {
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+  Platform,
+  ScrollView,
+  Keyboard,
+} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import Modal from 'react-native-modal';
-import { responsiveHeight, responsiveWidth } from '../utils/Responsive_Dimensions';
+import {responsiveHeight, responsiveWidth} from '../utils/Responsive_Dimensions';
 import AppColors from '../utils/AppColors';
 import AppText from './AppTextComps/AppText';
 import Entypo from 'react-native-vector-icons/Entypo';
-import { Rating } from 'react-native-ratings';
 import AppButton from './AppButton';
 import AppTextInput from './AppTextInput';
-import { addReviews } from '../GlobalFunctions';
-import { ShowToast } from '../GlobalFunctions/auth';
-import { useSelector } from 'react-redux';
+import {addReviews} from '../GlobalFunctions';
+import {ShowToast} from '../GlobalFunctions/auth';
+import {useSelector} from 'react-redux';
 import StarRating from 'react-native-star-rating-widget';
-const AddReviewModal = ({ modalVisible, setModalVisible, setRefresh, onBackdropPress, saloonId }) => {
+const AddReviewModal = ({
+  modalVisible,
+  setModalVisible,
+  setRefresh,
+  onBackdropPress,
+  saloonId,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [reviewMsg, setReviewMsg] = useState('');
   const [totalStars, setTotalStars] = useState(2);
-  console.log('totalstars', totalStars)
-  const { userData } = useSelector(state => state.user);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  console.log('totalstars', totalStars);
+  const {userData} = useSelector(state => state.user);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') {
+      return;
+    }
+
+    const showSub = Keyboard.addListener('keyboardWillShow', event => {
+      setKeyboardHeight(event.endCoordinates?.height || 0);
+    });
+    const hideSub = Keyboard.addListener('keyboardWillHide', () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const addReviewsHandler = async () => {
     if (!reviewMsg) {
@@ -51,84 +82,91 @@ const AddReviewModal = ({ modalVisible, setModalVisible, setRefresh, onBackdropP
         backdropOpacity={0.1}
         onBackdropPress={onBackdropPress}
         isVisible={modalVisible}
-        avoidKeyboard
-        style={{ margin: 0 }}>
+        propagateSwipe
+        avoidKeyboard={false}
+        style={{
+          justifyContent: 'flex-end',
+          margin: 0,
+        }}>
         <View
           style={{
-            borderTopLeftRadius: responsiveHeight(1.5),
-            borderTopRightRadius: responsiveHeight(1.5),
+            marginBottom: Platform.OS === 'ios' ? keyboardHeight : 0,
             width: responsiveWidth(100),
-            position: 'absolute',
-            backgroundColor: AppColors.WHITE,
-            minHeight: responsiveHeight(50),
-            bottom: 0,
-            padding: responsiveHeight(1),
           }}>
-          <TouchableOpacity
-            onPress={onBackdropPress}
-            style={{ alignSelf: 'flex-end', marginTop: responsiveHeight(1) }}>
-            <Entypo name="cross" size={30} />
-          </TouchableOpacity>
-          <AppText
-            title="Rate Your Experience"
-            textAlignment="center"
-            mrgnTop={1.2}
-            textSize={3}
-            textColor={AppColors.BTNCOLOURS}
-          />
-          {/* <Rating
-            count={5}
-            startingValue={2}
-            defaultRating={2}
-            size={30}
-            ratingColor="red"             // ⭐ filled star color (e.g., gold)
-            ratingBackgroundColor="#E0E0E0"
-            onFinishRating={ratings => setTotalStars(ratings)}
-            style={{ marginTop: responsiveHeight(2) }}
-            starContainerStyle={{
-              flexDirection: 'row',
-              justifyContent: 'center',
-              // fallback to margin-based spacing
-              columnGap: 10, // or use marginHorizontal in custom star
-            }}
-          /> */}
-          <StarRating
-            starSize={45}
-            color={AppColors.RED}
-            style={{ alignSelf: 'center', marginTop: responsiveHeight(1) }}
-            rating={totalStars}
-            onChange={setTotalStars}
-          />
           <View
             style={{
-              height: responsiveHeight(17),
-              marginVertical: responsiveHeight(3),
-              paddingHorizontal: responsiveHeight(2),
+              backgroundColor: AppColors.WHITE,
+              borderTopLeftRadius: responsiveHeight(1.5),
+              borderTopRightRadius: responsiveHeight(1.5),
+              maxHeight: responsiveHeight(72),
+              minHeight: responsiveHeight(48),
+              padding: responsiveHeight(1),
             }}>
-            <AppTextInput
-              onChangeText={value => setReviewMsg(value)}
-              multiline
-              
-              height={14}
-              fntSize={2.3}
-              containerBg={AppColors.INPUTBG}
-              txtAlignVertical="top"
-              inputPlaceHolder="Comment"
-            />
-          </View>
-          <View style={{ alignItems: 'center', bottom: 5 }}>
-            <AppButton
-              title={
-                isLoading ? (
-                  <ActivityIndicator size={'large'} color={AppColors.WHITE} />
-                ) : (
-                  'Submit'
-                )
-              }
-              width={80}
-              bgColor={AppColors.BTNCOLOURS}
-              handlePress={addReviewsHandler}
-            />
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingBottom: responsiveHeight(2),
+              }}>
+              <TouchableOpacity
+                onPress={onBackdropPress}
+                style={{
+                  alignSelf: 'flex-end',
+                  marginTop: responsiveHeight(1),
+                  padding: responsiveHeight(0.5),
+                }}>
+                <Entypo name="cross" size={30} />
+              </TouchableOpacity>
+              <AppText
+                title="Rate Your Experience"
+                textAlignment="center"
+                mrgnTop={1.2}
+                textSize={3}
+                textColor={AppColors.BTNCOLOURS}
+              />
+              <StarRating
+                starSize={45}
+                color={AppColors.RED}
+                style={{alignSelf: 'center', marginTop: responsiveHeight(1)}}
+                rating={totalStars}
+                onChange={setTotalStars}
+              />
+              <View
+                style={{
+                  height: responsiveHeight(17),
+                  marginVertical: responsiveHeight(3),
+                  paddingHorizontal: responsiveHeight(2),
+                }}>
+                <AppTextInput
+                  onChangeText={value => setReviewMsg(value)}
+                  multiline
+                  height={14}
+                  fntSize={2.3}
+                  containerBg={AppColors.INPUTBG}
+                  txtAlignVertical="top"
+                  inputPlaceHolder="Comment"
+                />
+              </View>
+              <View style={{alignItems: 'center'}}>
+                <AppButton
+                  title={
+                    isLoading ? (
+                      <ActivityIndicator
+                        size={'large'}
+                        color={AppColors.WHITE}
+                      />
+                    ) : (
+                      'Submit'
+                    )
+                  }
+                  width={80}
+                  bgColor={AppColors.BTNCOLOURS}
+                  disabled={isLoading}
+                  handlePress={addReviewsHandler}
+                />
+              </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>

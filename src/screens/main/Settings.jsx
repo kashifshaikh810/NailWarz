@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import {View, Text, FlatList, Switch, TouchableOpacity} from 'react-native';
+import {View, Text, FlatList, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
 import AppColors from '../../utils/AppColors';
 import AppHeader from '../../components/AppHeader';
@@ -131,42 +131,78 @@ const Settings = ({navigation}) => {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
+          paddingHorizontal: responsiveWidth(6),
         }}>
         <View
           style={{
-            width: responsiveWidth(85),
+            width: responsiveWidth(82),
             backgroundColor: '#fff',
-            borderRadius: 12,
-            padding: 20,
+            borderRadius: 14,
+            padding: responsiveHeight(2.2),
             shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 6,
-            elevation: 5,
+            shadowOffset: {width: 0, height: 6},
+            shadowOpacity: 0.2,
+            shadowRadius: 14,
+            elevation: 12,
           }}>
           <AppText
-            title={'Are you sure you want to delete your account?'}
-            textSize={2}
+            title="Delete Account?"
+            textSize={2.3}
             textColor={AppColors.BLACK}
+            textFontWeight
+          />
+          <AppText
+            title="Are you sure you want to delete your account? This action cannot be undone."
+            textSize={1.75}
+            textColor={AppColors.DARKGRAY}
+            mrgnTop={1}
           />
 
           <View
             style={{
               flexDirection: 'row',
               justifyContent: 'flex-end',
-              marginTop: 20,
+              alignItems: 'center',
+              marginTop: responsiveHeight(2.4),
             }}>
             <TouchableOpacity
               onPress={() => setConfirmVisible(false)}
-              style={{marginRight: 20}}>
-              <AppText title="Cancel" textColor={AppColors.GRAY} />
+              style={{
+                minWidth: responsiveWidth(22),
+                paddingVertical: responsiveHeight(1.1),
+                paddingHorizontal: responsiveWidth(3),
+                borderRadius: 8,
+                alignItems: 'center',
+                marginRight: responsiveWidth(2),
+                backgroundColor: '#F2F2F2',
+              }}>
+              <AppText
+                title="Cancel"
+                textColor={AppColors.BLACK}
+                textSize={1.7}
+                textFontWeight
+              />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => {
                 setConfirmVisible(false);
                 deleteAccountHandler();
+              }}
+              style={{
+                minWidth: responsiveWidth(22),
+                paddingVertical: responsiveHeight(1.1),
+                paddingHorizontal: responsiveWidth(3),
+                borderRadius: 8,
+                alignItems: 'center',
+                backgroundColor: AppColors.BTNCOLOURS,
               }}>
-              <AppText title="Yes" textColor={AppColors.BLUE} />
+              <AppText
+                title="Delete"
+                textColor={AppColors.WHITE}
+                textSize={1.7}
+                textFontWeight
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -213,13 +249,37 @@ const Settings = ({navigation}) => {
                     />
                   </View>
                   {item.toggle ? (
-                    <Switch
-                      trackColor={{false: '#767577', true: AppColors.LIGHTGRAY}}
-                      thumbColor={isEnabled ? AppColors.WHITE : '#f4f3f4'}
-                      ios_backgroundColor="#3e3e3e"
-                      onValueChange={toggleSwitch}
-                      value={isEnabled}
-                    />
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={event => {
+                        event.stopPropagation?.();
+                        toggleSwitch();
+                      }}
+                      style={{
+                        width: responsiveWidth(13),
+                        height: responsiveHeight(3.2),
+                        borderRadius: responsiveHeight(2),
+                        padding: responsiveHeight(0.35),
+                        backgroundColor: isEnabled
+                          ? AppColors.BTNCOLOURS
+                          : '#D1D1D6',
+                        alignItems: isEnabled ? 'flex-end' : 'flex-start',
+                        justifyContent: 'center',
+                      }}>
+                      <View
+                        style={{
+                          width: responsiveHeight(2.5),
+                          height: responsiveHeight(2.5),
+                          borderRadius: responsiveHeight(1.25),
+                          backgroundColor: AppColors.WHITE,
+                          elevation: 2,
+                          shadowColor: '#000',
+                          shadowOffset: {width: 0, height: 1},
+                          shadowOpacity: 0.2,
+                          shadowRadius: 1.5,
+                        }}
+                      />
+                    </TouchableOpacity>
                   ) : (
                     <TouchableOpacity>
                       <Ionicons name="chevron-forward-outline" size={25} />

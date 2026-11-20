@@ -11,6 +11,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import AppColors from '../../../utils/AppColors';
 import AppHeader from '../../../components/AppHeader';
 import {useNavigation} from '@react-navigation/native';
@@ -249,7 +250,7 @@ const BattlePoll = ({navigation, route}) => {
                           );
                           setVisible(true);
                         }}>
-                        <Image
+                        <FastImage
                           style={{
                             height: responsiveHeight(20),
                             width: '100%',
@@ -258,7 +259,10 @@ const BattlePoll = ({navigation, route}) => {
                           }}
                           source={{
                             uri: `${ImageBaseUrl}${item?.participant.images[0]}`,
+                            priority: FastImage.priority.normal,
+                            cache: FastImage.cacheControl.immutable,
                           }}
+                          resizeMode={FastImage.resizeMode.cover}
                         />
                       </TouchableOpacity>
                     </View>

@@ -1,20 +1,20 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
   View,
   Text,
-  Image,
   FlatList,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Platform,
+  Alert,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import AppHeader from '../../components/AppHeader';
 import {ScrollView} from 'react-native-gesture-handler';
 import AppColors from '../../utils/AppColors';
 import {useNavigation} from '@react-navigation/native';
-import APPImages from '../../assets/APPImages';
 import {
   responsiveFontSize,
   responsiveHeight,
@@ -23,14 +23,11 @@ import {
 import AppText from '../../components/AppTextComps/AppText';
 import LineBreak from '../../components/LineBreak';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import EvilIcons from 'react-native-vector-icons/EvilIcons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AppButton from '../../components/AppButton';
 import {
   addToFavourite,
   getAllReviews,
   getSaloonById,
-  getServiceByCategoryId,
   getServiceBySalonAndCategoryId,
 } from '../../GlobalFunctions';
 import {ImageBaseUrl} from '../../BaseUrl';
@@ -42,31 +39,39 @@ import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
 import StarRating from 'react-native-star-rating-widget';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import moment from 'moment';
-const cardData = [
-  {id: 1, colorName: 'Solid Color', amount: '$10.00', time: '30 Mins'},
-  {
-    id: 2,
-    colorName: 'Toe Acrylic - Full set',
-    amount: '$5.00',
-    time: '24 Mins',
-  },
-];
+import {buildBookingServiceSelectionPayload} from '../../utils/bookingSelectionPayload';
+import {
+  getAccountReviewMessage,
+  isAccountUnderReview,
+} from '../../utils/accountReviewRestriction';
 
 const HomeDetails = ({route}) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const {saloonId} = route?.params;
+  const {
+    saloonId,
+    preselectedServices = [],
+    rebookMeta = null,
+  } = route?.params || {};
   const [saloonData, setSaloonData] = useState();
   const [menuData, setMenuData] = useState([]);
   const [currentCategory, setCurrentCategory] = useState();
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [services, setServices] = useState();
-  const [selectedService, setSelectedService] = useState();
+  const [selectedServices, setSelectedServices] = useState([]);
   const [fvrtLoading, setFvrtLoading] = useState(false);
-  const [isFvrt, setIsFvrt] = useState();
-  const {_id, favourite} = useSelector(state => state.user?.userData);
   const {userData} = useSelector(state => state?.user);
+  const userId = userData?._id;
+  const favouriteSalonIds = useMemo(
+    () =>
+      Array.isArray(userData?.favourite)
+        ? userData.favourite
+            .map(item => (typeof item === 'object' ? item?._id : item))
+            .filter(Boolean)
+        : [],
+    [userData?.favourite],
+  );
+  const isFvrt = favouriteSalonIds.includes(saloonId);
   const [allReviews, setAllReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoading2, setIsLoading2] = useState(false);
@@ -75,41 +80,82 @@ const HomeDetails = ({route}) => {
   const [activeDays, setActiveDays] = useState([]);
   const [firstDay, setFirstDay] = useState(null);
 
-  // console.log('selectedService.price', selectedService.price);
+  // console.log('selectedServices', selectedServices);
   console.log('saloonData', saloonData);
   const dispatch = useDispatch();
   // const roundedRating = 2;
   const roundedRating = Math.round(saloonData?.avgRating * 2) / 2;
+  const displayRating = Number.isFinite(Number(saloonData?.avgRating))
+    ? Number(saloonData?.avgRating).toFixed(1)
+    : '0';
 
   const handleToggleService = item => {
-    if (selectedService?._id === item._id) {
-      // Unselect if already selected
-      setSelectedService(null);
-    } else {
-      // Select new item
-      setSelectedService(item);
-    }
+    setSelectedServices(previousServices => {
+      const isAlreadySelected = previousServices.some(
+        service => service?._id === item?._id,
+      );
+
+      if (isAlreadySelected) {
+        return previousServices.filter(service => service?._id !== item?._id);
+      }
+
+      return [...previousServices, item];
+    });
   };
 
-  const getSaloonByIdHandler = async () => {
-    setIsLoading(true);
-    const response = await getSaloonById(saloonId);
-    setIsLoading(false);
-    if (!response.success) {
-      ShowToast('error', response.message);
+  const handleContinueWithMultipleServices = () => {
+    if (isAccountUnderReview(userData)) {
+      Alert.alert('Account Under Review', getAccountReviewMessage(userData), [
+        {text: 'OK'},
+      ]);
+      return;
     }
-    setSaloonData(response.data);
+
+    const payload = buildBookingServiceSelectionPayload({
+      salonId: saloonId,
+      services: selectedServices,
+      isMultiService: true,
+      reschedule: false,
+      myBookingId: null,
+      extra: rebookMeta
+        ? {
+            source: 'bookAgain',
+            ...rebookMeta,
+          }
+        : undefined,
+    });
+    console.log('Multi service selection payload:', payload);
+    console.log('Multi service selected services:', selectedServices);
+
+    navigation.navigate('StylistSelect', {
+      data: payload,
+    });
   };
+
   useEffect(() => {
-    if (favourite?.includes(saloonId)) {
-      setIsFvrt(true);
-    } else {
-      setIsFvrt(false);
+    if (Array.isArray(preselectedServices) && preselectedServices.length) {
+      setSelectedServices(preselectedServices);
     }
-  }, [favourite]);
+  }, [preselectedServices]);
+
+  const getSaloonByIdHandler = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await getSaloonById(saloonId);
+      if (!response.success) {
+        ShowToast('error', response.message);
+      }
+      setSaloonData(response.data);
+    } catch (err) {
+      ShowToast('error', err?.response?.data?.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [saloonId]);
+
   useEffect(() => {
     getSaloonByIdHandler();
-  }, []);
+  }, [getSaloonByIdHandler]);
   useEffect(() => {
     if (saloonData) {
       const active = saloonData?.workingDays?.filter(d => d?.isActive);
@@ -140,9 +186,9 @@ const HomeDetails = ({route}) => {
     if (menuData?.length > 0 && !currentCategory) {
       setCurrentCategory(menuData[0]._id); // ✅ Set first category
     }
-  }, [menuData]);
+  }, [currentCategory, menuData]);
 
-  const getServicesHandler = async () => {
+  const getServicesHandler = useCallback(async () => {
     if (!currentCategory) {
       setServices([]);
       setIsLoading2(false);
@@ -162,17 +208,37 @@ const HomeDetails = ({route}) => {
     } finally {
       setIsLoading2(false);
     }
-  };
+  }, [currentCategory, saloonId, selectedSubCategory]);
+
   const addToFavouriteHandler = async () => {
+    if (fvrtLoading) {
+      return;
+    }
+
+    if (!userId || !saloonId) {
+      ShowToast('error', 'Unable to update favorites right now.');
+      return;
+    }
+
     setFvrtLoading(true);
     try {
-      const response = await addToFavourite(_id, saloonId);
+      const response = await addToFavourite(userId, saloonId);
       console.log('response', response.data);
       if (response.success) {
         ShowToast('success', response.message);
+        const fallbackFavourite = isFvrt
+          ? favouriteSalonIds.filter(id => id !== saloonId)
+          : [...new Set([...favouriteSalonIds, saloonId])];
+        const responseFavourite =
+          response?.user?.favourite ||
+          response?.data?.user?.favourite ||
+          response?.data?.favourite ||
+          response?.favourite;
         const updatedUserData = {
           ...userData, // retain previous user data
-          favourite: response.user.favourite, // update only favourite
+          favourite: Array.isArray(responseFavourite)
+            ? responseFavourite
+            : fallbackFavourite,
         };
         dispatch(setUserData(updatedUserData));
 
@@ -186,14 +252,19 @@ const HomeDetails = ({route}) => {
       setFvrtLoading(false);
     }
   };
-  const getAllReviewsHandler = async () => {
-    const response = await getAllReviews(saloonId);
-    if (response.success) {
-      setAllReviews(response?.data);
-    } else {
-      ShowToast('error', response.message);
+  const getAllReviewsHandler = useCallback(async () => {
+    try {
+      const response = await getAllReviews(saloonId);
+      if (response.success) {
+        setAllReviews(response?.data);
+      } else {
+        ShowToast('error', response.message);
+      }
+    } catch (err) {
+      ShowToast('error', err?.response?.data?.message);
     }
-  };
+  }, [saloonId]);
+
   useEffect(() => {
     if (currentCategory) {
       getServicesHandler();
@@ -201,11 +272,11 @@ const HomeDetails = ({route}) => {
       setServices([]);
       setIsLoading2(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentCategory, selectedSubCategory]);
+  }, [currentCategory, getServicesHandler]);
+
   useEffect(() => {
     getAllReviewsHandler();
-  }, []);
+  }, [getAllReviewsHandler]);
   const formatTimeTo12Hour = time24 => {
     const [hourStr, minuteStr] = time24?.split(':');
     let hour = parseInt(hourStr, 10);
@@ -244,7 +315,7 @@ const HomeDetails = ({route}) => {
           isFvrtLoading={fvrtLoading}
           title="Salon Details"
           showHeartIcon
-          giveGap={3.5}
+          isTextAlignCentered
           style={{justifyContent: 'space-between'}}
           handleFavouritePress={addToFavouriteHandler}
           onPress={() => navigation.goBack()}
@@ -266,9 +337,11 @@ const HomeDetails = ({route}) => {
                 contentContainerStyle={{gap: responsiveHeight(2)}}
                 renderItem={({item, index}) => {
                   return (
-                    <Image
+                    <FastImage
                       source={{
                         uri: `${ImageBaseUrl}${item}`,
+                        priority: FastImage.priority.normal,
+                        cache: FastImage.cacheControl.immutable,
                       }}
                       style={{
                         alignSelf: 'center',
@@ -278,6 +351,7 @@ const HomeDetails = ({route}) => {
                         height: responsiveHeight(22),
                         borderRadius: 15,
                       }}
+                      resizeMode={FastImage.resizeMode.cover}
                     />
                   );
                 }}
@@ -594,7 +668,12 @@ const HomeDetails = ({route}) => {
               )}
 
               {isLoading2 ? (
-                <View style={{marginVertical: responsiveHeight(1)}}>
+                <View
+                  style={{
+                    marginVertical: responsiveHeight(
+                      Platform.OS === 'ios' ? 2 : 1,
+                    ),
+                  }}>
                   <ActivityIndicator
                     size="large"
                     color={AppColors.BTNCOLOURS}
@@ -609,9 +688,12 @@ const HomeDetails = ({route}) => {
                     paddingBottom: responsiveHeight(1.5),
                   }}
                   renderItem={({item}) => {
+                    const isServiceSelected = selectedServices.some(
+                      service => service?._id === item?._id,
+                    );
+
                     return (
                       <TouchableOpacity
-                        // onPress={() => selectedService ? setSelectedService(null) : setSelectedService(item)}
                         onPress={() => handleToggleService(item)}
                         style={{
                           borderRadius: 10,
@@ -667,13 +749,13 @@ const HomeDetails = ({route}) => {
                             onPress={() => handleToggleService(item)}>
                             <AntDesign
                               name={
-                                item?._id === selectedService?._id
+                                isServiceSelected
                                   ? 'checkcircle'
                                   : 'pluscircleo'
                               }
                               size={responsiveFontSize(2.7)}
                               color={
-                                item?._id === selectedService?._id
+                                isServiceSelected
                                   ? AppColors.BLUE
                                   : AppColors.BLACK
                               }
@@ -724,9 +806,7 @@ const HomeDetails = ({route}) => {
                     <AppText
                       textSize={1.9}
                       textColor="#0B0C16"
-                      title={`${roundedRating?.toFixed(1)} (${
-                        saloonData?.totalReviews
-                      })`}
+                      title={`${displayRating} (${saloonData?.totalReviews})`}
                     />
                   </View>
                 </View>
@@ -761,7 +841,7 @@ const HomeDetails = ({route}) => {
           </View>
         )}
       </ScrollView>
-      {selectedService ? (
+      {selectedServices.length ? (
         <AppButton
           style={{
             position: 'absolute',
@@ -771,21 +851,13 @@ const HomeDetails = ({route}) => {
             width: responsiveWidth(90),
             alignSelf: 'center',
           }}
-          title={'Continue'}
-          marginHorizontal={2}
-          handlePress={() =>
-            navigation.navigate('StylistSelect', {
-              data: {
-                saloonId,
-                serviceId: selectedService?._id,
-                serviceName: selectedService?.serviceName,
-                price: selectedService.price,
-                technicians: selectedService?.technicianId,
-                reschedule: false,
-                myBookingId: null,
-              },
-            })
+          title={
+            selectedServices.length > 1
+              ? `Continue (${selectedServices.length} Services)`
+              : 'Continue'
           }
+          marginHorizontal={2}
+          handlePress={handleContinueWithMultipleServices}
         />
       ) : null}
     </SafeAreaView>

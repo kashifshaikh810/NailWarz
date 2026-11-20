@@ -1,6 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import React from 'react';
+import FastImage from 'react-native-fast-image';
 import { useNavigation } from '@react-navigation/native';
 import { responsiveHeight, responsiveWidth } from '../utils/Responsive_Dimensions';
 import AppColors from '../utils/AppColors';
@@ -8,9 +9,8 @@ import { ImageBaseUrl } from '../BaseUrl';
 import AppText from './AppTextComps/AppText';
 import moment from 'moment';
 import LineBreak from './LineBreak';
-import AppButton from './AppButton';
 
-const SharePost = ({ key, postData, item }) => {
+const SharePost = ({ postData, item }) => {
   const navigation = useNavigation();
   console.log('item===>>>', item?.userId);
   return (
@@ -30,9 +30,14 @@ const SharePost = ({ key, postData, item }) => {
             alignItems: 'center',
             gap: 10,
           }}>
-          <Image
-            source={{ uri: `${ImageBaseUrl}${item?.userId?.image}` }}
+          <FastImage
+            source={{
+              uri: `${ImageBaseUrl}${item?.userId?.image}`,
+              priority: FastImage.priority.normal,
+              cache: FastImage.cacheControl.immutable,
+            }}
             style={{ width: 45, height: 45, borderRadius: 100 }}
+            resizeMode={FastImage.resizeMode.cover}
           />
           <View>
             <View
@@ -83,9 +88,14 @@ const SharePost = ({ key, postData, item }) => {
               alignItems: 'center',
               gap: 10,
             }}>
-            <Image
-              source={{ uri: `${ImageBaseUrl}${postData.userId.image}` }}
+            <FastImage
+              source={{
+                uri: `${ImageBaseUrl}${postData.userId.image}`,
+                priority: FastImage.priority.normal,
+                cache: FastImage.cacheControl.immutable,
+              }}
               style={{ width: 45, height: 45, borderRadius: 100 }}
+              resizeMode={FastImage.resizeMode.cover}
             />
             <View>
               <View
@@ -144,13 +154,18 @@ const SharePost = ({ key, postData, item }) => {
 
           <LineBreak space={1} />
 
-          <Image
-            source={{ uri: `${ImageBaseUrl}${postData.Post_Image}` }}
+          <FastImage
+            source={{
+              uri: `${ImageBaseUrl}${postData.Post_Image}`,
+              priority: FastImage.priority.normal,
+              cache: FastImage.cacheControl.immutable,
+            }}
             style={{
               borderRadius: 10,
               width: responsiveWidth(83),
               height: responsiveHeight(20),
             }}
+            resizeMode={FastImage.resizeMode.cover}
           />
         </View>
 

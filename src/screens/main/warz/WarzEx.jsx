@@ -5,10 +5,10 @@ import {
   Text,
   ScrollView,
   FlatList,
-  Image,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import AppColors from '../../../utils/AppColors';
 import AppText from '../../../components/AppTextComps/AppText';
 import {
@@ -136,11 +136,14 @@ const Warz = () => {
                             alignItems: 'center',
                             gap: 10,
                           }}>
-                          <Image
+                          <FastImage
                             source={{
                               uri: `${ImageBaseUrl}${item.userId.image}`,
+                              priority: FastImage.priority.normal,
+                              cache: FastImage.cacheControl.immutable,
                             }}
                             style={{width: 45, height: 45, borderRadius: 100}}
+                            resizeMode={FastImage.resizeMode.cover}
                           />
                           <View>
                             <View
@@ -208,13 +211,18 @@ const Warz = () => {
 
                         <LineBreak space={1} />
 
-                        <Image
-                          source={{uri: `${ImageBaseUrl}${item.Post_Image}`}}
+                        <FastImage
+                          source={{
+                            uri: `${ImageBaseUrl}${item.Post_Image}`,
+                            priority: FastImage.priority.normal,
+                            cache: FastImage.cacheControl.immutable,
+                          }}
                           style={{
                             borderRadius: 10,
                             width: responsiveWidth(83),
                             height: responsiveHeight(20),
                           }}
+                          resizeMode={FastImage.resizeMode.cover}
                         />
                       </View>
 

@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
-import {Image, Platform} from 'react-native';
+import {Image} from 'react-native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Home from '../screens/main/Home';
@@ -75,7 +75,11 @@ function HomeStackScreen() {
       <HomeStack.Screen name="AllReviews" component={AllReviews} />
       <HomeStack.Screen name="SelectAnyTech" component={SelectAnyTech} />
       <HomeStack.Screen name="Notification" component={Notification} />
-      <WarzStack.Screen name="BattleForm" component={BattleForm} />
+      <HomeStack.Screen name="BattleForm" component={BattleForm} />
+      <HomeStack.Screen
+        name="InstructionsScreen"
+        component={InstructionsScreen}
+      />
     </HomeStack.Navigator>
   );
 }
@@ -84,6 +88,7 @@ function BookingStackScreen() {
   return (
     <BookingStack.Navigator screenOptions={{headerShown: false}}>
       <BookingStack.Screen name="Booking" component={Booking} />
+      <BookingStack.Screen name="HomeDetails" component={HomeDetails} />
       <BookingStack.Screen name="BookingDetails" component={BookingDetails} />
       <BookingStack.Screen name="AddDispute" component={AddDispute} />
       <BookingStack.Screen name="ViewDispute" component={ViewDispute} />
@@ -99,6 +104,7 @@ function BookingStackScreen() {
       />
       <BookingStack.Screen name="DownloadReceipt" component={DownloadReceipt} />
       <BookingStack.Screen name="SelectAnyTech" component={SelectAnyTech} />
+      <BookingStack.Screen name="AllReviews" component={AllReviews} />
     </BookingStack.Navigator>
   );
 }
@@ -113,6 +119,10 @@ function WarzStackScreen() {
       <WarzStack.Screen name="LiveVotingScores" component={LiveVotingScores} />
       <WarzStack.Screen name="FinalScoreBoard" component={FinalScoreBoard} />
       <WarzStack.Screen name="CreatePost" component={CreatePost} />
+      <WarzStack.Screen
+        name="InstructionsScreen"
+        component={InstructionsScreen}
+      />
     </WarzStack.Navigator>
   );
 }
@@ -132,6 +142,10 @@ function ProfileStackScreen() {
       <ProfileStack.Screen name="Profile" component={Profile} />
       <ProfileStack.Screen name="EditProfile" component={EditProfile} />
       <ProfileStack.Screen name="Wallet" component={Wallet} />
+      <ProfileStack.Screen
+        name="SelectPaymentMethod"
+        component={SelectPaymentMethod}
+      />
       <ProfileStack.Screen name="Settings" component={Settings} />
       <ProfileStack.Screen
         name="InstructionsScreen"
@@ -201,7 +215,17 @@ function MyTabs() {
         backgroundColor: '#fff',
       }}>
       <Tab.Screen name="Home" component={HomeStackScreen} />
-      <Tab.Screen name="Booking" component={BookingStackScreen} />
+      <Tab.Screen
+        name="Booking"
+        component={BookingStackScreen}
+        listeners={({navigation}) => ({
+          tabPress: () => {
+            navigation.navigate('Booking', {
+              screen: 'Booking',
+            });
+          },
+        })}
+      />
       <Tab.Screen name="Warz" component={WarzStackScreen} />
       <Tab.Screen name="Favorites" component={FavoritesStackScreen} />
       <Tab.Screen name="Profile" component={ProfileStackScreen} />

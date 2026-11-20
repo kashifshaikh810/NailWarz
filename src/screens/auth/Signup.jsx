@@ -7,6 +7,7 @@ import {
   Image,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import AppText from '../../components/AppTextComps/AppText';
@@ -35,7 +36,7 @@ import {AppIcons} from '../../assets/Icons';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {setIsGoogleSignIn, setToken, setUserData} from '../../Redux/Slices';
 import {useDispatch} from 'react-redux';
-import messaging from '@react-native-firebase/messaging';
+import {getFcmToken} from '../../GlobalFunctions/Firebase';
 
 const Signup = ({navigation}) => {
   const [form, setForm] = useState({
@@ -61,19 +62,8 @@ const Signup = ({navigation}) => {
   useEffect(() => {
     const getToken = async () => {
       try {
-        const authStatus = await messaging().requestPermission();
-        const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-        if (enabled) {
-          const fcmToken = await messaging().getToken();
-          setFcmToken(fcmToken);
-          console.log('FCM Token:', fcmToken);
-          // Alert.alert('FCM Token', fcmToken);
-        } else {
-          console.log('FCM permission not granted');
-        }
+        const newFcmToken = await getFcmToken();
+        setFcmToken(newFcmToken);
       } catch (error) {
         console.error('Error getting FCM token:', error);
       }
@@ -117,20 +107,13 @@ const Signup = ({navigation}) => {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
+      console.log('Google Sign-In SDK response:', userInfo);
       if (userInfo?.type === 'success') {
-        const {name} = userInfo.data.user;
-        // Split the full name into firstName and lastName
-        const nameParts = name.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-        
+        const {name, email} = userInfo.data.user;
+
         setGoogleLoading(true);
-        const response = await signInWithGoogle(
-          firstName,
-          lastName,
-          userInfo.data.user.email,
-          fcmToken,
-        );
+        const response = await signInWithGoogle(name || '', email || '', fcmToken);
+        console.log('Google Sign-In backend response:', response);
         setGoogleLoading(false);
 
         if (response.success) {
@@ -339,25 +322,28 @@ const Signup = ({navigation}) => {
               justifyContent: 'flex-end',
               gap: responsiveHeight(2.5),
             }}>
-            <SocialAuthButton
-              bgColor={AppColors.BLACK}
-              title={'Continue with Apple'}
-              logo={
-                <AntDesign
-                  name={'apple1'}
-                  size={responsiveFontSize(2.8)}
-                  color={AppColors.WHITE}
-                />
-              }
-            />
+            {Platform.OS === 'ios' && (
+              <SocialAuthButton
+                bgColor={AppColors.BLACK}
+                title={'Continue with Apple'}
+                logo={
+                  <AntDesign
+                    name={'apple1'}
+                    size={responsiveFontSize(2.8)}
+                    color={AppColors.WHITE}
+                  />
+                }
+              />
+            )}
             <SocialAuthButton
               onPress={signInWithGoogleHandler}
+              disabled={googleLoading || isSigningIn}
               txtColor={AppColors.BLACK}
               bgColor={AppColors.LIGHTGRAY}
               title={
                 googleLoading ? (
                   <ActivityIndicator
-                    size={'large'}
+                    size={'small'}
                     color={AppColors.BTNCOLOURS}
                   />
                 ) : (

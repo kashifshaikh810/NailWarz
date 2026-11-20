@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React from 'react';
 import {View, Modal} from 'react-native';
 import {
   responsiveHeight,
@@ -11,6 +11,9 @@ import AppText from './AppTextComps/AppText';
 import AppButton from './AppButton';
 
 const CancelBookingModal = ({visible, handleCancelButtonPress, handleAppointmentButtonPress}) => {
+  const cancellationCopy =
+    'All cancellation funds are issued as Nail Warz credit, equal to the service amount. Credits never expire and will automatically apply to your next booking. App/service charges are non-refundable.';
+
   return (
     <Modal transparent={true} animationType="slide" visible={visible}>
       <View
@@ -42,7 +45,7 @@ const CancelBookingModal = ({visible, handleCancelButtonPress, handleAppointment
 
           <View style={{paddingHorizontal: responsiveWidth(4)}}>
             <AppText
-              title="Cancel Booking"
+              title="Cancel This Booking?"
               textColor={AppColors.BLACK}
               textSize={2.5}
               textFontWeight
@@ -52,24 +55,15 @@ const CancelBookingModal = ({visible, handleCancelButtonPress, handleAppointment
             <LineBreak space={2} />
 
             <AppText
-              title="Are you sure you want to cancel?"
+              title={cancellationCopy}
               textColor={AppColors.BLACK}
-              textSize={2.2}
-              textFontWeight
-            />
-
-            <LineBreak space={1} />
-
-            <AppText
-              title="Canceling your appointment will remove it from your upcoming bookings."
-              textColor={AppColors.BLACK}
-              textSize={1.7}
+              textSize={1.9}
             />
 
             <LineBreak space={2} />
 
             <AppButton
-              title={`Yes, Cancel Booking`}
+              title="Yes, Cancel Booking"
               handlePress={handleCancelButtonPress}
               bgColor={AppColors.WHITE}
               textColor={AppColors.BTNCOLOURS}
@@ -80,7 +74,7 @@ const CancelBookingModal = ({visible, handleCancelButtonPress, handleAppointment
             <LineBreak space={1} />
 
             <AppButton
-              title={`Keep Appointment`}
+              title="Keep Appointment"
               handlePress={handleAppointmentButtonPress}
             />
           </View>

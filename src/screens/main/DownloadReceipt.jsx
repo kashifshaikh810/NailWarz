@@ -1,16 +1,13 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
-  FlatList,
-  PermissionsAndroid,
   Platform,
   Alert,
   ActivityIndicator,
-  NativeModules,
-  Share,
   TouchableOpacity,
+  ScrollView,
   Clipboard,
   ToastAndroid,
 } from 'react-native';
@@ -25,73 +22,230 @@ import AppText from '../../components/AppTextComps/AppText';
 import LineBreak from '../../components/LineBreak';
 import AppButton from '../../components/AppButton';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
-import RNFS from 'react-native-fs';
 import {getBookingById} from '../../GlobalFunctions';
 import moment from 'moment';
+import ShareFile from 'react-native-share';
+import RNFS from 'react-native-fs';
 import RNBlobUtil from 'react-native-blob-util';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {globalStyles} from '../../GlobalFunctions/styles';
+import Feather from 'react-native-vector-icons/Feather';
+import {
+  buildBookingPricingSummary,
+  formatBookingCurrency,
+  getDiscountDescriptor,
+} from '../../utils/bookingPricing';
 
 const DownloadReceipt = ({route}) => {
   const navigation = useNavigation();
-  const [bookingDetails, setBookingDetails] = useState();
+  const {bookingId, fromBookingsCompleted, booking, receiptServices = []} =
+    route?.params || {};
+  const [bookingDetails, setBookingDetails] = useState(booking);
   const [isLoading, setIsLoading] = useState(false);
-  const formattedTime = moment(bookingDetails?.time, 'HH:mm').format('h:mm A');
-  const formattedDate = moment(bookingDetails?.date, 'DD-MM-YYYY').format(
-    'ddd, MMM DD',
-  );
-  const {bookingId} = route?.params;
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [showFullBookingId, setShowFullBookingId] = useState(false);
 
-  console.log('bookingDetails', bookingDetails);
-  console.log('bookingDetails', bookingDetails);
-  const displayId = `#${bookingId.slice(0, 8).toUpperCase()}`; // short professional ID; full ID stays in PDF
+  const handleBackPress = () => {
+    if (fromBookingsCompleted) {
+      navigation.navigate('Booking', {initialTab: 'Completed'});
+      return;
+    }
+
+    navigation.navigate('Home');
+  };
+
+  console.log('DownloadReceipt bookingDetails:', bookingDetails);
+  console.log('DownloadReceipt receiptServices:', receiptServices);
+  const flattenBookingValue = value => {
+    if (Array.isArray(value)) {
+      return value.reduce(
+        (items, item) => [...items, ...flattenBookingValue(item)],
+        [],
+      );
+    }
+
+    return value ? [value] : [];
+  };
+  const getName = value =>
+    value?.fullName || value?.username || value?.salonName || value?.name || '';
+  const getSalon = () =>
+    typeof bookingDetails?.salonId === 'object'
+      ? bookingDetails?.salonId
+      : typeof bookingDetails?.saloonId === 'object'
+      ? bookingDetails?.saloonId
+      : {};
+  const getUser = () =>
+    typeof bookingDetails?.userId === 'object' ? bookingDetails?.userId : {};
+  const backendServices = Array.isArray(bookingDetails?.servicesDetail)
+    ? bookingDetails.servicesDetail
+    : [];
+  const oldServiceDetails = flattenBookingValue(bookingDetails?.serviceId).filter(
+    service => service && typeof service === 'object',
+  );
+  const oldTechnicianDetails = flattenBookingValue(
+    bookingDetails?.technicianId,
+  ).filter(technician => technician && typeof technician === 'object');
+  const receiptServiceItems = backendServices.length
+    ? backendServices.map((item, index) => {
+        const routeService =
+          receiptServices.find(
+            service => service?.serviceId === item?.service || service?.service === item?.service,
+          ) || receiptServices[index] || {};
+        return {
+          serviceName:
+            item?.serviceName ||
+            routeService?.serviceName ||
+            `Service ${index + 1}`,
+          price: Number(item?.price ?? routeService?.price ?? 0),
+          _id: item?._id || item?.service || routeService?.serviceId,
+          technicianName:
+            getName(item?.technician) ||
+            item?.technicianName ||
+            routeService?.technicianName ||
+            '',
+          scheduledAt: item?.scheduledAt || routeService?.scheduledAt,
+          time: routeService?.time,
+          endTime: routeService?.endTime,
+        };
+      })
+    : oldServiceDetails.map((item, index) => ({
+        _id: item?._id,
+        serviceName: item?.serviceName || `Service ${index + 1}`,
+        price: Number(item?.price || 0),
+        technicianName: oldTechnicianDetails[index]?.fullName || '',
+        scheduledAt: null,
+      }));
+  const receiptPricingSummary = buildBookingPricingSummary({
+    booking: bookingDetails,
+    serviceItems: receiptServiceItems,
+  });
+  const firstScheduledAt = receiptServiceItems.find(item => item?.scheduledAt)
+    ?.scheduledAt;
+  const formattedDate = firstScheduledAt
+    ? moment(firstScheduledAt).format('ddd, MMM DD')
+    : moment(bookingDetails?.date, 'DD-MM-YYYY').format('ddd, MMM DD');
+  const formattedTime = firstScheduledAt
+    ? moment(firstScheduledAt).format('h:mm A')
+    : moment(bookingDetails?.time, ['HH:mm', 'h:mm A']).format('h:mm A');
+  const serviceTimeLabel =
+    receiptServiceItems.length > 1
+      ? 'Multiple times'
+      : receiptServiceItems[0]?.time || formattedTime;
+  const technicianLabel = [
+    ...new Set(
+      receiptServiceItems.map(item => item?.technicianName).filter(Boolean),
+    ),
+  ].join(', ');
+  const salonDetails = getSalon();
+  const userDetails = getUser();
+  const fullBookingId = bookingId || bookingDetails?._id || '';
+  const bookingDisplayId = fullBookingId
+    ? `#${fullBookingId.slice(-8).toUpperCase()}`
+    : '';
   const sectionDataOne = [
-    {id: 1, title: 'Booking ID', subTitle: displayId, fullId: bookingId},
-    {id: 2, title: 'Salon', subTitle: bookingDetails?.salonId?.salonName},
-    {id: 3, title: 'Customer Name', subTitle: bookingDetails?.userId?.username},
-    {id: 4, title: 'Phone', subTitle: bookingDetails?.salonId?.phoneNumber},
+    {
+      id: 1,
+      title: 'Booking ID',
+      subTitle: bookingDisplayId,
+      fullId: fullBookingId,
+    },
+    {id: 2, title: 'Salon', subTitle: salonDetails?.salonName || ''},
+    {id: 3, title: 'Customer Name', subTitle: userDetails?.username || ''},
+    {id: 4, title: 'Phone', subTitle: salonDetails?.phoneNumber || ''},
     {
       id: 4,
       title: 'Booking Date',
       subTitle: formattedDate,
     },
-    {id: 5, title: 'Booking Time', subTitle: bookingDetails?.time},
-    {
-      id: 6,
-      title: 'Technician',
-      subTitle: bookingDetails?.technicianId?.fullName,
-    },
+    ...(receiptServiceItems.length > 1
+      ? []
+      : [
+          {id: 5, title: 'Booking Time', subTitle: serviceTimeLabel},
+          {
+            id: 6,
+            title: 'Technician',
+            subTitle: technicianLabel,
+          },
+        ]),
   ];
 
-  const discountValue = bookingDetails?.discount ?? 6;
   const sectionDataTwo = [
+    ...receiptServiceItems.map((item, index) => ({
+      id: `service-${index}`,
+      title: item?.serviceName || `Service ${index + 1}`,
+      subTitle: formatBookingCurrency(item?.price),
+      detail:
+        receiptServiceItems.length > 1
+          ? [item?.technicianName, item?.time || moment(item?.scheduledAt).format('h:mm A')]
+              .filter(Boolean)
+              .join(' • ')
+          : '',
+    })),
     {
-      id: 1,
-      title: bookingDetails?.serviceId?.serviceName,
-      subTitle: `$${bookingDetails?.serviceId?.price}`,
+      id: 'subtotal',
+      title: 'Services Subtotal',
+      subTitle: formatBookingCurrency(receiptPricingSummary.subtotal),
     },
-    {id: 2, title: 'Platform Charges', subTitle: '$5'},
-    {id: 3, title: 'Nail Warz Discount', subTitle: `-$${discountValue}`},
-    {id: 2, title: 'Total', subTitle: `$${bookingDetails?.totalAmount}`},
-    // {id: 3, title: 'Discount', subTitle: '$3.00'},
+    {
+      id: 'appCharges',
+      title: 'Platform Charges',
+      subTitle: formatBookingCurrency(receiptPricingSummary.appCharges),
+    },
+    ...(receiptPricingSummary.discountAmount > 0
+      ? [
+          {
+            id: 'discount',
+            title: 'Nail Warz Discount',
+            subTitle: `-${formatBookingCurrency(
+              receiptPricingSummary.discountAmount,
+            )}`,
+            detail: getDiscountDescriptor(receiptPricingSummary.discountDetails),
+            isDiscount: true,
+          },
+        ]
+      : []),
+    {
+      id: 'total',
+      title: 'Total',
+      subTitle: formatBookingCurrency(receiptPricingSummary.totalAmount),
+      isTotal: true,
+    },
   ];
-  const getBookingByIdHandler = async () => {
+  const getBookingByIdHandler = useCallback(async () => {
+    if (!bookingId) {
+      return;
+    }
     try {
       setIsLoading(true);
       const response = await getBookingById(bookingId);
       setIsLoading(false);
-      setBookingDetails(response?.data);
+      if (response?.data) {
+        setBookingDetails(response.data);
+      }
     } catch (err) {
       setIsLoading(false);
       console.log('error', err);
     }
-  };
+  }, [bookingId]);
 
   useEffect(() => {
     getBookingByIdHandler();
-  }, []);
+  }, [getBookingByIdHandler]);
+
+  const copyBookingId = () => {
+    Clipboard.setString(fullBookingId);
+    if (Platform.OS === 'android') {
+      ToastAndroid.show('Booking ID copied!', ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Copied', 'Full Booking ID copied to clipboard.');
+    }
+  };
 
   const handleDownloadReceipt = async () => {
+    if (isDownloading) {
+      return;
+    }
+
     if (!bookingDetails) {
       Alert.alert('Error', 'Booking details not loaded yet.');
       return;
@@ -99,211 +253,152 @@ const DownloadReceipt = ({route}) => {
 
     const htmlContent = `
     <h2 style="text-align:center;">Receipt</h2>
-    <p><strong>Booking ID:</strong> ${bookingId}</p>
-    <p><strong>Salon:</strong> ${bookingDetails?.salonId?.salonName}</p>
-    <p><strong>Customer Name:</strong> ${bookingDetails?.userId?.username}</p>
-    <p><strong>Phone:</strong> ${bookingDetails?.salonId?.phoneNumber}</p>
+    <p><strong>Booking ID:</strong> ${fullBookingId}</p>
+    <p><strong>Salon:</strong> ${salonDetails?.salonName || ''}</p>
+    <p><strong>Customer Name:</strong> ${userDetails?.username || ''}</p>
+    <p><strong>Phone:</strong> ${salonDetails?.phoneNumber || ''}</p>
     <p><strong>Booking Date:</strong> ${formattedDate}</p>
-    <p><strong>Booking Time:</strong> ${bookingDetails?.time}</p>
-    <p><strong>Technician:</strong> ${bookingDetails?.technicianId?.fullName}</p>
+    ${
+      receiptServiceItems.length > 1
+        ? ''
+        : `<p><strong>Booking Time:</strong> ${serviceTimeLabel}</p>
+           <p><strong>Technician:</strong> ${technicianLabel}</p>`
+    }
     <hr/>
-    <p><strong>Service:</strong> ${bookingDetails?.serviceId?.serviceName}</p>
-    <p><strong>Total:</strong> $${bookingDetails?.serviceId?.price}</p>
+    ${receiptServiceItems
+      .map(
+        item =>
+          `<p>
+            <strong>${item?.serviceName || 'Service'}:</strong> ${formatBookingCurrency(item?.price)}
+            ${
+              receiptServiceItems.length > 1
+                ? `<br/><span>${[
+                    item?.technicianName,
+                    item?.time || moment(item?.scheduledAt).format('h:mm A'),
+                  ]
+                    .filter(Boolean)
+                    .join(' • ')}</span>`
+                : ''
+            }
+          </p>`,
+      )
+      .join('')}
+    <p><strong>Services Subtotal:</strong> ${formatBookingCurrency(
+      receiptPricingSummary.subtotal,
+    )}</p>
+    <p><strong>Platform Charges:</strong> ${formatBookingCurrency(
+      receiptPricingSummary.appCharges,
+    )}</p>
+    ${
+      receiptPricingSummary.discountAmount > 0
+        ? `<p><strong>Nail Warz Discount:</strong> -${formatBookingCurrency(
+            receiptPricingSummary.discountAmount,
+          )}<br/><span>${getDiscountDescriptor(
+            receiptPricingSummary.discountDetails,
+          )}</span></p>`
+        : ''
+    }
+    <p><strong>Total:</strong> ${formatBookingCurrency(
+      receiptPricingSummary.totalAmount,
+    )}</p>
   `;
 
-    try {
-      // Android: request appropriate storage permission based on API level
-      if (Platform.OS === 'android') {
-        const apiLevel = Platform.constants?.Release >= 10 ? 30 : 29; // Estimate API level
-        
-        if (apiLevel >= 30) {
-          // Android 11+ (API 30+) - Use MANAGE_EXTERNAL_STORAGE or scoped storage
-          try {
-            // For Android 11+, we'll use the document directory or shared Downloads
-            // No need for WRITE_EXTERNAL_STORAGE permission
-            console.log('Using scoped storage for Android 11+');
-          } catch (e) {
-            console.log('Scoped storage approach');
-          }
-        } else {
-          // For older Android versions, request WRITE_EXTERNAL_STORAGE
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-            {
-              title: 'Storage Permission',
-              message: 'App needs access to your storage to save the receipt',
-              buttonNeutral: 'Ask Me Later',
-              buttonNegative: 'Cancel',
-              buttonPositive: 'OK',
-            },
-          );
-          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-            Alert.alert(
-              'Permission denied',
-              'Cannot save receipt without storage permission',
-            );
-            return;
-          }
-        }
-      }
+    setIsDownloading(true);
 
-      // Generate PDF and get file path (prefer filePath). If that fails, request base64 and write with RNFS.
-      let pdf = await RNHTMLtoPDF.convert({
+    try {
+      const rawFileName = `Nail_Warz_Receipt_${
+        bookingDetails?._id || bookingId || Date.now()
+      }`;
+      const fileName = rawFileName.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const pdf = await RNHTMLtoPDF.convert({
         html: htmlContent,
-        fileName: `receipt_${bookingDetails?._id}`,
+        fileName,
+        ...(Platform.OS === 'ios' ? {directory: 'Documents'} : {}),
       });
 
-      let sourcePath = pdf?.filePath;
-      // If PDF generation didn't return a filePath, try base64 and write via RNFS
-      if (!sourcePath || !(await RNFS.exists(sourcePath))) {
-        console.warn(
-          'PDF filePath not available or not found, trying base64 fallback',
+      if (!pdf?.filePath) {
+        throw new Error('PDF file path was not created.');
+      }
+
+      const pdfExists = await RNFS.exists(pdf.filePath);
+      if (!pdfExists) {
+        throw new Error('Generated PDF could not be found on the device.');
+      }
+
+      if (Platform.OS === 'android') {
+        const savedUri = await RNBlobUtil.MediaCollection.copyToMediaStore(
+          {
+            name: `${fileName}.pdf`,
+            parentFolder: 'Nail Warz Receipts',
+            mimeType: 'application/pdf',
+          },
+          'Download',
+          pdf.filePath,
         );
-        pdf = await RNHTMLtoPDF.convert({
-          html: htmlContent,
-          fileName: `receipt_${bookingDetails?._id}`,
-          base64: true,
+
+        console.log('Receipt PDF saved to Downloads:', {
+          filePath: pdf.filePath,
+          savedUri,
+          fileName,
         });
-        const downloadsDirFallback = RNFS.DocumentDirectoryPath;
-        const fallbackPath = `${downloadsDirFallback}/Receipt_${bookingDetails?._id}.pdf`;
-        if (pdf?.base64) {
-          try {
-            await RNFS.writeFile(fallbackPath, pdf.base64, 'base64');
-            sourcePath = fallbackPath;
-            console.log('Wrote base64 PDF to:', fallbackPath);
-          } catch (writeErr) {
-            console.warn('RNFS.writeFile(base64) failed', writeErr);
-          }
-        }
-      }
-      console.log('Generated PDF at:', sourcePath);
 
-      // iOS: present share sheet so user can save to Files/Downloads
-      if (Platform.OS === 'ios') {
-        try {
-          const shareUrl = `file://${sourcePath}`;
-          await Share.share({url: shareUrl, title: 'Nail Warz Receipt'});
-          Alert.alert(
-            'Success',
-            'Use the Share sheet to save or share the receipt.',
-          );
-          return;
-        } catch (shareErr) {
-          console.warn('iOS share failed', shareErr);
-          // fall through to fallback saving
-        }
+        Alert.alert(
+          'Receipt Saved',
+          'Your receipt has been saved to Downloads > Nail Warz Receipts.',
+        );
+        return;
       }
 
-      // Determine destination path - prefer RNBlobUtil for better cross-platform support
-      let downloadsDir;
-      let destPath;
-      
-      if (Platform.OS === 'android') {
-        // Use RNBlobUtil for better Android compatibility
-        try {
-          const dirs = RNBlobUtil.fs.dirs;
-          downloadsDir = dirs.DownloadDir || dirs.DocumentDir;
-          console.log('Using RNBlobUtil dirs:', dirs);
-        } catch (e) {
-          // Fallback to RNFS if RNBlobUtil fails
-          downloadsDir = RNFS.ExternalStorageDirectoryPath
-            ? `${RNFS.ExternalStorageDirectoryPath}/Download`
-            : RNFS.DownloadDirectoryPath || RNFS.DocumentDirectoryPath;
-        }
-      } else {
-        downloadsDir = RNFS.DownloadDirectoryPath || RNFS.DocumentDirectoryPath;
-      }
-      
-      destPath = `${downloadsDir}/Receipt_${bookingDetails?._id}.pdf`;
-      console.log('Download destination:', destPath);
+      const fileUrl = pdf.filePath.startsWith('file://')
+        ? pdf.filePath
+        : `file://${pdf.filePath}`;
+      const shareOptions = {
+        title: 'Nail Warz Receipt',
+        message: 'Save or share your Nail Warz receipt.',
+        url: fileUrl,
+        type: 'application/pdf',
+        filename: `${fileName}.pdf`,
+        failOnCancel: false,
+        subject: 'Nail Warz Receipt',
+        saveToFiles: true,
+      };
 
-      // Copy generated file to Downloads
-      try {
-        if (Platform.OS === 'android' && RNBlobUtil.android) {
-          // Use RNBlobUtil for Android for better permission handling
-          try {
-            await RNBlobUtil.fs.cp(sourcePath, destPath);
-            console.log('RNBlobUtil copy successful');
-          } catch (blobErr) {
-            console.warn('RNBlobUtil copy failed, trying RNFS:', blobErr);
-            await RNFS.copyFile(sourcePath, destPath);
-          }
-        } else {
-          await RNFS.copyFile(sourcePath, destPath);
-        }
-      } catch (copyErr) {
-        console.warn('copyFile failed, attempting moveFile', copyErr);
-        try {
-          await RNFS.moveFile(sourcePath, destPath);
-        } catch (moveErr) {
-          console.warn('moveFile also failed, using source path as final destination', moveErr);
-          destPath = sourcePath; // Use source as final destination
-        }
-      }
+      console.log('Receipt PDF generated:', {
+        filePath: pdf.filePath,
+        fileName,
+        platform: Platform.OS,
+      });
 
-      // Verify file exists, if not use sourcePath as fallback
-      let finalPath = destPath;
-      try {
-        const exists = await RNFS.exists(destPath);
-        if (!exists) {
-          const srcExists = await RNFS.exists(sourcePath);
-          finalPath = srcExists ? sourcePath : destPath;
-        }
-      } catch (e) {
-        console.warn('exists check failed', e);
-      }
-
-      // Register the file so it appears in Downloads (Android)
-      if (Platform.OS === 'android') {
-        if (
-          RNBlobUtil &&
-          RNBlobUtil.android &&
-          RNBlobUtil.android.addCompleteDownload
-        ) {
-          try {
-            await RNBlobUtil.android.addCompleteDownload(
-              `Receipt_${bookingDetails?._id}.pdf`,
-              'Nail Warz Receipt',
-              'application/pdf',
-              destPath,
-              true,
-            );
-          } catch (scanErr) {
-            console.warn('addCompleteDownload failed', scanErr);
-          }
-        } else if (
-          NativeModules.RNFetchBlob &&
-          NativeModules.RNFetchBlob.scanFile
-        ) {
-          try {
-            NativeModules.RNFetchBlob.scanFile([
-              {path: destPath, mime: 'application/pdf'},
-            ]);
-          } catch (scanErr) {
-            console.warn('RNFetchBlob.scanFile failed', scanErr);
-          }
-        }
-      }
-
-      Alert.alert('Success', `Saved to Downloads:\n${finalPath}`);
+      await ShareFile.open(shareOptions);
     } catch (err) {
       console.error('PDF Generation or Save Error:', err);
-      Alert.alert('Error', 'Failed to generate or save the PDF.');
+      Alert.alert(
+        'Error',
+        'Unable to download the receipt. Please try again.',
+      );
+    } finally {
+      setIsDownloading(false);
     }
   };
 
   return (
     <SafeAreaView style={globalStyles.container}>
-      <AppHeader onPress={() => navigation.navigate('Home')} title="Receipt" />
+      <AppHeader
+        onPress={handleBackPress}
+        title={fromBookingsCompleted ? 'Back to Bookings' : 'Receipt'}
+      />
       {isLoading ? (
         <View style={{flex: 0.4, justifyContent: 'center'}}>
           <ActivityIndicator size={40} color={AppColors.BTNCOLOURS} />
         </View>
       ) : (
-        <View
-          style={{
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={{flex: 1}}
+          contentContainerStyle={{
             paddingHorizontal: responsiveWidth(5),
-            marginVertical: responsiveHeight(2),
+            paddingTop: responsiveHeight(2),
+            paddingBottom: responsiveHeight(10),
           }}>
           <View
             style={{
@@ -316,80 +411,158 @@ const DownloadReceipt = ({route}) => {
               paddingVertical: responsiveHeight(2),
               paddingHorizontal: responsiveWidth(4),
             }}>
-            <FlatList
-              data={sectionDataOne}
-              scrollEnabled={false}
-              // ItemSeparatorComponent={() => <LineBreak space={1.5} />}
-              renderItem={({item, index}) => {
-                return (
-                  <View>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}>
-                      <AppText
-                        title={item.title}
-                        textSize={2}
-                        textColor={AppColors.BLACK}
-                      />
-                      {item.fullId ? (
-                        // Booking ID row: tappable to copy full ID
-                        <TouchableOpacity
-                          activeOpacity={0.7}
-                          onPress={() => {
-                            Clipboard.setString(item.fullId);
-                            if (Platform.OS === 'android') {
-                              ToastAndroid.show(
-                                'Booking ID copied!',
-                                ToastAndroid.SHORT,
-                              );
-                            } else {
-                              Alert.alert(
-                                'Copied',
-                                'Full Booking ID copied to clipboard.',
-                              );
-                            }
-                          }}
+            {sectionDataOne.map((item, index) => {
+              return (
+                <View key={`${item.title}-${index}`}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
+                    <AppText
+                      title={item.title}
+                      textSize={2}
+                      textColor={AppColors.BLACK}
+                    />
+                    {item.fullId ? (
+                      <TouchableOpacity
+                        activeOpacity={0.75}
+                        hitSlop={{top: 8, right: 8, bottom: 8, left: 8}}
+                        onPress={() =>
+                          setShowFullBookingId(previous => !previous)
+                        }
+                        style={{
+                          alignItems: 'flex-end',
+                          flex: 1,
+                          marginLeft: responsiveWidth(3),
+                        }}>
+                        <View
                           style={{
-                            flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 5,
+                            flexDirection: 'row',
+                            gap: responsiveWidth(1.5),
                           }}>
-                          <AppText
-                            title={item.subTitle}
-                            textSize={2}
-                            // textColor={AppColors.BTNCOLOURS}
-                          />
                           <Text
-                            style={{fontSize: 12, color: AppColors.DARKGRAY}}>
-                            ⎘
+                            style={{
+                              color: AppColors.DARKGRAY,
+                              fontSize: 15,
+                              fontWeight: '700',
+                            }}>
+                            {item.subTitle}
                           </Text>
-                        </TouchableOpacity>
-                      ) : (
-                        <AppText
-                          title={item.subTitle}
-                          textSize={2}
-                          textColor={AppColors.DARKGRAY}
-                        />
-                      )}
-                    </View>
-                    {index !== 6 ? (
+                          <View
+                            style={{
+                              alignItems: 'center',
+                              height: responsiveHeight(3.4),
+                              justifyContent: 'center',
+                              width: responsiveHeight(3.4),
+                            }}>
+                            <Feather
+                              name={
+                                showFullBookingId
+                                  ? 'chevron-up'
+                                  : 'chevron-down'
+                              }
+                              color={AppColors.DARKGRAY}
+                              size={18}
+                            />
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    ) : (
+                      <AppText
+                        title={item.subTitle}
+                        textSize={2}
+                        textColor={AppColors.DARKGRAY}
+                      />
+                    )}
+                  </View>
+                  {item.fullId && showFullBookingId ? (
+                    <TouchableOpacity
+                      activeOpacity={0.75}
+                      onPress={copyBookingId}
+                      style={{
+                        backgroundColor: '#FAFAFA',
+                        borderColor: AppColors.WHITE2,
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        marginTop: responsiveHeight(1.2),
+                        paddingHorizontal: responsiveWidth(3),
+                        paddingVertical: responsiveHeight(1.2),
+                      }}>
                       <View
                         style={{
-                          backgroundColor: '#b4b4b4',
-                          height: 1,
-                          // elevation: 5,
-                          marginVertical: responsiveHeight(1.7),
-                          width: '100%',
-                        }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              }}
-            />
+                          alignItems: 'center',
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                        }}>
+                        <View style={{flex: 1, paddingRight: responsiveWidth(2)}}>
+                          <Text
+                            style={{
+                              color: AppColors.BTNCOLOURS,
+                              fontSize: 11,
+                              fontWeight: '700',
+                              marginBottom: responsiveHeight(0.4),
+                              textTransform: 'uppercase',
+                            }}>
+                            Reference details
+                          </Text>
+                          <Text
+                            selectable
+                            style={{
+                              color: AppColors.DARKGRAY,
+                              flexShrink: 1,
+                              fontSize: 12,
+                              lineHeight: 18,
+                            }}>
+                            Booking ID: {item.fullId}
+                          </Text>
+                        </View>
+                        <View style={{alignItems: 'center'}}>
+                          <View
+                            style={{
+                              alignItems: 'center',
+                              backgroundColor: AppColors.WHITE,
+                              borderColor: '#E5E5E5',
+                              borderRadius: 8,
+                              borderWidth: 1,
+                              justifyContent: 'center',
+                              padding: responsiveHeight(0.9),
+                            }}>
+                            <Feather
+                              name="copy"
+                              color={AppColors.BTNCOLOURS}
+                              size={16}
+                            />
+                          </View>
+                          <Text
+                            style={{
+                              color: AppColors.BTNCOLOURS,
+                              fontSize: 11,
+                              fontWeight: '700',
+                              marginTop: responsiveHeight(0.6),
+                            }}>
+                            Copy ID
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ) : null}
+                  {index !== sectionDataOne.length - 1 ? (
+                    <View
+                      style={{
+                        backgroundColor: '#b4b4b4',
+                        height: 1,
+                        // elevation: 5,
+                        marginVertical: responsiveHeight(1.7),
+                        width: '100%',
+                      }}
+                    />
+                  ) : null}
+                </View>
+              );
+            })}
           </View>
 
           <LineBreak space={2} />
@@ -405,64 +578,75 @@ const DownloadReceipt = ({route}) => {
               paddingVertical: responsiveHeight(2),
               paddingHorizontal: responsiveWidth(4),
             }}>
-            <FlatList
-              data={sectionDataTwo}
-              scrollEnabled={false}
-              renderItem={({item, index}) => {
-                return (
-                  <View>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                      }}>
+            {sectionDataTwo.map((item, index) => {
+              return (
+                <View key={`${item.title}-${index}`}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                    }}>
+                    <View style={{flex: 1, paddingRight: responsiveWidth(3)}}>
                       <AppText
                         title={item.title}
                         textSize={2}
-                        textColor={AppColors.BLACK}
+                        textColor={
+                          item.isDiscount ? '#147A3D' : AppColors.BLACK
+                        }
+                        textFontWeight={item.isTotal}
                       />
-                      <AppText
-                        title={item.subTitle}
-                        textSize={2}
-                        textColor={AppColors.DARKGRAY}
-                      />
+                      {item.detail ? (
+                        <AppText
+                          title={item.detail}
+                          textSize={1.45}
+                          textColor={AppColors.DARKGRAY}
+                          numberOfLines={2}
+                        />
+                      ) : null}
                     </View>
-                    {index !== 3 ? (
-                      <View
-                        style={{
-                          backgroundColor: '#b4b4b4',
-                          height: 1,
-                          // elevation: 5,
-                          marginVertical: responsiveHeight(1.7),
-
-                          width: '100%',
-                        }}
-                      />
-                    ) : null}
+                    <AppText
+                      title={item.subTitle}
+                      textSize={2}
+                      textColor={
+                        item.isDiscount
+                          ? '#147A3D'
+                          : item.isTotal
+                          ? AppColors.BLACK
+                          : AppColors.DARKGRAY
+                      }
+                      textFontWeight={item.isTotal}
+                    />
                   </View>
-                );
-              }}
-            />
+                  {index !== sectionDataTwo.length - 1 ? (
+                    <View
+                      style={{
+                        backgroundColor: '#b4b4b4',
+                        height: 1,
+                        // elevation: 5,
+                        marginVertical: responsiveHeight(1.7),
+
+                        width: '100%',
+                      }}
+                    />
+                  ) : null}
+                </View>
+              );
+            })}
           </View>
-        </View>
+
+          <LineBreak space={2} />
+
+          <AppButton
+            title="Download Receipt"
+            handlePress={handleDownloadReceipt}
+            disabled={isDownloading}
+            isLoading={isDownloading}
+            //   bgColor={AppColors.DARKGRAY}
+            //   textColor={AppColors.WHITE}
+          />
+        </ScrollView>
       )}
-
-      <View
-        style={{
-          // flex: 1,
-          justifyContent: 'flex-end',
-          backgroundColor: AppColors.WHITE,
-          paddingHorizontal: responsiveWidth(4),
-        }}>
-        <AppButton
-          title="Download Receipt"
-          handlePress={handleDownloadReceipt}
-          //   bgColor={AppColors.DARKGRAY}
-          //   textColor={AppColors.WHITE}
-        />
-      </View>
-
-      <LineBreak space={2} />
     </SafeAreaView>
   );
 };

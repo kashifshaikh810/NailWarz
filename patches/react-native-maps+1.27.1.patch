@@ -1,7 +1,7 @@
-diff --git a/android/src/main/jni/CMakeLists.txt b/android/src/main/jni/CMakeLists.txt
-index d8c4e04..a2c8c49 100644
---- a/android/src/main/jni/CMakeLists.txt
-+++ b/android/src/main/jni/CMakeLists.txt
+diff --git a/node_modules/react-native-maps/android/src/main/jni/CMakeLists.txt b/node_modules/react-native-maps/android/src/main/jni/CMakeLists.txt
+index ddb85f5..c3af553 100644
+--- a/node_modules/react-native-maps/android/src/main/jni/CMakeLists.txt
++++ b/node_modules/react-native-maps/android/src/main/jni/CMakeLists.txt
 @@ -25,4 +25,8 @@ target_link_libraries(
    reactnative
  )

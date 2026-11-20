@@ -4,11 +4,11 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
   FlatList,
   Alert,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import AppColors from '../../../utils/AppColors';
 import {
   responsiveFontSize,
@@ -135,9 +135,14 @@ const Community = ({navigation, route}) => {
 
         <LineBreak space={20} />
 
-        <Image
-          source={{uri: `${ImageBaseUrl}${data?.Post_Image}`}}
+        <FastImage
+          source={{
+            uri: `${ImageBaseUrl}${data?.Post_Image}`,
+            priority: FastImage.priority.normal,
+            cache: FastImage.cacheControl.immutable,
+          }}
           style={{width: responsiveWidth(100), height: responsiveHeight(45)}}
+          resizeMode={FastImage.resizeMode.cover}
         />
 
         <View
@@ -256,13 +261,18 @@ const Community = ({navigation, route}) => {
               flexDirection: 'row',
               gap: responsiveHeight(2),
             }}>
-            <Image
+            <FastImage
               style={{
                 height: responsiveHeight(8.3),
                 width: responsiveWidth(16),
                 borderRadius: responsiveHeight(5),
               }}
-              source={{uri: `${ImageBaseUrl}${userData?.image}`}}
+              source={{
+                uri: `${ImageBaseUrl}${userData?.image}`,
+                priority: FastImage.priority.normal,
+                cache: FastImage.cacheControl.immutable,
+              }}
+              resizeMode={FastImage.resizeMode.cover}
             />
             <AppText
               title={userData.username}
@@ -355,7 +365,7 @@ const Community = ({navigation, route}) => {
                           alignItems: 'center',
                         }}>
                         {item?.userId?.image ? (
-                          <Image
+                          <FastImage
                             style={{
                               height: responsiveHeight(5.5),
                               width: responsiveWidth(11),
@@ -363,7 +373,10 @@ const Community = ({navigation, route}) => {
                             }}
                             source={{
                               uri: `${ImageBaseUrl}${item?.userId.image}`,
+                              priority: FastImage.priority.normal,
+                              cache: FastImage.cacheControl.immutable,
                             }}
+                            resizeMode={FastImage.resizeMode.cover}
                           />
                         ) : (
                           <Ionicons

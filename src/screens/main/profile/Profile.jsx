@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   PermissionsAndroid,
   Platform,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import AppColors from '../../../utils/AppColors';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
 import AppHeader from '../../../components/AppHeader';
@@ -44,10 +45,17 @@ import {
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import {getWalletByUserId} from '../../../GlobalFunctions';
 import Modal from 'react-native-modal';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {formatBookingCurrency} from '../../../utils/bookingPricing';
 const Profile = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {userData, isGoogleSignIn, location: latLng} = useSelector(state => state.user);
+  const insets = useSafeAreaInsets();
+  const {
+    userData,
+    isGoogleSignIn,
+    location: latLng,
+  } = useSelector(state => state.user);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const {token} = useSelector(state => state.user);
@@ -99,7 +107,7 @@ const Profile = () => {
       title: 'Wallet',
       mrgnTop: 0,
       bottomWidth: 1,
-      rightTxt: `$ ${walletDetails?.balance || '0'}.00`,
+      rightTxt: formatBookingCurrency(walletDetails?.balance),
     },
     {
       id: 4,
@@ -203,11 +211,40 @@ const Profile = () => {
     },
   ];
 
+  const getDisplayName = () => {
+    const username = userData?.username || userData?.name || userData?.fullName;
+    if (username) {
+      return String(username).replace(/\s+user$/i, '').trim();
+    }
+
+    const firstName = String(userData?.firstName || '').trim();
+    const lastName = String(userData?.lastName || '').trim();
+    const cleanLastName = lastName.toLowerCase() === 'user' ? '' : lastName;
+
+    return `${firstName} ${cleanLastName}`.trim() || '-';
+  };
+
+  const getUserAddress = () => {
+    const profileParts = [
+      userData?.street,
+      userData?.city,
+      userData?.state,
+      userData?.zipCode,
+    ].filter(part => part && part !== 'N/A' && String(part).trim() !== '');
+
+    if (profileParts.length > 0) {
+      return profileParts.join(', ');
+    }
+    return latLng?.address && latLng.address !== 'Fetching location...'
+      ? latLng.address
+      : '-';
+  };
+
   const data = [
     {
       id: 1,
       title: 'Name',
-      value: `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || userData?.username,
+      value: getDisplayName(),
       Icon: FontAwesome,
       iconName: 'user-o',
     },
@@ -228,14 +265,14 @@ const Profile = () => {
     {
       id: 4,
       title: 'Address',
-      value: latLng?.address ? latLng?.address : '-',
+      value: getUserAddress(),
       Icon: Ionicons,
       iconName: 'location-outline',
     },
     {
       id: 5,
       title: 'Wallet',
-      value: `$ ${walletDetails?.balance || '0'}.00`,
+      value: formatBookingCurrency(walletDetails?.balance),
       Icon: FontAwesome6,
       iconName: 'money-bill-wave',
     },
@@ -252,6 +289,7 @@ const Profile = () => {
       title: 'Payment Method',
       Icon: Ionicons,
       iconName: 'wallet-outline',
+      navTo: 'SelectPaymentMethod',
     },
     {
       id: 8,
@@ -411,7 +449,7 @@ const Profile = () => {
 
   //   initLocation();
   // }, []);
-  const getWalletHandler = async () => {
+  const getWalletHandler = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await getWalletByUserId(token);
@@ -420,7 +458,7 @@ const Profile = () => {
     } catch (error) {
       setIsLoading(false);
     }
-  };
+  }, [token]);
 
   const LogoutHandler = () => {
     if (isGoogleSignIn) {
@@ -431,60 +469,108 @@ const Profile = () => {
   };
   useEffect(() => {
     getWalletHandler();
-  }, [focus]);
+  }, [focus, getWalletHandler]);
 
   const renderConfirmModal = () => (
     <Modal
-      animationType="fade"
-      transparent={true}
-      visible={confirmVisible}
-      onRequestClose={() => setConfirmVisible(false)}>
+      isVisible={confirmVisible}
+      animationIn="fadeIn"
+      animationOut="fadeOut"
+      backdropOpacity={0.25}
+      useNativeDriver
+      hideModalContentWhileAnimating
+      onBackdropPress={() => setConfirmVisible(false)}
+      onBackButtonPress={() => setConfirmVisible(false)}
+      style={{margin: 0}}>
       <View
         style={{
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
+          paddingHorizontal: responsiveWidth(5),
         }}>
         <View
           style={{
-            width: responsiveWidth(85),
+            width: '100%',
             backgroundColor: '#fff',
-            borderRadius: 12,
-            padding: 20,
+            borderRadius: 18,
+            paddingHorizontal: responsiveWidth(5),
+            paddingTop: responsiveHeight(3),
+            paddingBottom: responsiveHeight(2.4),
             shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 6,
-            elevation: 8,
+            shadowOffset: {width: 0, height: 8},
+            shadowOpacity: 0.18,
+            shadowRadius: 16,
+            elevation: 10,
           }}>
           <AppText
-            title={'Are you sure you want to logout your account?'}
-            textSize={2}
+            title={'Log out of Nail Warz?'}
+            textSize={2.35}
             textColor={AppColors.BLACK}
+            textFontWeight
           />
+          <View style={{marginTop: responsiveHeight(1.2)}}>
+            <AppText
+              title={'You will need to sign in again to access your bookings, wallet, and profile.'}
+              textSize={1.65}
+              textColor={AppColors.GRAY}
+              lineHeight={responsiveHeight(2.6)}
+            />
+          </View>
 
           <View
             style={{
               flexDirection: 'row',
-              justifyContent: 'flex-end',
-              marginTop: 20,
+              gap: responsiveWidth(3),
+              marginTop: responsiveHeight(3),
             }}>
             <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => setConfirmVisible(false)}
-              style={{marginRight: 20}}>
-              <AppText title="Cancel" textColor={AppColors.GRAY} />
+              style={{
+                flex: 1,
+                minHeight: responsiveHeight(5.8),
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: '#E2E2E2',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: AppColors.WHITE,
+              }}>
+              <AppText
+                title="Cancel"
+                textColor={AppColors.BLACK}
+                textSize={1.8}
+                textFontWeight
+              />
             </TouchableOpacity>
             <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => {
                 setConfirmVisible(false);
                 LogoutHandler();
+              }}
+              style={{
+                flex: 1,
+                minHeight: responsiveHeight(5.8),
+                borderRadius: 12,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: AppColors.BTNCOLOURS,
               }}>
-              <AppText title="Yes" textColor={AppColors.BLUE} />
+              <AppText
+                title="Log Out"
+                textColor={AppColors.WHITE}
+                textSize={1.8}
+                textFontWeight
+              />
             </TouchableOpacity>
           </View>
         </View>
       </View>
     </Modal>
   );
+
   const toggleSwitch = () => {
     setIsEnabled(!isEnabled);
     // console.log('enabled',isEnabled
@@ -505,7 +591,7 @@ const Profile = () => {
         backgroundColor: AppColors.WHITE,
         padding: responsiveHeight(2),
         paddingTop: Platform.OS === 'ios' ? responsiveHeight(8.8) : null,
-        paddingBottom: responsiveHeight(10),
+        paddingBottom: 60 + insets.bottom + responsiveHeight(6),
       }}>
       <View
         style={{
@@ -532,10 +618,14 @@ const Profile = () => {
           />
         </View>
         <View>
-          <Image
+          <FastImage
             source={
               userData?.image
-                ? {uri: `${ImageBaseUrl}${userData?.image}`}
+                ? {
+                    uri: `${ImageBaseUrl}${userData?.image}`,
+                    priority: FastImage.priority.normal,
+                    cache: FastImage.cacheControl.immutable,
+                  }
                 : APPImages.dummyImg
             }
             style={{
@@ -543,6 +633,7 @@ const Profile = () => {
               width: responsiveHeight(5.7),
               borderRadius: 9999,
             }}
+            resizeMode={FastImage.resizeMode.cover}
           />
         </View>
       </View>
@@ -559,10 +650,14 @@ const Profile = () => {
           borderRadius: responsiveHeight(2),
         }}>
         <View style={{alignSelf: 'center'}}>
-          <Image
+          <FastImage
             source={
               userData?.image
-                ? {uri: `${ImageBaseUrl}${userData?.image}`}
+                ? {
+                    uri: `${ImageBaseUrl}${userData?.image}`,
+                    priority: FastImage.priority.normal,
+                    cache: FastImage.cacheControl.immutable,
+                  }
                 : APPImages.dummyImg
             }
             style={{
@@ -570,6 +665,7 @@ const Profile = () => {
               width: responsiveHeight(9.7),
               borderRadius: 9999,
             }}
+            resizeMode={FastImage.resizeMode.cover}
           />
           <TouchableOpacity
             onPress={() => navigation.navigate('EditProfile')}
@@ -614,6 +710,7 @@ const Profile = () => {
 
               return (
                 <Item
+                  activeOpacity={0.75}
                   {...(!item.value && {
                     onPress: () => {
                       if (item?.id === 11) {

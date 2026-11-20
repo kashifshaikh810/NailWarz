@@ -12,7 +12,20 @@
           "package_name": "com.nailwarz"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "994635612004-krhl52og16247sv420ik5phtr3klcnbc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nailwarz",
+            "certificate_hash": "885022718d9cef552775d5e07d9b955a3b00c8d2"
+          }
+        },
+        {
+          "client_id": "994635612004-fc2s7er7utlo2ek8ovctmlnuk6kajitd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCYKEggiPmB3dUdzVYx5PoE0HFulx30Zpo"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "994635612004-fc2s7er7utlo2ek8ovctmlnuk6kajitd.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "994635612004-ju3bn1glckl1a6fhhrbdfmlet07r2tt4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.nailwarz.app"
+              }
+            }
+          ]
         }
       }
     }
